@@ -66,7 +66,7 @@ function render(){
  }else if(stage==='gap'){
   html=`<span class="source-badge">已有原文支持的人工候选 · 仍需你确认</span><p class="muted">目标：${esc(ctx.goal||'先回目标页填写本人目标')}。下面是当前材料的候选缺口，不是奖项评分结论。</p>${p.gaps.map((g,i)=>`<div class="gap-card"><strong>0${i+1}　${esc(g)}</strong><p>原文范围：${esc(p.locations)}。缺失附件不等于整个作品从未做过。</p></div>`).join('')}<form id="criteria-form"><p>这一步做到什么才算完成？先冻结判据，再执行，避免边做边换标准。</p>${(s.criteria.length?s.criteria:p.criteria).map((c,i)=>textarea('criterion'+i,'判据 '+(i+1),c)).join('')}<button class="primary" type="submit">确认这轮标准，选一个小动作 →</button></form>`;
  }else if(stage==='action'){
-  html=`<span class="source-badge">人工首步草稿 · 不是模型自动生成</span><div class="hint">未知能力先试做一行；已有能力直接做。没有材料先求助，不要求先学完整课程。</div><form id="action-form">${textarea('action','具体改哪里、怎么改、交什么',s.action||p.action)}<label>这一步来自<select name="origin"><option value="human_candidate">已有人工候选，经本人确认</option><option value="human_adapted">本人调整过的候选</option></select></label><div class="gap-card"><strong>自检</strong><p>产物有一行/一处；来源能回查；未取得的信息标待核；别人知道怎么判断完成。</p></div><button class="primary" type="submit">确认首步，开始本人执行 →</button></form>`;
+  html=`<span class="source-badge">人工首步草稿 · 不是模型自动生成</span><div class="hint">未知能力先试做一行；已有能力直接做。没有材料先求助，不要求先学完整课程。</div><form id="action-form">${textarea('action','具体改哪里、怎么改、交什么',s.personalized_plan?.first_action||s.action||p.action)}<label>这一步来自<select name="origin"><option value="human_candidate">已有人工候选，经本人确认</option><option value="human_adapted">本人调整过的候选</option></select></label><div class="gap-card"><strong>自检</strong><p>产物有一行/一处；来源能回查；未取得的信息标待核；别人知道怎么判断完成。</p></div><button class="primary" type="submit">确认首步，开始本人执行 →</button></form>`;
  }else if(stage==='execute'){
   html=`<div class="gap-card"><strong>这次只做</strong><p>${esc(s.action||'先到“选第一步”确认具体动作')}</p></div>${s.help?`<div class="hint"><b>上次卡在：</b>${esc(s.help.note)}<br><b>调整建议：</b>${esc(s.help.suggestion)}<div class="button-row"><button class="secondary" id="resume">保留上下文，继续这一步</button><button class="quiet" data-stage="clarify">重新确认目标与范围</button></div></div>`:''}<p class="muted">做完后只交小产物：修改的一页、一个表或一张截图。最多20MB。助手草稿不能直接冒充本人执行。</p><form id="submit-form"><label>上传本人实际修改的小产物<input type="file" name="file" accept=".pdf,.png,.jpg,.jpeg,.docx,.pptx,.xlsx,.csv,.txt,.md" ${mode==='local'?'':'disabled'} required></label>${textarea('explanation','你改了哪一点？为什么这样改？','','说明来源、具体改动及仍未确定的地方')}<label class="criteria-item"><input type="checkbox" name="human_declaration" required><span>这是本人实际修改后提交的产物，仍需非执行者复核。</span></label><button class="primary" type="submit" ${mode==='local'?'':'disabled'}>保存产物，交给非执行者复核 →</button></form>${mode!=='local'?'<div class="hint">当前为浏览器预览，上传复核在本机工作台完成，预览不模拟通过。</div>':''}`;
  }else if(stage==='review'){
@@ -75,7 +75,7 @@ function render(){
  }else{
   html=s.stage==='accepted'?`<div class="hint success">本轮人工复核记录已通过。它只表示这一个小产物，不等于全部55项完成、业务效果已证实或比赛达到某个分数。</div><h3>这次学到的可迁移方法</h3><p>先指出原文已有信息；把缺口变成可交付的一行；按原判据核对。下次相近任务，先自己尝试这一套方法。</p><button class="primary" id="begin-next">保留历史，开启下一步</button>`:'<div class="empty">完成本人修改和非执行者复核后，再总结这次学会的方法。</div>';
  }
- $('#stage-content').innerHTML=html;renderTasks();renderHistory();bindForms();checkDeadline();
+ $('#stage-content').innerHTML=html;renderTasks();renderHistory();renderQualityPlan();bindForms();checkDeadline();
 }
 function renderTasks(){
  const filter=$('#task-filter').value;
@@ -124,4 +124,14 @@ async function init(){
  }catch(e){notice('页面连接失败：'+e.message+'。已有记录未被覆盖，请启动本机服务后刷新。');}
 }
 init();
+
+function renderQualityPlan(){
+ const p=state().personalized_plan;
+ $('#quality-plan-result').innerHTML=p?`<span class="source-badge">透明规则候选 · 能力未自动认证</span><p><b>当前分流：</b>${esc(p.why)}</p><p><b>当前方法：</b>${esc(p.current_skill)}</p><div class="hint">${esc(p.first_action)}</div><p><b>本次产物：</b>${esc(p.output)}</p><p class="muted">对应原55项：${p.task_ids.join('、')}。${esc(p.review_gate)}。${esc(p.transfer_gate)}</p>`:'先确认目标和材料；计划会说明为什么先做这一件，不把长期愿望变成一堆泛泛任务。';
+}
+$('#quality-plan-button').onclick=async()=>{
+ if(mode!=='local')return notice('专属计划需要本机当前作品与反馈，云端预览不伪造生成。');
+ if(busy)return;busy=true;$('#quality-plan-button').disabled=true;
+ try{const pid=selected;const r=await request('/api/quality-plan',{});states[pid]=r.state;render();notice('已保存本项目专属候选计划；请确认它是否回应当前目标，之后再执行。');}catch(e){notice(e.message);}finally{busy=false;$('#quality-plan-button').disabled=false;}
+};
 
