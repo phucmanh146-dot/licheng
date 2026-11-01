@@ -45,7 +45,7 @@ function textarea(name,label,value,placeholder=''){return `<label>${label}<texta
 function render(){
  const p=project(),s=state(),ctx=s.context||{};const stage=viewStage||(s.stage==='blocked'?'execute':s.stage);
  $('#project-list').innerHTML=seed.projects.map((p,i)=>`<button class="project-item ${p.id===selected?'active':''}" data-project="${p.id}"><span class="project-icon">${String(i+1).padStart(2,'0')}</span>${esc(p.name)}</button>`).join('');
- $('#project-name').textContent=p.name;$('#project-index').textContent=String(seed.projects.indexOf(p)+1).padStart(2,'0')+' / 08';
+ const qualityLink=document.querySelector('a[href^="quality.html"]');if(qualityLink)qualityLink.href='quality.html#'+p.id;$('#project-name').textContent=p.name;$('#project-index').textContent=String(seed.projects.indexOf(p)+1).padStart(2,'0')+' / 08';
  $('#stage-label').textContent=s.stage==='blocked'?'遇到困难，正在调整':stages.find(x=>x[0]===s.stage)?.[1];
  const current=stages.findIndex(x=>x[0]===(s.stage==='blocked'?'execute':s.stage));
  $('#workflow').innerHTML=stages.map(([id,name],i)=>`<button class="flow-node ${id===stage?'active':''} ${i<current?'done':''}" data-stage="${id}"><span>${i<current?'✓':String(i+1).padStart(2,'0')}</span><b>${name}</b></button>`).join('');
