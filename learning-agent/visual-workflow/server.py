@@ -40,6 +40,7 @@ def apply_event(old,event,data,project):
             s.update(frozen=False,criteria=[],review=None,submissions=[],action='')
         s['context']=context;s['stage']='gap' if not s['frozen'] else 'action';s['checkin_ack']=None
         s.pop('model_result',None)
+        s.pop('personalized_plan',None)
         detail='目标：'+context['goal']+'；现有材料：'+context['materials']+'；卡点：'+context['blocker']
     elif event=='freeze':
         if not s['context']:raise ValueError('先保存目标、材料和卡点')
@@ -48,6 +49,7 @@ def apply_event(old,event,data,project):
         if s['frozen'] and criteria!=s['criteria']:
             s.setdefault('cycles',[]).append({k:copy.deepcopy(s.get(k)) for k in ('context','criteria','action','submissions','review')})
             s['submissions']=[];s['action']=''
+        s.pop('personalized_plan',None)
         s.update(criteria=criteria,frozen=True,stage='action',review=None);detail='冻结本轮判据：'+'；'.join(criteria)
     elif event=='start':
         if not s['frozen']:raise ValueError('先确认本轮判据')
@@ -180,6 +182,13 @@ def handler(workspace,store,seed,token):
                 if self.path=='/api/starter':
                     from research_starter import propose
                     return self.send(200,{'proposal':propose(data.get('payload',{}))})
+                if self.path=='/api/quality-plan':
+                    if pid=='RS':raise ValueError('请选择八个实际作品之一，此计划针对原项目质量闭环')
+                    from quality_plan import build_plan
+                    plan=build_plan(project,old,seed['tasks']);new=copy.deepcopy(old)
+                    new['personalized_plan']=plan;new['revision']+=1
+                    new['history'].append({'time':now(),'event':'quality_plan','detail':'按本轮质量判据、资源和实际反馈分流：'+plan['route']+'；规则候选，未自动认证能力或勾选55项'})
+                    store.save(pid,old['revision'],new);return self.send(200,{'state':new})
                 if self.path=='/api/upload':
                     filename=Path(require_text(data,'filename',240)).name
                     if Path(filename).suffix.lower() not in ('.png','.jpg','.jpeg','.pdf','.docx','.pptx','.xlsx','.csv','.txt','.md'):raise ValueError('请上传文档、表格或图片')
