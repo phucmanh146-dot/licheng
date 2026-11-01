@@ -34,6 +34,8 @@ class QualityTests(unittest.TestCase):
         checks=[{'before':'V1未分','after':'V2已分','result':'pass','note':'SYNTHETIC对照'},{'before':'缺证','after':'未确定','result':'unknown','note':'原始依据还缺'}]
         self.assertEqual(self.event('q_content_review',{'reviewer':'test-reviewer','checks':checks})[0],200)
         self.assertEqual(self.q()['remaining'],[1]);self.assertFalse(self.q()['content_pass'])
+        self.assertEqual(self.event('q_v2_submit',{'upload':v2,'explanation':'SYNTHETIC重复旧稿'})[0],400)
+        v2=self.newupload('V2-fixed')
         self.event('q_v2_submit',{'upload':v2,'explanation':'SYNTHETIC只补未知项'})
         checks[1].update(result='pass',after='缺证已标未知，未断言授权')
         self.event('q_content_review',{'reviewer':'test-reviewer','checks':checks})
@@ -65,6 +67,32 @@ class QualityTests(unittest.TestCase):
                 q={**quality_initial(),'executor':'test','criteria':p['criteria'],'gap_index':i,'minutes':8,'material_status':'available'}
                 r=proposal(q,p);actions.append(r['action']);self.assertTrue(r['explanation']);self.assertEqual(r['route'],'trial');self.assertLessEqual(r['estimate_minutes'],8)
         self.assertEqual(len(set(actions)),24)
+
+    def test_tampered_pending_evidence_cannot_be_reviewed(self):
+        self.setup_goal();u=self.newupload('trial-tamper')
+        self.event('q_trial_submit',{'upload':u,'explanation':'SYNTHETIC'})
+        path=next((self.root/'work/workflow-state/uploads').glob('JN-'+u['id']+'.*'))
+        path.write_bytes(b'SYNTHETIC externally changed after submission')
+        status,body,_=self.event('q_trial_review',{'reviewer':'test-reviewer','passed':True,'note':'SYNTHETIC'})
+        self.assertEqual(status,400);self.assertEqual(self.q()['phase'],'trial_review')
+
+    def test_new_goal_round_cannot_reuse_old_skill_binding(self):
+        from quality_loop import binding
+        self.setup_goal();p=next(x for x in self.seed['projects'] if x['id']=='JN')
+        s=self.store.get('JN');old_binding=binding(s['quality'],p)
+        s['quality']['skills'].append({'binding':old_binding,'passed':True,'scope':'SYNTHETIC fixture'})
+        s['revision']+=1;self.store.save('JN',s['revision']-1,s)
+        self.setup_goal()
+        self.assertNotEqual(binding(self.q(),p),old_binding)
+        self.assertEqual(self.q()['phase'],'trial');self.assertFalse(self.q()['plan']['skill_verified'])
+        self.assertTrue(self.q()['previous_rounds'][-1]['skills'])
+
+    def test_all_pass_without_comparison_is_not_improvement(self):
+        self.setup_goal();self.trial(True)
+        self.event('q_v2_submit',{'upload':self.newupload('unchanged-claims'),'explanation':'SYNTHETIC'})
+        checks=[{'before':'同一句描述','after':'同一句描述','result':'pass','note':'SYNTHETIC 全勾选'}]*2
+        self.assertEqual(self.event('q_content_review',{'reviewer':'test-reviewer','checks':checks})[0],400)
+        self.assertEqual(self.q()['phase'],'content_review');self.assertFalse(self.q().get('content_pass',False))
 
 if __name__=='__main__':unittest.main(verbosity=2)
 
