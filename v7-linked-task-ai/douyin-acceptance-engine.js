@@ -31,8 +31,9 @@ var RUBRICS={
 };
 function getRubric(t){var k=classify(t);return{type:k,rubric:RUBRICS[k]||RUBRICS.general}}
 function render(){
- var a=acct(),panel=document.getElementById('sdpm-center');if(!a||!panel)return;
- var all=tasks(a).filter(function(t){return t&&(/^douyin_/.test(String(t.importKey||''))||String(t.project||'').indexOf('抖音')>=0||/ppt|课程|考研|agent|demo/i.test(String(t.name||'')))});
+ var a=acct(),panel=document.getElementById('sdpm-center')||document.getElementById('view-daily');if(!a||!panel)return;
+ if(host&&host.parentNode!==panel){host.remove();host=null;}
+ var all=tasks(a).filter(function(t){var s=String(t.name||'')+' '+String(t.project||'')+' '+String(t.category||'');return t&&!t.containerOnly&&(/抖音|ppt|演示文稿|幻灯片|课程|考研|agent|demo|pra|千雪|work building|trae训练营|物流|交付/i.test(s)||/^douyin_/.test(String(t.importKey||'')))});
  var selected=host&&host.querySelector('[data-ae-task]')?host.querySelector('[data-ae-task]').value:'';
  if(!selected&&all.length)selected=String(all[0].id);
  var t=all.find(function(x){return String(x.id)===String(selected)})||all[0],existing=t&&a.acceptanceRecords&&a.acceptanceRecords[String(t.id)],cfg=t?getRubric(t):null;
