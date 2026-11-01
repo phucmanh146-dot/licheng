@@ -10,7 +10,7 @@ var tasks=function(a){return a&&Array.isArray(a.tasks)?a.tasks:[]};
 var done=function(t){return !!(t&&(t.done||t.completed||t.completedAt||t.status==='已交付'))};
 var name=function(t){return String(t&&(t.name||t.title||t.text)||'未命名任务')};
 var due=function(t){return String(t&&(t.dueDate||t.deadlineDate||t.due)||'')};
-var fmt=function(n){return Number.isFinite(Number(n))&&Number(n)>0?Math.round(Number(n))+'分钟':'待估算'};
+var fmt=function(n){return Number.isFinite(Number(n))&&Number(n)>0?Math.round(Number(n))+'分钟':'待估算'};\nvar dateKey=function(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')};
 var currentTask=function(){var a=acct(),ts=tasks(a);return ts.find(function(t){return String(t.id)===String(selectedId)})||null};
 var miniRubric=[
  ['固定事务不被挤占','课程/会议等固定时段锁定，排期不能覆盖','待核验','product-acceptance.md：要求列明；当前状态段未明确证明'],
@@ -33,7 +33,7 @@ function evidence(t,a){
  if(/TRAE|小程序|DDL执行教练/.test(name(t)+' '+String(t.project||'')))lines.push('本机小程序产品现状核验快照（文档来源：DDL执行教练Demo/docs/product-acceptance.md、docs/ddl-fact-check-2026-11-01.md）：',miniCurrent);
  return lines.join('\n');
 }
-function targets(a){return tasks(a).filter(function(t){return !t.deleted&&!t.containerOnly&&!done(t)&&(due(t)||t.hardDeadline||/千雪|Agent|PRA|TRAE|DDL执行教练|小程序/.test(name(t)+' '+(t.project||'')))}).sort(function(x,y){var dx=due(x)||'9999',dy=due(y)||'9999';return dx.localeCompare(dy)||name(x).localeCompare(name(y))})}
+function targets(a){return tasks(a).filter(function(t){return !t.deleted&&!t.containerOnly&&(due(t)||t.hardDeadline||/千雪|Agent|PRA|TRAE|DDL执行教练|小程序/.test(name(t)+' '+(t.project||'')))}).sort(function(x,y){var dx=due(x)||'9999',dy=due(y)||'9999';return dx.localeCompare(dy)||name(x).localeCompare(name(y))})}
 function defaultCriteria(t){
  var s=name(t)+' '+String(t.project||'');
  if(/TRAE|小程序|DDL执行教练/.test(s))return campCriteria+'\n\n产品自身功能验收标准（本机 product-acceptance.md）：\n'+miniRubric.map(function(x,i){return (i+1)+'. '+x[0]+'：'+x[1]+'。文档状态：'+x[2]+'；依据：'+x[3]+'。'}).join('\n');
@@ -84,7 +84,7 @@ function createSteps(){
  var a=acct(),t=currentTask(),steps=lastResult&&lastResult.data&&lastResult.data.steps||[];if(!a||!t||!steps.length)return;
  var existing=tasks(a).filter(function(x){return String(x.parentTaskId||'')===String(t.id)&&String(x.importKey||'').indexOf('dgr_'+String(t.id)+'_')===0});if(existing.length&&!confirm('该任务已有 '+existing.length+' 项由差距分析创建的子任务。继续会新增本轮 '+steps.length+' 项，不会覆盖旧任务。继续吗？'))return;
  var day=root.SY&&SY.todayKey?SY.todayKey():new Date().toISOString().slice(0,10),dueDate=due(t),added=0,max=tasks(a).reduce(function(m,x){return Math.max(m,Number(x.order)||0)},0);
- steps.forEach(function(s,i){var mins=Math.max(5,Math.min(480,Number(s.minutes)||30)),d=day;if(dueDate&&/^\d{4}-\d{2}-\d{2}$/.test(dueDate)){var dueObj=new Date(dueDate+'T00:00:00'),todayObj=new Date(day+'T00:00:00'),gap=Math.max(0,Math.round((dueObj-todayObj)/86400000));d=gap>0?new Date(todayObj.getTime()+Math.round(gap*(i+1)/(steps.length+1))*86400000).toISOString().slice(0,10):day;}
+ steps.forEach(function(s,i){var mins=Math.max(5,Math.min(480,Number(s.minutes)||30)),d=day;if(dueDate&&/^\d{4}-\d{2}-\d{2}$/.test(dueDate)){var dueObj=new Date(dueDate+'T00:00:00'),todayObj=new Date(day+'T00:00:00'),gap=Math.max(0,Math.round((dueObj-todayObj)/86400000));d=gap>0?dateKey(new Date(todayObj.getTime()+Math.round(gap*(i+1)/(steps.length+1))*86400000)):day;}
  var id=root.SY&&SY.uid?SY.uid():'dgr_'+Date.now()+'_'+i;tasks(a).push({id:id,name:name(t)+'｜'+String(s.title||'交付子任务'),project:t.project||t.category||'交付拆解',category:t.category||t.category||t.project||'交付子任务',parentTaskId:String(t.id),date:d,dueDate:dueDate,dueTime:'',estMinutes:mins,plannedMinutes:mins,remainingMinutes:mins,startMinutes:null,aiScheduled:false,done:false,completed:false,completedAt:null,important:true,urgent:!!dueDate,hardDeadline:!!dueDate,deliverable:String(s.output||''),acceptanceCriteria:String(s.acceptance||''),dependencyNote:String(s.dependency||''),status:'未开始',scheduleStatus:'待安排',sourceLabel:'AI交付差距分析；用户确认创建',importKey:'dgr_'+String(t.id)+'_'+Date.now()+'_'+i,createdAt:Date.now(),order:max+1+i});added++;});
  save(a);if(root.SY&&SY.planDay){try{if(a.dailyHours&&a.dailyHours[day]!==undefined)SY.planDay(day,{release:true,report:true})}catch(e){}}
  if(root.SY&&SY.refreshCurrentView)SY.refreshCurrentView();status('已创建 '+added+' 项子任务并保留父任务原截止日期。若今天可用时长未设置，子任务先保留在任务池，不会假装已排入具体时段。');render();
