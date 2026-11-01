@@ -25,7 +25,7 @@ def text(d,k):
     if not isinstance(s,str) or not s.strip() or len(s)>5000:raise ValueError('请补充：'+k)
     return s.strip()
 def quality_initial():return {'phase':'goal','goal_revision':0,'history':[],'trials':[],'versions':[],'transfers':[],'skills':[]}
-def binding(q,p):return hashlib.sha256(json.dumps([p['id'],q['executor'],q['criteria'],q['gap_index']],ensure_ascii=False).encode()).hexdigest()
+def binding(q,p):return hashlib.sha256(json.dumps([p['id'],q['executor'],q['criteria'],q['gap_index'],q.get('goal_revision'),q.get('v1',{}).get('sha256')],ensure_ascii=False).encode()).hexdigest()
 def proposal(q,p):
     skill,explain,output=METHODS[p['id']]
     key=binding(q,p)
@@ -50,10 +50,11 @@ def transition(old,event,d,p,stamp):
     state=copy.deepcopy(old);q=state.setdefault('quality',quality_initial());detail=''
     if event=='q_define':
         q.setdefault('previous_rounds',[])
-        if q.get('criteria'):q['previous_rounds'].append(copy.deepcopy({k:q.get(k) for k in ('goal','criteria','v1','versions','transfers','plan')}))
+        if q.get('criteria'):q['previous_rounds'].append(copy.deepcopy({k:v for k,v in q.items() if k not in ('previous_rounds','history')}))
         minutes=d.get('minutes',20);gap=d.get('gap_index',0)
         if type(minutes)!=int or not 1<=minutes<=720 or type(gap)!=int or not 0<=gap<len(p['gaps']):raise ValueError('时间或当前缺口不正确')
         q.update(goal=text(d,'goal'),executor=text(d,'executor'),self_report=text(d,'self_report'),minutes=minutes,gap_index=gap,material_status=d.get('material_status','unknown'),phase='confirm',criteria=[],goal_revision=q['goal_revision']+1)
+        q.update(trials=[],versions=[],transfers=[],remaining=[])
         if q['material_status'] not in ('available','missing','unknown'):raise ValueError('请确认材料条件')
         for key in ('plan','v1','pending_trial','pending_v2','pending_transfer','content_pass'):q.pop(key,None)
         detail='复述目标：'+q['goal']+'；候选质量差距：'+p['gaps'][gap]+'；能力仅本人自述，未判已掌握。'
@@ -77,6 +78,8 @@ def transition(old,event,d,p,stamp):
     elif event=='q_v2_submit':
         if q.get('phase')!='execute':raise ValueError('先解决试做或材料依赖')
         if d['upload']['sha256']==q['v1']['sha256']:raise ValueError('V2与V1字节相同，请提交实际改动并说明理由')
+        if q['versions'] and not q['versions'][-1]['review']['passed'] and d['upload']['sha256']==q['versions'][-1]['upload']['sha256']:
+            raise ValueError('退回后重复上传相同V2，未提供新的修改；请补未通过项后再提交')
         q['pending_v2']={'upload':d['upload'],'explanation':text(d,'explanation'),'criteria':copy.deepcopy(q['criteria'])};q['phase']='content_review';detail='收到V2和修改理由；仍须与V1按同一G比较。'
     elif event=='q_content_review':
         if q.get('phase')!='content_review':raise ValueError('先提交本轮V2')
@@ -85,6 +88,8 @@ def transition(old,event,d,p,stamp):
         for c in checks:
             text(c,'before');text(c,'after');text(c,'note')
             if c.get('result') not in ('pass','fail','unknown'):raise ValueError('结果只能为通过、未通过或未知')
+        if all(x['result']=='pass' for x in checks) and not any(x['before'].strip()!=x['after'].strip() for x in checks):
+            raise ValueError('尚未指出V1到V2哪一处实际改善；不能只把结果全部选为通过')
         review=reviewer({**d,'passed':all(x['result']=='pass' for x in checks),'note':'；'.join(x['note'] for x in checks)},q['executor'])
         q['versions'].append({**q.pop('pending_v2'),'checks':checks,'review':review})
         q['remaining']=[i for i,c in enumerate(checks) if c['result']!='pass'];q['content_pass']=review['passed'];q['phase']='transfer' if review['passed'] else 'execute';detail='按原G比较后：'+('成果改善；尚未判定方法掌握' if review['passed'] else '仅补未通过/未知项：'+str(q['remaining']))
