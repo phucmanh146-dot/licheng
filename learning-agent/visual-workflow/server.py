@@ -218,6 +218,18 @@ def handler(workspace,store,seed,token):
                     new['history'].append({'time':now(),'event':'model','detail':'真实模型返回通过技术校验；仍待原文支持性与可执行性复核，未自动批准首步'})
                     store.save(pid,old['revision'],new);return self.send(200,{'state':new})
                 if self.path!='/api/event':return self.send(404,{'error':'不存在'})
+                evidence=[]
+                q=old.get('quality',{})
+                if data.get('event') in ('q_trial_review','q_content_review','q_transfer_review'):
+                    evidence.append(q.get('v1'))
+                    pending={'q_trial_review':'pending_trial','q_content_review':'pending_v2','q_transfer_review':'pending_transfer'}[data['event']]
+                    evidence.append(q.get(pending,{}).get('upload'))
+                    if data['event']=='q_transfer_review' and q.get('versions'):evidence.append(q['versions'][-1]['upload'])
+                for artifact in filter(None,evidence):
+                    uid=artifact.get('id','')
+                    candidates=list(uploads.glob(pid+'-'+uid+'.*')) if len(uid)==32 and uid.isalnum() else []
+                    if len(candidates)!=1 or hashlib.sha256(candidates[0].read_bytes()).hexdigest()!=artifact.get('sha256'):
+                        raise ValueError('验收依据文件缺失或内容已改变，旧验收版本失效；请重新提交确认')
                 if data.get('event') in ('submit','q_confirm','q_trial_submit','q_v2_submit','q_transfer_submit'):
                     upload=data.get('payload',{}).get('upload',{});uid=upload.get('id','')
                     matches=list(uploads.glob(pid+'-'+uid+'.*')) if len(uid)==32 and uid.isalnum() else []
