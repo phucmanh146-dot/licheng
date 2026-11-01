@@ -140,6 +140,12 @@ def handler(workspace,store,seed,token):
         def do_GET(self):
             if not self.allowed_host():return self.send(403,{'error':'仅本机入口可用'})
             parsed=urlparse(self.path);path=parsed.path
+            if path=='/api/sprint':
+                from task_acceptance import ledger
+                from sprint import project_sprint
+                return self.send(200,project_sprint(ledger(seed['tasks'],{k:store.get(k) for k in projects},uploads)))
+            if path in ('/sprint','/sprint.html'):
+                return self.send(200,(HERE/'sprint.html').read_bytes(),'text/html; charset=utf-8')
             if path=='/api/data':return self.send(200,{'seed':seed,'states':{k:store.get(k) for k in projects},'mode':'local','token':token})
             if path=='/api/acceptance':
                 from task_acceptance import ledger

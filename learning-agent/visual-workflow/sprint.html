@@ -1,0 +1,7 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>三天冲刺 · 上岸鸭</title><link rel="stylesheet" href="/style.css"></head><body><main style="margin:auto;max-width:1100px"><header class="topbar"><a href="/">← 工作台</a><b>三天 · 八项交付</b><a href="/acceptance">55项验收账</a></header><p id="scope"></p><p>八项目各一条差距和首步卡，优先两条真人闭环。D3预留半天打包；实际截止由团队确认。</p><a href="/api/sprint" download="sprint-evidence.json">导出当前冲刺证据索引</a><div id="items"></div><p id="error" role="alert"></p></main><script>
+const escapeHtml=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+fetch('/api/sprint').then(async r=>{if(!r.ok)throw Error('无法读取冲刺进度');return r.json();}).then(d=>{
+document.querySelector('#scope').textContent=d.scope+'。'+d.completion_rule;
+document.querySelector('#items').innerHTML=d.items.map(x=>`<section class="panel"><h2>${x.id}. ${escapeHtml(x.title)}</h2><p>${escapeHtml(x.day)} · ${escapeHtml(x.owner)} · 待核本项交付</p><p>${escapeHtml(x.required_evidence)}</p><p>关联原任务：${x.related_tasks.map(t=>`<a href="/acceptance?task=${t.id}">${t.id}（${escapeHtml(t.status)}）</a>`).join('、')}</p></section>`).join('');
+}).catch(e=>document.querySelector('#error').textContent=e.message);
+</script></body></html>

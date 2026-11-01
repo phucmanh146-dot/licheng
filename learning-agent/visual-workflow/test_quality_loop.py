@@ -46,7 +46,7 @@ class QualityTests(unittest.TestCase):
         self.event('q_transfer_review',{'reviewer':'test-reviewer','passed':True,'note':'SYNTHETIC检查另一处与解释'})
         self.assertEqual(self.q()['phase'],'round_pass');self.assertEqual(len(self.q()['skills']),1)
         evidence={'scope':'SYNTHETIC_ENGINEERING_NOT_HUMAN_TRIAL','history':self.q()['history'],'final_phase':self.q()['phase'],'skills':self.q()['skills'],'all_55_completed':False}
-        out=Path(__file__).resolve().parents[2]/'outputs/质量进阶闭环_工程执行证据_20261101.json'
+        out=self.root/'质量进阶闭环_工程执行证据_20261101.json'
         out.write_text(json.dumps(evidence,ensure_ascii=False,indent=2),encoding='utf-8')
         p=next(x for x in self.seed['projects'] if x['id']=='JN')
         self.assertEqual(proposal(self.q(),p)['route'],'execute')
