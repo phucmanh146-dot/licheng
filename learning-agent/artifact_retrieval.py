@@ -91,6 +91,18 @@ def select(project, query, limit=12, max_chars=18000, filters=None):
         [(fused[k], candidates[k][1], candidates[k][2], channels[k]) for k in fused],
         key=lambda row: (-row[0], row[1]['artifact_id'], row[2]['locator']))
     import cross_encoder_rerank
+    rrf_hits, rrf_used = [], 0
+    for fused_score, doc, unit, recall_channels in ordered:
+        if len(rrf_hits) >= limit:
+            break
+        if rrf_used + len(unit['text']) > max_chars:
+            continue
+        rrf_hits.append({'artifact_id':doc['artifact_id'],
+                         'artifact_version':doc['artifact_version'],
+                         'locator':unit['locator'],
+                         'score':round(fused_score, 6),
+                         'recall_channels':recall_channels})
+        rrf_used += len(unit['text'])
     rerank_pool = ordered[:min(50, len(ordered))]
     cross_scores, cross_trace = cross_encoder_rerank.rank(
         query, [row[2]['text'][:6000] for row in rerank_pool])
@@ -122,7 +134,7 @@ def select(project, query, limit=12, max_chars=18000, filters=None):
             'channels':{name:len(route) for name, route in routes.items()},
             'dense_status':dense_trace['status'], 'dense_trace':dense_trace,
             'reranker':reranker_name, 'reranker_trace':cross_trace,
-            'filters':filters, 'query':query, 'hits':copy.deepcopy(hits),
+            'filters':filters, 'query':query, 'rrf_hits':copy.deepcopy(rrf_hits), 'hits':copy.deepcopy(hits),
             'coverage':'partial', 'scanned_units':len(rows), 'matched_units':len(ranked),
             'selected_chars':used, 'max_chars':max_chars,
             'omitted_matches':len(ranked)-len(hits),
@@ -138,7 +150,8 @@ def diagnosis_preview(data):
     """Explicit partial-material RAG preview; never adopts a plan or marks work done."""
     import team_ai
     project = team.current(data)
-    result = select(project, data.get('query'), data.get('limit', 12), data.get('max_chars', 18000))
+    result = select(project, data.get('query'), data.get('limit', 12),
+                    data.get('max_chars', 18000), data.get('filters'))
     if not result['hits']:
         raise ValueError('无可用检索片段；未调用模型，不代表项目没有差距')
     documents = {}
