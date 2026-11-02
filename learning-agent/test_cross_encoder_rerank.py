@@ -63,6 +63,7 @@ class CrossEncoderTests(unittest.TestCase):
                  patch.object(cross_encoder_rerank, "rank", side_effect=fake_rank):
                 result = artifact_retrieval.select(project, "交付验收")
             self.assertEqual(result["reranker"], "cross_encoder")
+            self.assertTrue(result["rrf_hits"])  # Preserve the pre-rerank ranking for paired evaluation.
             self.assertEqual(result["reranker_trace"]["status"], "AVAILABLE")
             self.assertEqual(result["hits"][0]["text"], captured["documents"][-1])
             hit = result["hits"][0]
