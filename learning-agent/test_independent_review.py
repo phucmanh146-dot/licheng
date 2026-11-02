@@ -117,6 +117,9 @@ class IndependentReviewTests(unittest.TestCase):
         paths = {route.path for route in shared_api.app.routes}
         self.assertIn('/api/v1/engineering/health', paths)
         self.assertIs(shared_api.HANDLERS['review-receive'], handoff.receive_manual_review)
+        from pathlib import Path
+        frontend = (Path(__file__).parent / 'visual-workflow' / 'shared-workbench.js').read_text(encoding='utf-8')
+        self.assertIn("content_read_confirmed:v.confirmed==='on'", frontend)
 
 
 
