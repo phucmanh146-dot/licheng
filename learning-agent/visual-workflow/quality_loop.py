@@ -1,5 +1,6 @@
 """Evidence-gated, project-specific quality progression; no model success fallback."""
 import copy,hashlib,json
+from task_acceptance import identity
 
 METHODS={
 'JN':('区分主张与专利凭证','数量只是主张；把申请、授权、文件份数和统计日分别登记。先把P14一条主张与一份证书对应，缺号码/权利人保持待核。','一行主张—证书—状态—日期映射'),
@@ -42,7 +43,7 @@ def proposal(q,p):
 
 def reviewer(d,executor):
     name=text(d,'reviewer')
-    if ''.join(name.lower().split())==''.join(executor.lower().split()):raise ValueError('请由非执行者复核，不允许同一代号自己复核自己')
+    if identity(name)==identity(executor):raise ValueError('请由非执行者复核，不允许同一代号自己复核自己')
     if type(d.get('passed')) is not bool:raise ValueError('请明确通过或未通过')
     return {'reviewer':name,'passed':d['passed'],'note':text(d,'note'),'scope':'human_entered_record_identity_not_independently_verified'}
 
