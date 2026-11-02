@@ -71,7 +71,15 @@ def respond(data):
                            "depends_on_titles":[str(x)[:180] for x in row.get("depends_on_titles",[])[:10]],
                            "priority":max(1,min(5,int(row.get("priority",3)))),
                            "parallel":row.get("parallel") is True})
-    return {"reply":value["reply"][:12000], "questions":value.get("questions",[])[:1],
-            "task_drafts":normalized, "schedule_notes":value.get("schedule_notes",[])[:8],
+    questions = value.get("questions", [])
+    if isinstance(questions, str):
+        questions = [questions]
+    notes = value.get("schedule_notes", [])
+    if isinstance(notes, str):
+        notes = [notes]
+    if not isinstance(questions, list) or not isinstance(notes, list):
+        raise rescue.RescueError("模型返回的问题或排期说明格式无效，未写入任务。", "MODEL_FORMAT")
+    return {"reply":value["reply"][:12000], "questions":[str(x)[:500] for x in questions[:1]],
+            "task_drafts":normalized, "schedule_notes":[str(x)[:500] for x in notes[:8]],
             "confidence":value.get("confidence","low"), "provider":"configured-live-model",
             "written_to_tasks":False}
