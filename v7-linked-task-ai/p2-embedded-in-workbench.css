@@ -1,0 +1,17 @@
+/* Original Shanganya navigation, not a separate website */
+#aiP2Nav{display:flex;align-items:center;gap:8px}
+#aiP2Nav .app-nav-icon{font-weight:900;font-size:18px;display:grid;place-items:center}
+#aiP2Nav.active{background:#d9f0df;color:#1e5a3a}
+#view-ai-p2.app-ai-chat-view{width:100%;max-width:none;height:calc(100vh - 170px);min-height:420px;overflow:hidden;display:flex;flex-direction:column;gap:9px}
+#view-ai-p2.app-ai-chat-view[hidden]{display:none!important}
+#view-ai-p2 .embedded-p2-head{display:flex;align-items:center;flex-wrap:wrap;justify-content:space-between;gap:12px;padding:11px 16px;background:#edf6ee;border:1px solid #d1e5d6;border-radius:14px;color:#24573e}
+#view-ai-p2 .embedded-p2-head>div{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+#view-ai-p2 .embedded-p2-head strong{font-size:18px;font-weight:850}
+#view-ai-p2 .embedded-p2-head span{font-size:12px;color:#547a61}
+#view-ai-p2 #embeddedP2Frame{display:block;width:100%;min-width:0;height:100%;flex:1 1 auto;min-height:320px;border:1px solid #d9e6d9;border-radius:16px;overflow:hidden;background:#fcfdfb}
+@media (max-width:840px){
+#view-ai-p2.app-ai-chat-view{height:calc(100dvh - 122px);min-height:420px}
+#view-ai-p2 .embedded-p2-head{padding:9px 12px}
+#view-ai-p2 .embedded-p2-head strong{font-size:16px}
+#view-ai-p2 .embedded-p2-ready{display:none}
+}

@@ -1,0 +1,36 @@
+/* Larger controls for the existing workbench and question panels. */
+#pma-root{font-size:16px;line-height:1.65}
+#pma-root :is(button,input,select,textarea){font-size:16px!important}
+#pma-root :is(button,input,select){min-height:46px}
+#pma-root button{padding:11px 16px}
+#pma-root :is(.pma-help,.pmaw-note,.pmaw-row span,.pmaw-status,.pmaw-filters label,.pmaw-form label,.pmah-help,.pmah-desc){font-size:15px!important;line-height:1.7}
+#pma-root :is(.pmaw-head strong,.pma-section-title h3){font-size:21px}
+#pma-root .pma-head h2{font-size:27px}
+#pma-root .pmaw-head p{font-size:16px}
+#pma-root :is(.pmaw-hit-name,.pmaw-hit-number){font-size:16px}
+#pma-root .pmaw-hit{padding:10px;gap:12px;grid-template-columns:32px minmax(0,1fr) auto}
+#pma-root .pmaw-results{max-height:360px;gap:9px}
+#pma-root :is(.pmaw-preview summary,#pma-wx-frame summary,.pmaw-optional-search>summary){font-size:16px!important;cursor:pointer;padding:12px 0}
+#pma-root .pmaw-optional-search{margin:12px 0;border-bottom:1px solid #d5e5dc}
+#pma-root .pmaw-preview img{max-height:65vh}
+#pma-root #pma-wx-canvas img{max-height:min(70vh,760px)!important}
+#pma-root .pmaw-recognition{padding:18px}
+#pma-root .pmaw-recognition h4{font-size:19px}
+#pma-root #pmaw-ocr{font-size:16px;line-height:1.8;max-height:360px;padding:14px}
+#pma-root :is(input,select,textarea):focus-visible,#pma-root button:focus-visible{outline:3px solid #248b68;outline-offset:3px}
+#pma-root .pmaw-filters{gap:14px}
+#pma-root .pmaw-form{gap:16px}
+#pma-root input[type=checkbox]{min-height:22px;width:22px;height:22px;vertical-align:middle}
+#pma-root button:disabled{cursor:not-allowed}
+#p2-app{font-size:16px}
+#p2-app :is(button,input,textarea,select){font-size:16px!important}
+#p2-app :is(button,.p2-upload,.p2-switch){min-height:44px}
+#p2-app :is(.p2-status,.p2-disclaimer){font-size:14px;line-height:1.7}
+@media(max-width:640px){
+ #pma-root .pmaw-filters,#pma-root .pmaw-form{grid-template-columns:1fr}
+ #pma-root .pmaw-row button,#pma-root .pmaw-head>button{width:100%}
+ #pma-root .pmaw-hit{grid-template-columns:28px minmax(0,1fr)}
+ #pma-root .pmaw-hit button{grid-column:2;width:100%}
+ #pma-root .pmaw-head strong{font-size:20px}
+ .p2-controls-left{flex-wrap:wrap;gap:8px}
+}

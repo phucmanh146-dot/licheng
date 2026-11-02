@@ -1,0 +1,15 @@
+const assert = require('node:assert/strict');
+const create = require('./sy_wechat_store.js');
+const store = create(), first = {text:'RAG 第一条资料',group:'测试群'}, second = {text:'未选择的消息',group:'测试群'};
+store.set({messages:[first,second]}); assert.equal(store.chosen().length,0);
+store.select(first,true);store.set({messages:[second]});assert.deepEqual(store.chosen(),[first]);
+store.set({messages:[second,first]});assert.equal(store.has(first),true);assert.equal(store.has(second),false);
+store.select(first,false);assert.equal(store.chosen().length,0);
+store.set({messages:[first,first]});assert.equal(store.view().messages.length,1);
+store.select(first,true);assert.equal(store.has({...first,group:'另一个群'}),false);
+const crop={text:'框选文字',image:'data:image/png;base64,fixture',crop:true};
+store.set({messages:[crop]},true);store.set({messages:[]});assert.deepEqual(store.view().messages,[crop]);
+store.clear();assert.equal(store.chosen().length,0);assert.equal(store.view().messages.length,1);
+for(let i=0;i<100;i++)store.select({text:'item'+i},true);
+assert.throws(()=>store.select({text:'overflow'},true),/100条/);assert.equal(store.chosen().length,100);
+console.log('Selection checks passed: explicit selection, refresh persistence, reorder, deselect, deduplication, chat separation, crop retention, clearing, capacity.');

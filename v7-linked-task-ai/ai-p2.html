@@ -1,0 +1,235 @@
+﻿<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="light">
+<meta name="referrer" content="no-referrer">
+<title>上岸鸭 · 连接 AI</title>
+<link rel="stylesheet" href="./p2-chat.css?v=20261023-gpt-workspace-v3">
+<link rel="stylesheet" href="./p2-wechat-ai.css?v=20261023-wechat-ai">
+<link rel="stylesheet" href="./p2-video-presenter.css?v=20261023-multimodal-video">
+<link rel="stylesheet" href="./p2-embedded-child.css">
+<link rel="stylesheet" href="./p2-conversation-refresh.css">
+<link rel="stylesheet" href="./p2-linked-task-ai.css?v=20261023-v7">
+<link rel="stylesheet" href="./p2-answer-mindmap.css?v=20261023-v8">
+<link rel="stylesheet" href="./p2-heygen-video.css?v=20261023-v8">
+<link rel="stylesheet" href="./workbench-readable-ui.css?v=20261015-2248">
+</head>
+<body>
+<div class="p2-shell" id="p2-app">
+  <aside class="p2-side" id="p2-side" aria-label="对话列表">
+    <div class="p2-brand"><span class="p2-duck">◈</span><span>上岸鸭 <b>P2</b></span><button class="p2-menu mobile-only" id="p2-close-side" aria-label="关闭侧栏">×</button></div>
+    <button class="p2-new" id="p2-new">＋ 新建对话</button>
+    <div class="p2-side-label">最近对话</div>
+    <div class="p2-history" id="p2-history" aria-label="历史对话"></div>
+    <div class="p2-side-bottom">
+       <a href="./index.html" class="p2-back">← 返回上岸鸭工作台</a>
+       <p>这是上岸鸭工作台内置的 AI 助手。对话记录保存在当前浏览器；可按需关联任务、Obsidian 笔记和上传资料；不会自动改动原任务。</p>
+    </div>
+  </aside>
+  <div class="p2-main">
+    <header class="p2-topbar">
+      <div class="p2-top-left"><button class="p2-menu" id="p2-open-side" aria-label="打开对话列表">☰</button>
+      <div><div class="p2-top-title">连接 AI <span>工作台内置助手 · 图片/文档/链接 · 联网研究 · 视频解析</span></div><div class="p2-model-status" id="p2-model-status">正在检查真实模型连接…</div></div></div>
+      <div class="p2-actions p2-model-quick"><label class="p2-top-provider-label" for="p2-top-provider">AI 服务商</label><select id="p2-top-provider" aria-label="选择 AI 服务商"><option value="">正在读取真实服务商列表…</option></select><a id="p2-top-docs" class="p2-api-doc-link" href="https://platform.openai.com/docs" target="_blank" rel="noopener noreferrer">官方 API 文档 ↗</a><button id="p2-open-config" class="p2-config">配置 / 测试 API</button><a class="p2-workbench" href="./index.html">工作台 ↗</a></div>
+    </header>
+    <section id="p2-timeline" class="p2-timeline" aria-live="polite">
+      <div id="p2-welcome" class="p2-welcome">
+        <div class="p2-orb">✦</div>
+        <h1>连接 AI，直接解决问题</h1>
+        <p>像通用 AI 助手一样直接提问、连续追问和分析资料。支持图片理解、文档阅读、网页链接、联网研究与代码排查；额外提供视频逐段解析、可选语音转写，以及回答转思维导图 / 讲解视频。关联任务完全可选。</p>
+        <div class="p2-prompts">
+          <button data-q="请先直接回答我的问题，再用通俗语言解释原因、步骤和注意事项；不确定的地方明确说明。" class="p2-prompt-primary">✦ 直接问 AI</button>
+          <button data-q="帮我深入研究这个问题，交叉核对可靠来源，给出结论、证据、不同观点和可执行步骤。" data-web="1">🔎 联网研究</button>
+          <button data-q="请阅读我上传的文件或图片：先总结整体内容，再提取关键细节、问题、证据和下一步行动。">📄 图片 / 文档分析</button>
+          <button data-q="请对我上传的视频按时间顺序分析场景、人物或物体动作、画面文字和关键变化；把观察事实与推测分开，并说明无法读取的部分。" data-video="1">▶ 视频逐段解析</button>
+          <button data-q="请把本轮问题和材料整理成层级清楚的思维导图，保留关键细节，并给出可执行清单。">🧠 思维导图</button>
+           <button data-q="请根据本轮已读取的飞书、Obsidian、网页链接、视频或上传文件，以及前面的对话，写一份可直接制作成复盘讲解视频的中文方案：先明确本次目标与背景，再用大白话解释做了什么、取得哪些有证据支持的结果、哪些问题还没解决、经验教训和下一步行动。请输出：①事实与来源（未读取的资料明确写未读取）；②1—3分钟口播稿（自然语言、首次术语解释）；③按镜头顺序排列的字幕分镜，每镜头一个重点；④需要补充的素材。严格区分已证实事实和建议，不要编造成果、个人经历、聊天记录或视频画面。">🎬 写复盘视频</button>
+          <button data-q="请检查这段代码或技术问题，先定位原因，再给出可复制的修复方案、验证步骤和可能副作用。">💻 编程 / 排错</button>
+        </div>
+      </div>
+      <div id="p2-messages" class="p2-messages"></div>
+    </section>
+    <div class="p2-composer-wrap">
+      <div id="p2-status" class="p2-status" role="status"></div>
+      <div id="p2-attachments" class="p2-attachments"></div>
+      <div id="p2-urls" class="p2-urls"></div>
+      <form id="p2-form" class="p2-composer">
+        <details class="p2-task-context-box"><summary>关联现有任务 / 目标（可选）</summary><label for="p2-task-context">任务名称、要求、截止日期或验收标准</label><textarea id="p2-task-context" rows="2" placeholder="例如：上岸鸭多模态 AI 接入；目标是图片/文档/链接能解决任务并生成讲解视频"></textarea><small>只将你在此填写的任务背景发送给 AI；不会自动改动原任务或截止日期。</small></details>
+        <section class="p2-obsidian-connector" aria-label="Obsidian 知识库连接"><div class="p2-obsidian-row"><label class="p2-switch"><input type="checkbox" id="p2-use-obsidian"><span>提问时检索已连接的 Obsidian 笔记</span></label><button type="button" id="p2-obsidian-connect">选择本机 Obsidian 文件夹</button><a class="p2-obsidian-open" href="obsidian://open?vault=%E9%9F%A9%E5%A5%95%E7%9F%A5%E8%AF%86%E5%A4%8D%E7%9B%98" title="在本机打开韩奕知识复盘">打开本机 Obsidian ↗</a></div><p id="p2-obsidian-status" role="status">尚未读取本机笔记。点击“选择本机 Obsidian 文件夹”，在系统窗口中选择你的 Vault，才会读取真实 Markdown 内容。</p><div id="p2-obsidian-results" class="p2-obsidian-results" hidden></div><small>只检索本次问题相关的笔记，最多引用 3 篇正文片段。正文会随本轮问题发送给当前 AI 服务商；不会上传整个 Vault。通过原工作台本机服务读取，不伪造连接状态。</small></section>
+        <textarea id="p2-text" placeholder="向 AI 提问，或粘贴链接 / 拖入图片、文档、视频；可连续追问…" rows="3" spellcheck="true"></textarea>
+        <div class="p2-controls">
+          <div class="p2-controls-left">
+            <label class="p2-upload" title="上传资料">＋<input id="p2-files" type="file" multiple accept=".pdf,.doc,.docx,.pptx,.pptm,.xlsx,.xlsm,.txt,.md,.csv,.json,.html,.png,.jpg,.jpeg,.webp,.gif,.bmp,.mp4,.mov,.webm,.mkv,.mp3,.wav,.m4a,.aac,.ogg,.flac,.opus,.aiff,.srt,.vtt" aria-label="上传文件"></label>
+            <details class="p2-task-context-box p2-chatgpt-import-help"><summary>导入我和 ChatGPT 的历史聊天记录</summary><p>ChatGPT 网页聊天记录默认保存在你的 ChatGPT 账户历史中，不是自动存到这台电脑的固定文件夹。请先在 ChatGPT「设置 → 数据控制 → 导出数据」申请导出；收到 ZIP 后解压，找到 <code>conversations.json</code>（大导出也可能拆成多个 JSON 文件），再用左侧「＋」上传到这里。</p><p>上传后，当前已连接的 AI 才能把文件内容作为资料进行搜索、总结和复盘；这不会自动同步整个 ChatGPT 账户，也不会恢复原来的聊天侧栏。导出文件可能含隐私信息，请只上传你希望用于分析的记录。</p><a href="https://help.openai.com/en/articles/7260999-exporting-your-chatgpt-history-and-data" target="_blank" rel="noopener noreferrer">查看 ChatGPT 官方导出说明 ↗</a></details>
+            <button type="button" id="p2-video-analyze" class="p2-link p2-video-analyze" title="选择视频并进行画面解析">▶ <span>视频解析</span></button><input id="p2-video-files" type="file" multiple accept=".mp4,.mov,.webm,.mkv,.avi,.m4v" hidden aria-label="选择待解析视频"><button type="button" id="p2-add-url" class="p2-link" title="读取网页地址">🔗 <span>网页链接</span></button>
+            <button type="button" id="p2-wechat-open" class="p2-link" title="读取真实授权微信原文并交给当前 AI">💬 <span>微信原始数据 AI</span></button>
+            <label class="p2-switch" title="更有层次、引用更多来源"><input type="checkbox" id="p2-deep" checked><span>✦ 深入分析</span></label>
+            <label class="p2-switch" title="调用真实搜索引擎并引用来源"><input type="checkbox" id="p2-search" checked><span>⌕ 联网搜索</span></label>
+            <label class="p2-switch" title="画面解析会抽取视频帧交给视觉模型；勾选此项才额外尝试语音转写，可能产生费用"><input type="checkbox" id="p2-transcribe"><span>同时转写语音</span></label>
+          </div>
+          <button id="p2-send" class="p2-send" type="submit" aria-label="发送问题">↑</button>
+        </div>
+      </form>
+      <p class="p2-disclaimer">回答支持继续追问、生成复盘口播稿、分镜和思维导图；确认后可制作视频。视频解析会检查实际抽取到的画面；只有勾选“同时转写语音”才额外尝试音频转写。效果取决于当前模型与服务能力，不会把未读取的内容说成已读取。</p>
+    </div>
+  </div>
+</div>
+<dialog id="p2-config-dialog" class="p2-dialog">
+  <form method="dialog"><button class="p2-dialog-x" aria-label="关闭">×</button></form>
+  <h2>接入真实 AI 模型</h2>
+  <p>本机已连接的模型可直接使用。更换服务商需要你自己的 API Key，点击测试后才能启用。</p>
+  <label>服务商<select id="p2-provider"></select></label>
+  <label>模型 ID<input id="p2-model" placeholder="先读取可用模型，或手动填写准确的模型 ID"></label>
+  <div class="p2-model-picker"><button id="p2-load-models" type="button">读取可用模型列表</button><select id="p2-model-list" aria-label="选择已读取的模型" hidden><option value="">选择一个已读取的模型</option></select></div>
+  <p class="p2-small" id="p2-model-list-status">模型列表会通过你填写的服务商 API 实时读取；不支持列表的代理可手动填模型 ID。</p>
+  <details id="p2-model-discovery" class="p2-team-settings">
+    <summary>发现更多可接入模型（公开目录爬取）</summary>
+    <p>从公开模型目录抓取并合并可发现的模型；这里只提供目录信息和模型 ID，不直接接入、不代表账号有权限，也不会自动更换当前模型。选中模型后仍需按官方文档配置对应服务商或网关，再做真实连接测试。</p>
+    <label>搜索模型 / 厂商 / 能力<input id="p2-discovery-query" placeholder="例如 Qwen、Claude、vision、reasoning"></label>
+    <label>筛选来源 / 厂商<input id="p2-discovery-provider" placeholder="例如 OpenRouter、Google、DeepSeek"></label>
+    <div class="p2-dialog-actions"><button id="p2-discovery-fetch" type="button">爬取 / 刷新模型目录</button></div>
+    <label>抓取到的模型<select id="p2-discovery-results" size="6" aria-label="公开模型目录结果"><option value="">点击爬取模型目录</option></select></label>
+    <p class="p2-small" id="p2-discovery-status" role="status">尚未抓取；结果会注明来源，公开目录不等于已连接。</p>
+  </details>
+  <label>API 地址<input id="p2-base" spellcheck="false"></label>
+  <label>API Key<input type="password" id="p2-key" autocomplete="new-password" placeholder="填写该服务商的 API Key；不要填写登录密码"></label>
+  <label>接口类型<select id="p2-protocol"><option value="chat">OpenAI 兼容 Chat</option><option value="responses">OpenAI Responses</option><option value="anthropic">Anthropic Claude</option></select></label>
+  <div class="p2-dialog-actions"><button id="p2-test-model" type="button">实际测试并连接</button><a id="p2-api-docs" rel="noopener noreferrer" target="_blank" href="https://platform.openai.com/docs">打开服务商 API 文档 ↗</a></div>
+  <p class="p2-small">密钥不会回显或写入聊天记录；请只在可信设备配置自己的 API Key。连接是否可用以真实测试结果为准，服务重启后可能需要重新配置。</p>
+  <p id="p2-config-status" class="p2-status"></p>
+  <details id="p2-search-settings" class="p2-team-settings">
+    <summary>联网搜索设置（公开网页）</summary>
+    <p>在这里统一设置 AI 是否默认联网搜索、优先使用哪个公开搜索引擎，并实际测试搜索是否可用。无需另找“连接 AI”按钮；搜索引擎不需要额外 API Key，是否能访问取决于当前部署的网络环境。</p>
+    <label class="p2-search-default"><input type="checkbox" id="p2-search-default" checked> 新问题默认开启联网搜索</label>
+    <label>搜索引擎<select id="p2-search-provider"><option value="auto">自动切换（DuckDuckGo → Bing）</option><option value="duckduckgo">DuckDuckGo</option><option value="bing">Bing</option></select></label>
+    <div class="p2-dialog-actions"><button type="button" id="p2-search-save">保存搜索设置</button><button type="button" id="p2-search-test">实际测试搜索</button></div>
+    <p id="p2-search-config-status" class="p2-small" role="status">正在读取联网搜索配置…</p>
+  </details>
+<details id="p2-team-settings" class="p2-team-settings">
+    <summary>配置多模型分工（可选）</summary>
+    <p>主模型负责普通对话；为下面的角色配置独立 API 地址和模型 ID。未配置或未验证的角色自动回退到主模型。每个角色保存时都会真实调用一次 API，服务商可能计费。</p>
+    <div class="p2-team-grid">
+      <fieldset class="p2-role-card"><legend>深度推理</legend>
+        <label>API 地址<input id="p2-role-reasoning-base" spellcheck="false" placeholder="https://…/v1"></label>
+        <label>模型 ID<input id="p2-role-reasoning-model" placeholder="推理模型 ID"></label>
+        <div class="p2-model-picker"><button type="button" data-role-load="reasoning">读取模型列表</button><select data-role-model-list="reasoning" hidden><option value="">选择模型</option></select></div>
+        <label>API Key<input id="p2-role-reasoning-key" type="password" autocomplete="new-password" placeholder="独立模型密钥，可留空沿用已保存密钥"></label>
+        <label>接口类型<select id="p2-role-reasoning-protocol"><option value="chat">OpenAI 兼容 Chat</option><option value="responses">OpenAI Responses</option><option value="anthropic">Anthropic Claude</option></select></label>
+        <p class="p2-small" data-role-status="reasoning">复杂分析、规划和多步骤推理</p>
+      </fieldset>
+      <fieldset class="p2-role-card"><legend>联网研究与证据综合</legend>
+        <label>API 地址<input id="p2-role-research-base" spellcheck="false" placeholder="https://…/v1"></label>
+        <label>模型 ID<input id="p2-role-research-model" placeholder="研究模型 ID"></label>
+        <div class="p2-model-picker"><button type="button" data-role-load="research">读取模型列表</button><select data-role-model-list="research" hidden><option value="">选择模型</option></select></div>
+        <label>API Key<input id="p2-role-research-key" type="password" autocomplete="new-password" placeholder="独立模型密钥，可留空沿用已保存密钥"></label>
+        <label>接口类型<select id="p2-role-research-protocol"><option value="chat">OpenAI 兼容 Chat</option><option value="responses">OpenAI Responses</option><option value="anthropic">Anthropic Claude</option></select></label>
+        <p class="p2-small" data-role-status="research">联网搜索后整理证据和引用</p>
+      </fieldset>
+      <fieldset class="p2-role-card"><legend>图片与视频画面理解</legend>
+        <label>API 地址<input id="p2-role-vision-base" spellcheck="false" placeholder="https://…/v1"></label>
+        <label>模型 ID<input id="p2-role-vision-model" placeholder="支持视觉输入的模型 ID"></label>
+        <div class="p2-model-picker"><button type="button" data-role-load="vision">读取模型列表</button><select data-role-model-list="vision" hidden><option value="">选择模型</option></select></div>
+        <label>API Key<input id="p2-role-vision-key" type="password" autocomplete="new-password" placeholder="独立模型密钥，可留空沿用已保存密钥"></label>
+        <label>接口类型<select id="p2-role-vision-protocol"><option value="chat">OpenAI 兼容 Chat</option><option value="responses">OpenAI Responses</option><option value="anthropic">Anthropic Claude</option></select></label>
+        <p class="p2-small" data-role-status="vision">必须选支持图片输入的模型；视频按可读取画面处理</p>
+      </fieldset>
+      <fieldset class="p2-role-card"><legend>代码分析与修复</legend>
+        <label>API 地址<input id="p2-role-coding-base" spellcheck="false" placeholder="https://…/v1"></label>
+        <label>模型 ID<input id="p2-role-coding-model" placeholder="代码模型 ID"></label>
+        <div class="p2-model-picker"><button type="button" data-role-load="coding">读取模型列表</button><select data-role-model-list="coding" hidden><option value="">选择模型</option></select></div>
+        <label>API Key<input id="p2-role-coding-key" type="password" autocomplete="new-password" placeholder="独立模型密钥，可留空沿用已保存密钥"></label>
+        <label>接口类型<select id="p2-role-coding-protocol"><option value="chat">OpenAI 兼容 Chat</option><option value="responses">OpenAI Responses</option><option value="anthropic">Anthropic Claude</option></select></label>
+        <p class="p2-small" data-role-status="coding">编程、API、报错诊断和代码修改</p>
+      </fieldset>
+    </div>
+    <div class="p2-dialog-actions"><button id="p2-save-team" type="button">保存并真实测试分工模型</button><button id="p2-clear-team" type="button">清除独立模型</button></div>
+    <p id="p2-team-status" class="p2-status"></p>
+    <p class="p2-small">密钥只在当前服务进程内存中保存，不回显、不写入聊天记录；服务重启后需要重新配置。公网多用户部署前应先完成账号隔离，不能共用访客 API Key。</p>
+  </details>
+  <details id="p2-feishu-settings" class="p2-team-settings">
+    <summary>连接飞书知识库（读取正文与目录）</summary>
+    <p>填写飞书开放平台自建应用凭证。系统会通过官方 API 读取你有权访问的 Wiki 文档；知识库目录会递归读取子页面，单次最多 30 篇。不会读取你私人微信聊天。</p>
+    <label>飞书应用 ID<input id="p2-feishu-app-id" spellcheck="false" autocomplete="off" placeholder="cli_…"></label>
+    <label>飞书应用密钥<input id="p2-feishu-app-secret" type="password" autocomplete="new-password" placeholder="填写应用 App Secret，不是飞书登录密码"></label>
+    <label>测试用飞书 Wiki / 文档链接<input id="p2-feishu-test-url" spellcheck="false" value="https://tcnb3a3fuvtb.feishu.cn/wiki/YD6HwHCS5iXlgmkpLOoccnvon7b" placeholder="https://你的组织.feishu.cn/wiki/…"></label>
+    <div class="p2-dialog-actions"><button id="p2-feishu-desktop-read" type="button">用电脑已登录的飞书读取</button><button id="p2-feishu-save" type="button">保存飞书 API 凭证</button><button id="p2-feishu-test" type="button">测试官方 API</button><button id="p2-feishu-clear" type="button">断开 API</button></div>
+    <p id="p2-feishu-status" class="p2-status">可直接用电脑已登录的飞书读取；不必先申请 App Secret。也可配置官方 API。</p>
+    <p class="p2-small">浏览器读取方式会在你点击后打开指定飞书链接，复制页面可见正文并作为当前对话附件；不会读取 Cookie、密码或登录令牌。过程中请勿操作键鼠。官方 API 方式仍需应用只读权限。</p>
+  </details>
+</dialog>
+<dialog id="p2-link-dialog" class="p2-dialog">
+  <form method="dialog"><button class="p2-dialog-x" aria-label="关闭">×</button></form>
+  <h2>添加网页资料</h2>
+  <p>只读取你主动提交的网址。对需要登录的飞书或付费内容，无法读取就会如实说明。</p>
+  <label>网址<input id="p2-link-input" placeholder="https://…" inputmode="url"></label>
+  <div class="p2-dialog-actions"><button type="button" id="p2-confirm-link">加入本次问题</button></div>
+  <p id="p2-link-status" class="p2-status"></p>
+</dialog>
+<dialog id="p2-wechat-dialog" class="p2-dialog p2-wechat-dialog">
+  <form method="dialog"><button class="p2-dialog-x" aria-label="关闭">×</button></form>
+  <h2>微信原始数据 AI 工具</h2>
+  <p>复用现有微信授权读取器与当前已配置的 AI 模型。只有真实读取或你主动导入的原始消息会进入分析；不会自动发微信消息或改写任务。</p>
+  <div id="p2-wechat-status" class="p2-status" role="status">请连接本机微信原始数据工具；未验证前不会声称读取成功。</div>
+  <div class="p2-wechat-card">
+    <h3>本机微信原始数据工具连接</h3>
+    <p class="p2-small">桥接服务仅监听你自己的电脑。请从 C:\Users\jiang\wechat_summary\config\web_bridge_token.txt 复制配对令牌；令牌只保存在当前浏览器标签页会话中。</p>
+    <label>本机桥接地址<input id="p2-wechat-bridge-url" value="http://127.0.0.1:8898" spellcheck="false"></label>
+    <label>配对令牌<input id="p2-wechat-bridge-token" type="password" autocomplete="off" placeholder="粘贴 web_bridge_token.txt 中的令牌"></label>
+    <div class="p2-dialog-actions"><button type="button" id="p2-wechat-check">检查连接与权限</button><button type="button" id="p2-wechat-save-bridge">保存本标签页连接</button><button type="button" id="p2-wechat-clear-bridge">清除令牌</button></div>
+    <div id="p2-wechat-bridge-state" class="p2-small">未检查。</div>
+  </div>
+  <div class="p2-wechat-grid">
+    <section class="p2-wechat-card">
+      <h3>① 搜索真实微信群</h3>
+      <label>群名关键词<input id="p2-wechat-group-query" placeholder="输入群名中的关键词"></label>
+      <div class="p2-dialog-actions"><button type="button" id="p2-wechat-search-groups">在微信界面搜索群名</button><button type="button" id="p2-wechat-open-group" disabled>打开所选候选</button></div>
+      <label>核对真实搜索结果<select id="p2-wechat-groups"><option value="">先搜索群名</option></select></label>
+      <div id="p2-wechat-preview" class="p2-wechat-preview">搜索截图会显示在这里供你核对。</div>
+      <label>消息关键词（可选）<input id="p2-wechat-keyword" placeholder="例如：GPU、报名、截止日期"></label>
+      <div class="p2-dialog-actions"><button type="button" id="p2-wechat-read-history">读取当前可见画面</button><button type="button" id="p2-wechat-more" disabled>继续读取更多</button></div>
+      <p class="p2-small">当前桥接会使用上岸鸭已有的微信窗口 OCR 读取器：它读取的是当前可见画面，不等于整个群的完整历史。搜索结果必须由你核对；未安装兼容读取驱动时不会伪称读取全部历史。</p>
+    </section>
+    <section class="p2-wechat-card">
+      <h3>② 或导入微信原始数据</h3>
+      <label>聊天记录文件（TXT / MD / JSON / CSV / HTML / XML）<input id="p2-wechat-file" type="file" accept=".txt,.md,.json,.csv,.html,.htm,.xml,.log"></label>
+      <p class="p2-small">导入文件只在你点击 AI 分析后发送给当前会话所配置的模型；不上传到微信，也不自动同步到任务清单。</p>
+      <details id="p2-wechat-local-model-settings">
+        <summary>配置“微信原始数据 AI”自己的模型 API</summary>
+        <label>模型服务商<select id="p2-wechat-provider"><option value="">读取服务商列表…</option></select></label>
+        <label>API Base URL<input id="p2-wechat-api-base" spellcheck="false" placeholder="https://api.example.com/v1"></label>
+        <label>模型 ID<input id="p2-wechat-api-model" spellcheck="false" placeholder="例如 deepseek-chat"></label>
+        <label>API Key<input id="p2-wechat-api-key" type="password" autocomplete="new-password" placeholder="新密钥；留空保留已保存密钥"></label>
+        <label>接口类型<select id="p2-wechat-api-protocol"><option value="chat">OpenAI 兼容 Chat Completions</option><option value="anthropic">Anthropic Messages</option></select></label>
+        <div class="p2-dialog-actions"><button type="button" id="p2-wechat-load-model-config">读取已保存配置</button><button type="button" id="p2-wechat-save-model-config">保存本机模型配置</button><button type="button" id="p2-wechat-test-model">真实测试 API</button></div>
+        <div id="p2-wechat-model-state" class="p2-small">API Key 不回显；配置保存在本机 wechat_summary/config/ai_config.json。</div>
+      </details>
+      <button type="button" id="p2-wechat-open-config">配置上岸鸭主模型 / 多模型分工</button>
+      <button type="button" id="p2-wechat-feishu-config">配置飞书只读授权</button>
+    </section>
+  </div>
+  <div class="p2-wechat-card">
+    <div class="p2-wechat-heading"><h3>③ 核对将要发送给 AI 的原始消息</h3><label><input type="checkbox" id="p2-wechat-select-all" checked> 全选当前批次</label></div>
+    <div id="p2-wechat-messages" class="p2-wechat-messages">尚未读取或导入消息。</div>
+    <label>本轮 AI 分析要求（可修改）<textarea id="p2-wechat-prompt" rows="4">请按微信群聊总结助手的方式分析本轮真实原文：1. 提炼重要摘要，去掉闲聊和重复内容；2. 按学习资料、经验方法、通知要求、问题求助、任务分类；3. 生成可执行任务清单，写清行动、验收标准和来源；4. 只提取消息明确写出的截止日期，没有则写“待确认”；5. 逐条说明重要链接的真实读取状态，并根据已读取正文总结；6. 与我在上岸鸭填写的当前任务进行关联，提示重复或冲突，但不要自动改动任务；7. 给出一个现在可以执行的下一步。区分事实、建议和推断，不要编造。</textarea></label>
+    <div class="p2-dialog-actions"><button type="button" id="p2-wechat-analyze" class="p2-send">交给上岸鸭当前 AI 分析</button><button type="button" id="p2-wechat-analyze-local">交给本机微信原始数据 AI 分析</button><button type="button" id="p2-wechat-save-local" disabled>保存本机 AI 结果</button><button type="button" id="p2-wechat-map">从最近回答生成思维导图</button><button type="button" id="p2-wechat-clear">清除本批资料</button></div>
+    <div id="p2-wechat-link-status" class="p2-small">本批链接状态尚未检查。</div>
+    <div id="p2-wechat-local-answer" class="p2-wechat-messages" aria-live="polite">本机 AI 结果将在这里显示。</div>
+    <p class="p2-small">两种 AI 都只处理你主动选中的消息。上岸鸭当前 AI 会使用本网页已配置模型，并在回答中标注未读链接；本机 AI 使用单独配置的服务商。只有读取到正文的链接才会作为正文证据。</p>
+  </div>
+</dialog>
+<script src="./p2-video-presenter.js?v=20261023-recap-v1" defer></script>
+<script src="./p2-answer-mindmap.js?v=20261023-v8" defer></script>
+<script src="./p2-heygen-video.js?v=20261023-recap-v1" defer></script>
+<script src="./p2-view.js?v=20261023-multimodal-video" defer></script>
+<script src="./source-bridge.js" defer></script>
+<script src="./p2-chat.js?v=20261023-local-folder-picker-v5" defer></script>
+<script src="./p2-linked-task-ai.js?v=20261023-linked-task-ai-v7" defer></script>
+<script src="./p2-wechat-ai.js?v=20261023-wechat-ai" defer></script>
+<script src="./p2-config.js?v=20261023-model-discovery-v1" defer></script>
+<script src="./p2-voice-sop.js" defer></script>
+<script src="./p2-capability-audit.js?v=20261024-audit-v1" defer></script>
+<link rel="stylesheet" href="./p2-voice-sop.css">
+</body>
+</html>

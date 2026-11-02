@@ -1,0 +1,36 @@
+
+/* SY Adaptive Planner v1: additive styling, original account/task DOM untouched */
+.sy-adaptive-launch{border:1px solid #f0d8bf!important;background:#fff5e9!important;color:#a74e17!important;font-weight:650!important;border-radius:12px!important}
+.sy-adaptive-summary{display:flex;align-items:center;justify-content:space-between;gap:16px;margin:12px 0 20px;padding:18px 20px;border:1px solid #f1e1cb;background:linear-gradient(115deg,#fffaf2,#fff1e1);border-radius:18px;box-shadow:0 6px 23px #af7a3520;color:#4e3325}
+.sy-adaptive-summary strong{display:block;font-size:1.07rem}.sy-adaptive-summary p{margin:6px 0 0;color:#836d5a;font-size:.85rem;line-height:1.5}.sy-adaptive-summary button,.sy-adaptive-primary{background:#ec813b!important;color:#fff!important;border:0!important;border-radius:11px;padding:11px 18px;cursor:pointer;font:inherit;white-space:nowrap}
+.sy-adaptive-dialog{border:0;padding:0;border-radius:22px;background:#fffaf3;box-shadow:0 22px 85px #35251450;color:#3c332d;max-width:min(1040px,95vw);width:100%;max-height:91vh;overflow:auto}
+.sy-adaptive-dialog::backdrop{background:#17130f9b;backdrop-filter:blur(3px)}
+.sy-adaptive-dialog *{box-sizing:border-box}
+.sy-adaptive-dialog header{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;background:linear-gradient(105deg,#fff0dc,#fffaf0);padding:22px 26px}
+.sy-adaptive-dialog h2{margin:0;font-size:1.55rem;color:#473121}
+.sy-adaptive-dialog .sy-subtitle{margin:6px 0 0;font-size:.86rem;color:#936f55}
+.sy-adaptive-dialog button{cursor:pointer;font:inherit}
+.sy-adaptive-dialog .sy-close{border:1px solid #eecda8;background:#fffaf2;border-radius:10px;padding:4px 10px;font-size:1.4rem}
+.sy-adaptive-tabs{display:flex;gap:7px;padding:14px 22px 0;overflow:auto}
+.sy-adaptive-tabs button{flex:1;min-width:95px;border:1px solid #f1dfc9;background:#fff;border-radius:11px;padding:10px 6px;color:#755c47}
+.sy-adaptive-tabs button[aria-selected=true]{background:#f47b32;color:#fff;border-color:#f47b32;font-weight:700}
+.sy-adaptive-body{padding:18px 24px 26px;min-height:330px}
+.sy-adaptive-card{background:#fff;border:1px solid #efe2d3;border-radius:15px;padding:17px;margin-bottom:14px;box-shadow:0 2px 7px #d7b99916}
+.sy-adaptive-card h3{margin:0 0 12px;font-size:1.06rem}
+.sy-adaptive-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.sy-adaptive-grid.two{grid-template-columns:repeat(2,minmax(0,1fr))}
+.sy-adaptive-dialog label{display:flex;flex-direction:column;gap:6px;font-size:.86rem;font-weight:600;color:#654d39}
+.sy-adaptive-dialog input,.sy-adaptive-dialog select,.sy-adaptive-dialog textarea{font:inherit;border:1px solid #decfbb;border-radius:10px;min-height:40px;padding:9px;color:#473726;background:#fff;max-width:100%;width:100%}
+.sy-adaptive-dialog button:focus-visible{outline:3px solid #8acdc9;outline-offset:2px}
+.sy-adaptive-dialog .sy-actions{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:12px 0}
+.sy-adaptive-dialog .sy-actions button:not(.sy-adaptive-primary){padding:10px 14px;border:1px solid #efcba6;background:#fff8f0;border-radius:10px;color:#794a27}
+.sy-adaptive-dialog .sy-muted{font-size:.83rem;color:#826b58;line-height:1.6}
+.sy-adaptive-dialog .sy-status{font-size:.86rem;min-height:22px;color:#9a5c2c}
+.sy-adaptive-dialog .sy-bar{height:9px;background:#f3e9da;border-radius:10px;overflow:hidden}.sy-adaptive-dialog .sy-bar span{display:block;height:100%;background:#eb9457}
+.sy-adaptive-dialog .sy-plan-row{display:grid;grid-template-columns:105px minmax(0,1fr) 72px;gap:12px;align-items:center;padding:10px 0;border-bottom:1px solid #f1eadf;font-size:.9rem}
+.sy-adaptive-dialog .sy-plan-row:last-child{border:0}.sy-adaptive-dialog .sy-chip{border-radius:20px;background:#eaf5ee;color:#29795f;font-size:.73rem;padding:4px 9px;display:inline-block;text-align:center}
+.sy-adaptive-dialog .sy-chip.rest{background:#eaf1ff;color:#4f6eaa}.sy-adaptive-dialog .sy-chip.buffer{background:#fff0ce;color:#996417}
+.sy-adaptive-dialog .sy-progress{border-left:3px solid #ec9d54;margin:10px 0;padding-left:12px}
+.sy-adaptive-dialog .sy-progress strong{display:block}.sy-adaptive-dialog .sy-progress p{font-size:.82rem;margin:3px 0 0;color:#837063}
+.sy-adaptive-dialog .sy-source{border:1px solid #ece5d9;border-radius:12px;padding:10px;margin:8px 0}.sy-adaptive-dialog .sy-source a{color:#aa601f}
+@media(max-width:740px){.sy-adaptive-summary{flex-direction:column;align-items:flex-start}.sy-adaptive-grid,.sy-adaptive-grid.two{grid-template-columns:1fr}.sy-adaptive-dialog .sy-plan-row{grid-template-columns:85px minmax(0,1fr) 55px}.sy-adaptive-dialog .sy-adaptive-body{padding:14px}.sy-adaptive-dialog header{padding:16px}.sy-adaptive-tabs{padding:12px 12px 0}.sy-adaptive-tabs button{font-size:.84rem}}

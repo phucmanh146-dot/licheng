@@ -1,0 +1,27 @@
+.p2-linked-task-panel{margin:0 0 10px;padding:13px 14px;border:1px solid #cbded4;border-radius:14px;background:linear-gradient(135deg,#f5faf7,#fff);color:#173b2e}
+.p2-linked-task-top{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.p2-linked-task-heading{display:flex;flex-direction:column;gap:3px}
+.p2-linked-task-heading strong{font-size:14px;font-weight:750}
+.p2-linked-task-heading span,.p2-linked-task-note,.p2-linked-extract-hint,.p2-linked-todo-help{font-size:12px;line-height:1.55;color:#60776d}
+.p2-linked-task-controls{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;margin-top:10px}
+.p2-linked-task-controls select,.p2-linked-todo-fields input,.p2-linked-todo-fields select{min-width:0;width:100%;border:1px solid #d6e2db;border-radius:9px;background:#fff;padding:9px 10px;color:#18382c;font:inherit;font-size:13px}
+.p2-linked-task-refresh,.p2-linked-task-attach,.p2-linked-extract-button{border:1px solid #cbded4;border-radius:9px;padding:8px 12px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap}
+.p2-linked-task-refresh{background:#fff;color:#35594a}
+.p2-linked-task-attach,.p2-linked-extract-button{background:#1e4c3b;color:#fff;border-color:#1e4c3b}
+.p2-linked-task-note{margin:8px 0 0}
+.p2-linked-extract-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:9px 2px 0}
+.p2-linked-extract-hint{font-size:11px}
+.p2-linked-todo-dialog{width:min(760px,calc(100vw - 28px));max-height:85vh;overflow:auto;border:1px solid #d4e2d9;border-radius:18px;padding:0;background:#fff;color:#17372c;box-shadow:0 24px 80px #18382c2b}
+.p2-linked-todo-dialog::backdrop{background:#10271e77;backdrop-filter:blur(3px)}
+.p2-linked-todo-form{padding:18px}
+.p2-linked-todo-header{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.p2-linked-todo-header h2{margin:0;font-size:18px}
+.p2-linked-todo-help{margin:8px 0 14px}
+.p2-linked-todo-rows{display:flex;flex-direction:column;gap:10px}
+.p2-linked-todo-row{display:grid;grid-template-columns:22px minmax(0,1fr);gap:9px;padding:11px;border:1px solid #e0e9e4;border-radius:12px;background:#fbfdfc}
+.p2-linked-todo-row>input[type=checkbox]{margin-top:10px;width:17px;height:17px;accent-color:#1e4c3b}
+.p2-linked-todo-fields{display:grid;grid-template-columns:minmax(0,1fr) 145px 145px 100px;gap:7px}
+.p2-linked-todo-fields input{font-size:12px;padding:8px}
+.p2-linked-todo-duplicate{grid-column:2;color:#9a5c19;font-size:11px;margin-top:-3px}
+.p2-linked-todo-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:16px}
+@media(max-width:650px){.p2-linked-task-controls{grid-template-columns:1fr}.p2-linked-task-attach{width:100%}.p2-linked-todo-fields{grid-template-columns:1fr 1fr}.p2-linked-todo-fields input:first-child{grid-column:1/-1}.p2-linked-todo-header h2{font-size:16px}}

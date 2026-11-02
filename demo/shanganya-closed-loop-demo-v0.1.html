@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>上岸鸭｜真实作品闭环 Demo（交互原型）</title>
+<style>
+:root{--ink:#19243a;--muted:#66738a;--line:#dce4ef;--bg:#f4f7fb;--blue:#315fcb;--blue2:#eaf0ff;--green:#18794e;--greenbg:#e6f6ed;--amber:#96600b;--amberbg:#fff3d7;--red:#b42318;--redbg:#fff0ee;--card:#fff}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.65 system-ui,-apple-system,"Microsoft YaHei",sans-serif}
+main{max-width:1180px;margin:28px auto;padding:0 18px}header{background:#17243b;color:#fff;border-radius:18px;padding:26px 28px}
+h1{margin:0 0 8px;font-size:28px}h2{font-size:20px;margin:0 0 12px}h3{font-size:16px;margin:0 0 8px}p{margin:8px 0}.muted{color:var(--muted);font-size:13px}.hero-note{color:#d5def0}.tag{display:inline-block;background:#e9eff8;color:#43516a;border-radius:20px;padding:3px 9px;font-size:12px;margin:3px 5px 3px 0}.warning{background:var(--amberbg);color:#704900;border:1px solid #f2d28a;border-radius:12px;padding:12px 15px;margin:14px 0}.grid{display:grid;grid-template-columns:1.05fr .95fr;gap:16px;margin-top:16px}.card{background:var(--card);border:1px solid var(--line);border-radius:15px;padding:18px;box-shadow:0 4px 18px #1b315008;margin-bottom:14px}.row{display:flex;gap:9px;flex-wrap:wrap;align-items:center}.row>*{max-width:100%}button,.btn{font:inherit;border:1px solid #c8d2e2;border-radius:9px;padding:9px 12px;background:#fff;color:var(--ink);cursor:pointer}button.primary{background:var(--blue);border-color:var(--blue);color:#fff}button:disabled{opacity:.45;cursor:not-allowed}button:hover:not(:disabled){filter:brightness(.97)}textarea,input,select{font:inherit;border:1px solid #c8d2e2;border-radius:9px;padding:10px;width:100%;background:#fff;color:var(--ink)}textarea{min-height:118px;resize:vertical}.field{margin:10px 0}.field label{display:block;font-size:13px;font-weight:700;margin-bottom:5px}.stepbar{display:grid;grid-template-columns:repeat(6,1fr);gap:7px;margin:16px 0}.step{padding:9px 7px;text-align:center;border:1px solid var(--line);background:#fff;border-radius:10px;font-size:12px;color:var(--muted)}.step.active{border-color:var(--blue);background:var(--blue2);color:var(--blue);font-weight:700}.status{border-radius:7px;padding:3px 8px;font-size:12px;font-weight:700;display:inline-block}.pending{background:var(--amberbg);color:var(--amber)}.done{background:var(--greenbg);color:var(--green)}.blocked{background:var(--redbg);color:var(--red)}.evidence{border-left:3px solid var(--blue);background:#f7f9ff;padding:12px;margin:10px 0;border-radius:0 9px 9px 0}.gapitem{border:1px solid var(--line);border-radius:11px;padding:12px;margin:9px 0}.gapitem p{margin:5px 0}.tiny{font-size:12px;color:var(--muted)}.innovation-list{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}.idea{background:#fff;border:1px solid var(--line);border-radius:11px;padding:10px;text-align:left;cursor:pointer}.idea strong{display:block;font-size:13px;margin-bottom:3px}.idea small{display:block;color:var(--muted);font-size:11px;line-height:1.45}.idea.active{border-color:var(--blue);background:var(--blue2)}.log{background:#101b2c;color:#e0e8f5;border-radius:10px;padding:12px;font:12px/1.6 ui-monospace,monospace;white-space:pre-wrap;max-height:200px;overflow:auto}.hidden{display:none!important}.pillrow{display:flex;gap:7px;flex-wrap:wrap}.routebtn{flex:1;min-width:140px;text-align:left}.routebtn strong{display:block}.routebtn span{font-size:12px;color:var(--muted)}.metric{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.metric div{background:#f5f8fc;border-radius:10px;padding:10px}.metric b{display:block;font-size:20px}.footer{font-size:12px;color:var(--muted);padding:12px 0 30px}.successline{color:var(--green);font-weight:700}
+@media(max-width:820px){.grid{grid-template-columns:1fr}.innovation-list{grid-template-columns:1fr 1fr}.stepbar{grid-template-columns:repeat(3,1fr)}main{margin:14px auto;padding:0 10px}header{padding:21px}h1{font-size:23px}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <div class="tag">可交互原型 · 无真实模型 API</div>
+  <h1>上岸鸭｜把真实作品推进到可复核的 V2</h1>
+  <p class="hero-note">主创新：人做、模型验｜停在哪、接回哪</p>
+  <p class="hero-note muted">使用预置科研/竞赛样例体验完整流程。页面会在当前浏览器保存演示状态；它不是已接入后端的正式产品。</p>
+</header>
+<div class="warning"><b>演示边界：</b>本版本用规则和预置样例模拟 A 诊断、B 行动卡与 A 复核；不会调用真实模型，不会把预置结果冒充真实用户效果。请用真实模型和真实 V1/V2 替换后再做正式答辩。</div>
+
+<section class="card">
+  <h2>五个创新方向</h2>
+  <div class="innovation-list">
+    <button class="idea active" data-idea="i1"><strong>I1 人做、模型验</strong><small>V1 → 证据差距 → 行动卡 → V2 → 原判据复核</small></button>
+    <button class="idea" data-idea="i2"><strong>I2 停在哪、接回哪</strong><small>保存版本、位置、卡点与下一动作</small></button>
+    <button class="idea" data-idea="i3"><strong>I3 论文换讲法</strong><small>通俗解释后回原文做一个小动作</small></button>
+    <button class="idea" data-idea="i4"><strong>I4 五分钟冷启动</strong><small>从宏观目标落到可检查的第一步</small></button>
+    <button class="idea" data-idea="i5"><strong>I5 用户自主分流</strong><small>用户自己选困难类型，不被自动贴标签</small></button>
+  </div>
+  <p id="ideaDescription" class="muted">主闭环：V1 诊断、真实修改、V2 复核，失败项才进入下一轮。</p>
+</section>
+
+<div class="stepbar" id="stepbar">
+  <div class="step active">1. 项目材料</div><div class="step">2. A 诊断</div><div class="step">3. B 行动卡</div><div class="step">4. 执行 V2</div><div class="step">5. A 复核</div><div class="step">6. 剩余重排</div>
+</div>
+
+<div class="grid">
+<div>
+  <section class="card">
+    <h2>1｜项目与 V1 材料</h2>
+    <div class="field"><label for="project">项目名称</label><input id="project" value="科研竞赛作品：论文复现与方案说明"></div>
+    <div class="field"><label for="goal">目标</label><input id="goal" value="把方案说明改到可以按要求复核"></div>
+    <div class="field"><label for="rubric">原始验收判据（不要让模型临时改标准）</label><textarea id="rubric">1. 明确研究问题，并给出原文/资料来源。
+2. 方法步骤能让另一位成员独立照做。
+3. 结果与限制分开写；没有证据的结论标为未知。</textarea></div>
+    <div class="field"><label for="v1">V1 当前作品内容</label><textarea id="v1">研究主题：分析学习任务管理工具如何帮助学生完成项目。
+目前方案：先收集资料，再进行分析，最后形成报告。
+结果：预计能够提升效率。
+待补充：资料来源不完整，执行步骤比较笼统，结果没有测量口径。</textarea></div>
+    <div class="row">
+      <button class="primary" id="diagnose">A｜基于样例生成证据差距</button>
+      <button id="reset">重置演示</button>
+    </div>
+    <p class="tiny">真实版本应支持上传 DOCX/PDF/PPTX 并记录文件哈希、版本号与页码/段落 locator。当前原型使用文本框代替文件解析。</p>
+  </section>
+
+  <section class="card">
+    <h2>2｜A 诊断：差距必须有证据</h2>
+    <div id="diagnosisState" class="muted">还未运行诊断。点击上方按钮后显示预置样例结果。</div>
+    <div id="gaps"></div>
+  </section>
+
+  <section class="card">
+    <h2>3｜B 行动卡</h2>
+    <div id="actionState" class="muted">A 的差距通过证据检查后，才能生成行动卡。</div>
+    <div id="actionCard"></div>
+    <div class="row"><button class="primary" id="startAction" disabled>开始执行并记录</button><button id="saveCheckpoint">保存当前存档点</button></div>
+  </section>
+</div>
+
+<div>
+  <section class="card">
+    <h2>4｜执行人提交真实 V2</h2>
+    <div class="field"><label for="v2">V2 修改内容（请实际编辑，不要直接点“完成”）</label><textarea id="v2" placeholder="先生成行动卡，再把实际修改内容写在这里。"></textarea></div>
+    <div class="row"><button class="primary" id="submitV2" disabled>提交 V2 → 等待 A 复核</button><span id="v2Status" class="status pending">尚未提交</span></div>
+    <p class="tiny">实际系统必须保存新的 artifact_version、提交时间与执行记录；当前演示以文本版本模拟。</p>
+  </section>
+
+  <section class="card">
+    <h2>5｜A 按原判据逐条复核</h2>
+    <div id="reviewState" class="muted">V2 提交后才能复核。演示规则不是模型评测。</div>
+    <div id="reviewResults"></div>
+    <div class="row"><button class="primary" id="reviewV2" disabled>运行样例复核</button><button id="confirmReview" disabled>人工确认本轮复核</button></div>
+  </section>
+
+  <section class="card">
+    <h2>6｜B 只重排剩余问题</h2>
+    <div id="remaining" class="muted">完成复核后，这里只列出未通过或未知项。</div>
+    <button id="nextRound" disabled>为剩余问题生成下一张行动卡</button>
+  </section>
+
+  <section class="card">
+    <h2>中断现场｜I2 与 I5</h2>
+    <p class="muted">中断不会清空原任务。用户选择原因，系统保存同一任务、版本、位置与下一动作。</p>
+    <div class="pillrow">
+      <button class="routebtn" data-route="confused"><strong>听不进去</strong><span>换讲法 → 回到原文做动作</span></button>
+      <button class="routebtn" data-route="tired"><strong>真的累了</strong><span>保存现场 → 休息/延长/结束</span></button>
+      <button class="routebtn" data-route="blocked"><strong>遇到技术困难</strong><span>记录已试办法 → 求助/替代路径</span></button>
+      <button class="routebtn" data-route="interrupted"><strong>临时有事</strong><span>保存承诺与返回条件</span></button>
+    </div>
+    <div id="routePanel" class="evidence hidden"></div>
+    <div class="row"><button id="resume" disabled>我回来了：确认接回原步骤</button><button id="extendRest" class="hidden">延长休息 5 分钟</button><button id="endRest" class="hidden">今天先结束，保留现场</button></div>
+  </section>
+
+  <section class="card">
+    <h2>运行记录（可导出）</h2>
+    <div class="metric"><div><span class="muted">当前版本</span><b id="versionMetric">V1</b></div><div><span class="muted">已通过判据</span><b id="passMetric">0</b></div><div><span class="muted">剩余问题</span><b id="remainMetric">—</b></div></div>
+    <div id="eventLog" class="log">[demo] 已加载预置样例。尚无运行记录。</div>
+    <div class="row" style="margin-top:10px"><button id="export">导出 JSON 运行记录</button><button id="clearState">清除此浏览器的演示存档</button></div>
+  </section>
+</div>
+</div>
+<div class="footer">Demo 版本：0.1 · 本地单文件 · 不依赖外部 CDN · localStorage 仅保存在当前浏览器。正式版本需接入后端 API、数据库、真实模型和文件解析服务。</div>
+</main>
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const STORAGE_KEY='shanganya-closed-loop-demo-v01';
+const state={stage:0,diagnosed:false,actionReady:false,started:false,submitted:false,reviewed:false,confirmed:false,checkpoint:null,route:null,pass:0,remaining:[],events:[],version:'V1',v1:'',v2:'',project:'',goal:'',rubric:''};
+const descriptions={
+ i1:'主闭环：V1 诊断、真实修改、V2 复核，失败项才进入下一轮。',
+ i2:'中断恢复不是重新写计划：必须恢复同一项目、同一版本、同一位置和下一动作。',
+ i3:'当前原型提供样例通俗解释；正式版要让每句解释都能定位回原文，并在解释后做一个小动作。',
+ i4:'首步必须在约 5 分钟内能启动，并产出可检查的东西，而不是只给一份长期计划。',
+ i5:'用户自己选择困难类型；状态推断不是事实，摄像头/手表不属于首版必需依赖。'
+};
+document.querySelectorAll('[data-idea]').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('[data-idea]').forEach(x=>x.classList.remove('active'));b.classList.add('active');$('ideaDescription').textContent=descriptions[b.dataset.idea];log('切换查看 '+b.dataset.idea+'：'+descriptions[b.dataset.idea]);}));
+function log(msg){const t=new Date().toLocaleTimeString();state.events.push({time:new Date().toISOString(),message:msg});$('eventLog').textContent=state.events.map(e=>'['+new Date(e.time).toLocaleTimeString()+'] '+e.message).join('\n');$('eventLog').scrollTop=$('eventLog').scrollHeight;persist();}
+function persist(){try{localStorage.setItem(STORAGE_KEY,JSON.stringify(state));}catch(e){}}
+function syncInputs(){state.project=$('project').value;state.goal=$('goal').value;state.rubric=$('rubric').value;state.v1=$('v1').value;state.v2=$('v2').value;}
+function setStage(n){state.stage=n;document.querySelectorAll('.step').forEach((s,i)=>s.classList.toggle('active',i===n));persist();}
+function renderGaps(){
+ $('diagnosisState').innerHTML='<span class="status done">证据门：样例已通过结构检查</span><p>样例定位：V1 · 第 1 段（本地预置 locator；不是文件解析结果）。</p>';
+ $('gaps').innerHTML='<div class="gapitem"><b>G-01｜研究问题缺少可核对来源</b><p>证据：V1 第 1 段写了“分析学习任务管理工具”，没有引用研究资料或原始要求。</p><p><span class="tag">版本 V1</span><span class="tag">定位 第 1 段</span><span class="tag">状态 verified（仅样例）</span></p></div><div class="gapitem"><b>G-02｜执行步骤无法让另一人独立复现</b><p>证据：V1 只写“收集资料、进行分析、形成报告”，缺少操作、产物与自检标准。</p><p><span class="tag">版本 V1</span><span class="tag">定位 第 2 段</span><span class="tag">状态 verified（仅样例）</span></p></div><div class="gapitem"><b>G-03｜效果结论缺少测量口径</b><p>证据：V1 写“预计能够提升效率”，但没有基线、样本、指标或实测结果。</p><p><span class="tag">版本 V1</span><span class="tag">定位 第 3 段</span><span class="tag">状态 verified（仅样例）</span></p></div>';
+}
+function renderAction(){
+ $('actionState').innerHTML='<span class="status done">行动卡已生成（预置样例）</span>';
+ $('actionCard').innerHTML='<div class="evidence"><b>动作 A-01｜补齐方法与验收口径</b><p><b>输入版本：</b>V1　<b>目标位置：</b>第 2–3 段</p><p><b>具体动作：</b>把“收集资料、进行分析”改写成 3 个可复现步骤；每步写明输入、操作和产物。将“提升效率”改成待验证假设，补上基线、计时方法和结果限制。</p><p><b>理由：</b>解决 G-02、G-03；避免把预测当作结果。</p><p><b>预期产物：</b>一段可复现的方法说明 + 一段指标定义。</p><p><b>自检：</b>队友只看这段文字，能否说明先做什么、输出什么、如何判断完成？</p><p><b>失败下一步：</b>若指标无法测量，标为 unknown，并写明需要收集的数据。</p></div>';
+ $('startAction').disabled=false;$('submitV2').disabled=false;
+}
+function routeText(kind){
+ const m={
+ confused:{title:'换讲法分支已保存',body:'存档点：项目 + 当前版本 + 当前定位 + 卡点 + 下一动作。样例解释：把“对照组”理解成实验里的比较对象——只有在条件尽量一致时，才知道变化可能来自哪一个因素。回到原文后，请在方法表中补一格：实验组和对照组分别有什么不同？',resume:'解释后回到原文第 2 段，完成对比表一格。'},
+ tired:{title:'休息分支已保存',body:'已保存当前现场。你可以休息、延长，或结束本轮；计时结束不会自动开始任务，也不会自动勾选完成。',resume:'回来后由你确认是否继续原来的微动作。'},
+ blocked:{title:'技术求助分支已保存',body:'记录字段：错误/卡点、已试办法、当前材料版本、求助对象、等待的返回条件。不要重复运行同一失败步骤；材料不足时标记 blocked。',resume:'确认依赖条件满足后，再从原微动作继续。'},
+ interrupted:{title:'临时事项分支已保存',body:'已保存项目、版本、当前位置、已完成内容、承诺和返回条件。外部条件没有实际确认前，不把“时间到了”当成条件满足。',resume:'回来先确认项目与版本，再继续原步骤。'}
+ };return m[kind];
+}
+function updateMetrics(){$('versionMetric').textContent=state.submitted?'V2':state.version;$('passMetric').textContent=state.pass;$('remainMetric').textContent=state.reviewed?state.remaining.length:'—';}
+$('diagnose').addEventListener('click',()=>{syncInputs();state.diagnosed=true;state.stage=1;renderGaps();log('A 诊断：已显示预置样例差距；正式版须由真实文件解析与来源校验提供证据。');setStage(1);});
+$('startAction').addEventListener('click',()=>{if(!state.diagnosed)return;state.actionReady=true;state.started=true;state.checkpoint={project:$('project').value,version:'V1',locator:'第 2–3 段',blocker:null,nextAction:'补齐方法步骤与指标口径',savedAt:new Date().toISOString()};state.version='V1';renderAction();$('v2Status').textContent='执行中';$('v2Status').className='status pending';log('开始执行 A-01；保存当前存档点，下一动作已明确。');setStage(2);});
+$('saveCheckpoint').addEventListener('click',()=>{syncInputs();state.checkpoint={project:$('project').value,version:state.submitted?'V2':'V1',locator:'第 2–3 段',blocker:state.route||null,nextAction:state.reviewed&&state.remaining.length?'处理剩余差距':'补齐方法步骤与指标口径',savedAt:new Date().toISOString()};log('存档点已保存：'+JSON.stringify(state.checkpoint));});
+$('submitV2').addEventListener('click',()=>{syncInputs();if(!$('v2').value.trim()){alert('请先实际编辑 V2 内容，再提交。');return;}state.v2=$('v2').value;state.submitted=true;state.reviewed=false;state.confirmed=false;state.version='V2';$('v2Status').textContent='pending_review';$('v2Status').className='status pending';$('reviewV2').disabled=false;$('reviewState').textContent='V2 已提交；进入待复核状态，尚未算完成。';log('提交 V2，版本状态变为 pending_review；等待 A 按原判据复核。');setStage(3);updateMetrics();});
+$('reviewV2').addEventListener('click',()=>{if(!state.submitted)return;const text=$('v2').value.toLowerCase();const checks=[
+ {label:'判据 1：研究问题与来源',pass:/来源|引用|文献|作者|doi|url|参考/.test(text),why:'检查 V2 是否补入可核对来源标识。'},
+ {label:'判据 2：可复现的方法步骤',pass:/步骤|首先|然后|输入|输出|操作|自检|复现/.test(text),why:'检查 V2 是否包含可执行步骤字段。'},
+ {label:'判据 3：结果指标与限制',pass:/基线|指标|计时|样本|限制|未知|待验证|未测量/.test(text),why:'检查 V2 是否区分实测结果、假设与限制。'}
+ ];
+ state.remaining=[];state.pass=0;
+ $('reviewResults').innerHTML=checks.map((c,i)=>{const status=c.pass?'pass':'fail';if(c.pass)state.pass++;else state.remaining.push({id:'G-0'+(i+1),label:c.label,reason:c.why});return '<div class="gapitem"><b>'+c.label+'</b><p>'+c.why+'</p><span class="status '+(c.pass?'done':'blocked')+'">'+(c.pass?'pass（规则命中，需人工核对）':'fail（缺少可识别字段）')+'</span></div>';}).join('');
+ state.reviewed=true;state.confirmed=false;$('confirmReview').disabled=false;$('reviewState').innerHTML='<span class="status pending">已生成样例复核，等待人工确认</span><p>注意：这里是关键词规则模拟，不代表语义正确。正式版必须检查原文证据和版本。</p>';
+ $('remaining').innerHTML=state.remaining.length?state.remaining.map(g=>'<div class="gapitem"><b>'+g.id+'｜'+g.label+'</b><p>'+g.reason+'</p></div>').join(''):'当前规则未发现剩余项；仍须人工确认，不能仅凭规则自动通过。';
+ $('nextRound').disabled=state.remaining.length===0;$('confirmReview').disabled=false;log('A 复核样例完成：pass='+state.pass+'，剩余='+state.remaining.length+'。结果仍需人工确认。');setStage(4);updateMetrics();});
+$('confirmReview').addEventListener('click',()=>{if(!state.reviewed)return;state.confirmed=true;log('人工确认：已确认当前样例复核记录。正式版应保存 review_id、确认人和时间。');$('reviewState').innerHTML+='<p class="successline">本轮复核已人工确认（仅原型本地状态）。</p>';if(state.remaining.length)$('nextRound').disabled=false;setStage(5);});
+$('nextRound').addEventListener('click',()=>{if(!state.reviewed||!state.remaining.length)return;const g=state.remaining[0];$('actionState').innerHTML='<span class="status pending">下一轮只处理剩余问题</span>'; $('actionCard').innerHTML='<div class="evidence"><b>下一轮行动卡｜'+g.id+'</b><p>'+g.label+'</p><p>具体下一步：根据原始判据补齐证据或字段；缺少数据时标记 unknown，不编造结果。</p><p>已通过的判据与锁定任务保持不变。</p></div>';log('B 仅为剩余问题 '+g.id+' 生成下一轮行动卡；已通过项保持不变。');setStage(2);});
+document.querySelectorAll('[data-route]').forEach(b=>b.addEventListener('click',()=>{syncInputs();state.route=b.dataset.route;state.checkpoint={project:$('project').value,version:state.submitted?'V2':'V1',locator:'第 2–3 段',blocker:state.route,nextAction:'补齐方法步骤与指标口径',savedAt:new Date().toISOString()};const r=routeText(state.route);$('routePanel').classList.remove('hidden');$('routePanel').innerHTML='<b>'+r.title+'</b><p>'+r.body+'</p><p><b>接回动作：</b>'+r.resume+'</p>'; $('resume').disabled=false;$('extendRest').classList.toggle('hidden',state.route!=='tired');$('endRest').classList.toggle('hidden',state.route!=='tired');log('中断：用户主动选择 '+state.route+'；存档已写入当前浏览器。');}));
+$('resume').addEventListener('click',()=>{if(!state.checkpoint)return;const cp=state.checkpoint;$('routePanel').innerHTML='<b>请确认恢复现场</b><p>项目：'+cp.project+'</p><p>版本：'+cp.version+'；位置：'+cp.locator+'</p><p>下一步：'+cp.nextAction+'</p><p>请检查是否为正确项目/版本；确认后才算接续。</p><button id="confirmResume" class="primary">确认接回原步骤</button>'; $('resume').disabled=true;$('confirmResume').addEventListener('click',()=>{log('用户确认恢复：'+cp.project+' / '+cp.version+' / '+cp.locator+' / '+cp.nextAction);$('routePanel').innerHTML='<b class="successline">已接回原步骤（本地原型）</b><p>'+cp.nextAction+'</p>';});});
+$('extendRest').addEventListener('click',()=>log('用户选择延长休息 5 分钟；原任务现场不变。原型不保证后台准时通知。'));
+$('endRest').addEventListener('click',()=>{log('用户选择今天先结束；现场与下一动作保留，不再催回。');$('routePanel').innerHTML+='<p class="successline">本轮结束，已保留存档。</p>';});
+$('export').addEventListener('click',()=>{syncInputs();const blob=new Blob([JSON.stringify({...state,exportedAt:new Date().toISOString()},null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='shanganya-demo-run-record.json';a.click();URL.revokeObjectURL(a.href);log('已导出 JSON 运行记录。');});
+$('clearState').addEventListener('click',()=>{localStorage.removeItem(STORAGE_KEY);log('已清除此浏览器的演示存档（页面当前日志保留至刷新）。');});
+$('reset').addEventListener('click',()=>{if(!confirm('重置当前页面演示状态？'))return;localStorage.removeItem(STORAGE_KEY);location.reload();});
+try{const old=localStorage.getItem(STORAGE_KEY);if(old){const saved=JSON.parse(old);if(saved.events&&saved.events.length){state.events=saved.events;state.checkpoint=saved.checkpoint;state.route=saved.route;$('eventLog').textContent=state.events.map(e=>'['+new Date(e.time).toLocaleTimeString()+'] '+e.message).join('\n');}}}catch(e){}
+})();
+</script>
+</body></html>

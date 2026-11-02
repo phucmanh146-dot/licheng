@@ -1,0 +1,7 @@
+.mini-overlay{position:fixed;top:0;right:0;bottom:0;left:0;background:rgba(8,28,31,.6);z-index:20000;display:flex;align-items:center;justify-content:center;padding:20px;overflow-y:auto}
+.mini-dialog{width:100%;max-width:650px;max-height:90vh;overflow-y:auto;background:#fcf6e8;color:#223e39;border-radius:22px;padding:26px;box-shadow:0 25px 70px rgba(0,0,0,.3);font-size:17px;line-height:1.7}
+.mini-dialog h2{font-size:25px;margin:0 0 15px}.mini-dialog textarea,.mini-dialog input{box-sizing:border-box;width:100%;display:block;font:inherit;background:#fffdf7;color:#24453d;border:1px solid #97b6a8;border-radius:10px;padding:12px;user-select:text;-webkit-user-select:text}
+.mini-dialog button{border:1px solid #6b9788;border-radius:10px;background:#254e44;color:#fff8e9;padding:12px 18px;min-height:44px;margin:12px 8px 0 0;font:inherit;cursor:pointer}.mini-dialog button:focus{outline:3px solid #dbac53;outline-offset:3px}
+.mini-source-text{user-select:text;-webkit-user-select:text;overflow-wrap:break-word}.mini-edition-note{padding:12px 18px;background:#e5eee4;color:#315345;border-radius:12px;font-size:16px;line-height:1.7;margin:12px 0}
+.mini-library-more{margin:20px 0;padding:14px 24px;border-radius:12px;font-size:17px}
+.mini-fallback-dialog{position:fixed;top:5vh;left:5%;right:5%;bottom:auto;z-index:21000;max-height:90vh;overflow-y:auto;width:90%;max-width:650px;margin:0 auto;box-shadow:0 0 0 100vmax rgba(8,28,31,.6)}

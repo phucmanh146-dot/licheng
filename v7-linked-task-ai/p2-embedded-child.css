@@ -1,0 +1,11 @@
+/* Applied only when /ai-p2.html?embedded=1 lives inside the original app */
+body.p2-embedded .p2-side-bottom .p2-back,
+body.p2-embedded .p2-workbench{display:none!important}
+body.p2-embedded .p2-side{padding-top:16px;width:232px;flex-basis:232px}
+body.p2-embedded .p2-topbar{height:63px;min-height:63px}
+body.p2-embedded .p2-top-title span{background:#e7f4ea;color:#307351}
+body.p2-embedded .p2-shell{height:100dvh;min-height:340px}
+@media(max-width:850px){body.p2-embedded .p2-side{width:210px;flex-basis:210px}}
+
+body.p2-embedded .p2-top-title span{font-size:11px}
+body.p2-embedded .p2-side-bottom p{font-size:11px;line-height:1.45}

@@ -1,0 +1,30 @@
+.sy-source-links{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}
+.sy-source-link,.sykv-note-link{display:inline-flex;align-items:center;padding:10px 14px;border:1px solid #a0bbad;border-radius:12px;background:#f7faf5;color:#1d5742;text-decoration:none;font-size:14px;font-weight:650;overflow-wrap:anywhere}
+.sy-source-link:hover,.sykv-note-link:hover{background:#e2f0df;color:#123a2b}
+.sy-file-drop{border:2px dashed #a9b9ad;border-radius:18px;padding:18px;background:#f0f4ed;transition:background .15s}
+.sy-file-drop.is-over,.ti-drop.is-over{background:#dcf3da;border-color:#237253}
+.sy-file-drop input{max-width:100%;font-size:15px}.sy-file-drop:focus-within{outline:2px solid #36765b;outline-offset:3px}
+.sykv-share{display:grid;grid-template-columns:1fr auto;gap:12px;border-bottom:1px solid #ccd7ce;padding-bottom:20px;margin-bottom:22px}
+.sykv-share h3{grid-column:1/-1;margin:0;font-size:18px}.sykv-share input{min-width:0;padding:13px;border:1px solid #a4b7aa;border-radius:12px;background:white;color:#203b32;font-size:15px}
+.sy-import-help{box-sizing:border-box;width:min(580px,94vw);max-height:85dvh;overflow:auto;border:1px solid #d0dccf;border-radius:20px;padding:28px;color:#244339;background:#fbfcf7;font:16px/1.8 system-ui,sans-serif}
+.sy-import-help::backdrop{background:#081e19b3}.sy-import-help h2{font-size:22px;line-height:1.4}.sy-import-help button{display:block;margin-top:20px;padding:10px 24px;border-radius:10px;border:0;background:#245f46;color:white;font-size:16px;cursor:pointer}
+.sy-cc-connect{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;padding:20px;margin-bottom:20px;border:1px solid #a9bfb0;background:#e7f1e6;border-radius:16px;color:#244539}
+.sy-cc-connect label{display:grid;gap:8px;font-weight:650}.sy-cc-connect select{min-width:0;width:100%;padding:12px;border:1px solid #a1b7a9;border-radius:10px;background:white;color:#244539;font-size:14px}
+.sy-cc-connect button{align-self:end;min-height:44px;font-size:14px}.sy-cc-connect p{grid-column:1/-1;margin:0;font-size:14px;overflow-wrap:anywhere}
+.sy-deadline-banner{box-sizing:border-box;position:fixed;z-index:2147483000;top:18px;right:22px;width:min(460px,calc(100vw - 28px));max-height:80dvh;overflow:auto;padding:16px 18px;background:#f5fbf1;color:#193f30;border:1px solid #b9d5bd;border-radius:18px;box-shadow:0 12px 38px #071d2740;font:14px/1.5 system-ui,-apple-system,'Microsoft YaHei',sans-serif;text-align:left;animation:sy-banner-in .22s ease-out}
+.sy-deadline-banner[hidden]{display:none!important}.sy-deadline-banner header{display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:13px;color:#4a735a;margin-bottom:8px}
+.sy-deadline-banner strong{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere;font-size:17px;line-height:1.45}
+.sy-deadline-banner p{margin:8px 0}.sy-deadline-banner label{display:grid;gap:5px}.sy-deadline-banner input{box-sizing:border-box;width:100%;min-width:0;padding:9px 12px;color:#214334;background:#fff;border:1px solid #c3d7c8;border-radius:10px;font-size:14px}
+.sy-deadline-actions{display:flex;flex-wrap:wrap;gap:7px;margin:12px 0 9px}.sy-deadline-banner button{cursor:pointer;border:1px solid #bed0c2;border-radius:10px;background:white;color:#24553f;font-size:13px;font-weight:600;padding:8px 11px}
+.sy-deadline-banner button[data-deadline=stuck]{background:#276849;color:#fff;border-color:#276849}.sy-deadline-banner small{display:block;color:#557360;font-size:12px}.sy-deadline-banner header button{padding:3px 9px;font-weight:400}
+.sy-support-dialog.sy-captain-check{max-width:680px}.sy-captain-check .sy-dialog-lead{font-size:18px;overflow-wrap:anywhere}.sy-captain-check .sy-checkin-grid button{font-size:16px;padding:20px 12px;min-height:70px}
+.ti-connector-actions{flex-wrap:wrap}.ti-connector-actions button{font-size:15px}.ti-connector p{font-size:15px}.ti-connector input{max-width:100%;min-width:0}
+@keyframes sy-banner-in{from{transform:translateY(-10px);opacity:0}to{transform:translateY(0);opacity:1}}
+@media(max-width:680px){.sykv-share,.sy-cc-connect{grid-template-columns:1fr}.sy-deadline-banner{right:14px;top:10px}.sy-deadline-actions button{flex:1}.sy-captain-check .sy-checkin-grid{grid-template-columns:1fr 1fr}.sy-import-help{padding:20px}}
+@media(prefers-reduced-motion:reduce){.sy-deadline-banner{animation:none}}
+.sy-import-previews{display:flex;flex-wrap:wrap;gap:12px;margin:12px 0}
+.sy-import-previews img{width:120px;height:90px;object-fit:contain;border:1px solid #9db6a8;border-radius:10px;background:#fff}
+.sy-captain-check .sy-checkin-grid{gap:12px}
+.sy-captain-check .voyage-captain{display:none}
+.sy-captain-check .sy-checkin-grid button{min-height:60px;text-align:left}
+.sy-captain-check .sy-dialog-body>p{line-height:1.7}

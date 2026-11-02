@@ -1,0 +1,57 @@
+.sy-route-builder{border:1px solid rgba(119,185,166,0.2902);border:1px solid #77b9a64a;border-radius:24px;padding:26px;background:linear-gradient(135deg,rgba(23,61,55,0.9098),rgba(18,47,48,0.9294));background:linear-gradient(135deg,#173d37e8,#122f30ed);color:#edf5ef;box-shadow:0 18px 50px rgba(0,27,36,0.2000);box-shadow:0 18px 50px #001b2433;margin:20px 0;}
+.sy-route-heading{display:flex;justify-content:space-between;align-items:center;}
+.sy-route-heading h2{margin:7px 0;font-size:26px;}
+.sy-route-heading small{letter-spacing:3px;color:#b5d691;}
+.sy-route-heading p,.sy-route-footnote{color:#b5cbc4;font-size:13px;line-height:1.7;}
+.sy-route-orbit{font-size:48px;color:#bfd8a2;transform:rotate(-12deg);padding:5px 28px;border-radius:50%;background:rgba(100,155,129,0.3137);background:#649b8150;box-shadow:8px 12px 0 rgba(7,30,28,0.2667);box-shadow:8px 12px 0 #071e1c44;}
+.sy-route-brands{display:flex;flex-wrap:wrap;grid-gap:10px;--mini-row-gap:10px;--mini-column-gap:10px;gap:10px;margin:18px 0;}
+.sy-route-brands a{display:flex;align-items:center;grid-gap:8px;--mini-row-gap:8px;--mini-column-gap:8px;gap:8px;color:#e7eeeb;padding:7px 11px;border:1px solid rgba(194,213,205,0.1882);border:1px solid #c2d5cd30;border-radius:10px;text-decoration:none;font-size:12px;}
+.sy-route-brands img{object-fit:contain;background:#fff;border-radius:4px;padding:2px;}
+.sy-route-fields{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;grid-gap:12px;--mini-row-gap:12px;--mini-column-gap:12px;gap:12px;}
+.sy-route-builder label{display:grid;grid-gap:7px;--mini-row-gap:7px;--mini-column-gap:7px;gap:7px;font-size:13px;margin:12px 0;}
+.sy-route-builder input:not([type=checkbox]),.sy-route-builder select,.sy-route-builder textarea{width:100%;border:1px solid rgba(138,173,157,0.4000);border:1px solid #8aad9d66;border-radius:10px;padding:11px 12px;background:#102b29;color:#edf5ef;font:inherit;}
+.sy-route-builder textarea{resize:vertical;min-height:70px;}
+.sy-route-builder .sy-route-search{display:flex;align-items:center;}
+.sy-route-search input{width:17px;height:17px;accent-color:#bfe49f;}
+.sy-route-buttons{display:flex;grid-gap:10px;--mini-row-gap:10px;--mini-column-gap:10px;gap:10px;flex-wrap:wrap;}
+.sy-route-buttons button{font:inherit;}
+.sy-route-materials{padding:14px;background:#11302f;border-radius:14px;}
+.sy-route-materials pre{white-space:pre-wrap;max-height:220px;overflow:auto;font:13px/1.8 inherit;}
+.sy-route-materials article{border-bottom:1px solid rgba(170,197,189,0.2000);border-bottom:1px solid #aac5bd33;padding:15px 0;}
+#syRouteStatus{color:#e2d7ad;line-height:1.8;font-size:13px;margin:16px 0;word-wrap:break-word;overflow-wrap:break-word;overflow-wrap:anywhere;}
+.sy-route-result{margin-top:25px;border-top:1px dashed #9fc5b9;padding-top:20px;}
+.sy-route-result header{display:flex;grid-gap:12px;--mini-row-gap:12px;--mini-column-gap:12px;gap:12px;flex-wrap:wrap;align-items:center;}
+.sy-route-result h3{font-size:23px;}
+.sy-route-islands{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));grid-gap:30px;--mini-row-gap:30px;--mini-column-gap:30px;gap:30px;list-style:none;margin:26px 0;padding:0;}
+.sy-route-island{position:relative;background:linear-gradient(145deg,#f1f3df,#dfe5c5);border-radius:18px;color:#23473c;padding:23px;box-shadow:0 9px 0 #809781,0 17px 18px rgba(4,26,32,0.3333);box-shadow:0 9px 0 #809781,0 17px 18px #041a2055;transform:perspective(1000px) rotateX(2deg);}
+.sy-route-island-top{display:flex;grid-gap:12px;--mini-row-gap:12px;--mini-column-gap:12px;gap:12px;align-items:center;}
+.sy-route-island-top h4{flex:1;margin:0;}
+.sy-island-number{background:#245143;color:#e5edcc;font:22px monospace;border-radius:12px;padding:10px;}
+.sy-route-goal{background:#c1d4b7;padding:10px;border-radius:9px;font-size:13px;}
+.sy-route-island ol{font-size:14px;line-height:1.9;padding-left:20px;}
+.sy-route-cites{font-size:12px;word-wrap:break-word;overflow-wrap:break-word;overflow-wrap:anywhere;}
+.sy-route-cites a{color:#285e5c;}
+.sy-route-island button{color:#23473c;border-color:rgba(73,107,85,0.2667);border-color:#496b5544;}
+.sy-route-result details{font-size:12px;color:#cbdfd7;line-height:1.8;}
+/* A course map is a reading surface, so it receives a full page-sized dialog. */
+#questOverlay .quest-card{width:min(1080px,calc(100vw - 48px));max-width:1080px;box-sizing:border-box;overflow-x:hidden;padding:34px 40px;border-radius:30px;}
+#questOverlay #questTitle{font-size:28px;line-height:1.45;overflow-wrap:anywhere;padding-right:34px;}
+#questOverlay #questSub{font-size:16px;line-height:1.7;overflow-wrap:anywhere;}
+#questOverlay .sy-voyage-scene{padding:30px;border-radius:24px;}
+#questOverlay .sy-island-route{grid-template-columns:repeat(3,minmax(0,1fr));gap:26px 32px;}
+#questOverlay .sy-island-label{min-width:0;}
+#questOverlay .sy-island-label strong{font-size:15px;line-height:1.6;}
+#questOverlay .sy-island-label small{font-size:16px;line-height:1.8;overflow-wrap:anywhere;}
+#questOverlay .quest-now{padding:28px;border-radius:22px;margin-top:24px;}
+#questOverlay .quest-now-text{font-size:23px;line-height:1.6;overflow-wrap:anywhere;}
+#questOverlay .quest-preview-row{grid-template-columns:32px minmax(0,1fr) 36px;}
+#questOverlay .quest-link-row input,#questOverlay .quest-preview-row input{min-width:0;}
+.sy-route-island-top{min-width:0;align-items:flex-start}.sy-route-island-top h4{overflow-wrap:anywhere;font-size:21px;line-height:1.5}.sy-route-branch-button{margin-top:12px}.sy-route-island ol{margin:18px 0}.sy-route-fields>*{min-width:0}.sy-route-heading>div{min-width:0}
+@media(max-width:700px){#questOverlay .quest-card{width:calc(100vw - 24px);padding:24px 18px}#questOverlay .sy-voyage-scene{padding:22px 15px}#questOverlay .sy-island-route{grid-template-columns:1fr;gap:22px}#questOverlay .sy-island-stop{padding-top:0!important;display:grid;grid-template-columns:78px minmax(0,1fr);gap:16px}#questOverlay .sy-island-stop:after{display:none!important}#questOverlay .sy-island-label{text-align:left;margin-top:0}#questOverlay #questTitle{font-size:23px}#questOverlay .quest-now-text{font-size:20px}}
+@media(max-width:760px){.sy-route-fields{grid-template-columns:1fr 1fr;}
+.sy-route-islands{grid-template-columns:1fr;}
+.sy-route-builder{padding:18px;}
+.sy-route-orbit{display:none;}
+}
+
+  

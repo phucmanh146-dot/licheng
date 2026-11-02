@@ -1,0 +1,19 @@
+.p2-answer-actions{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:12px 0 4px}
+.p2-mindmap-create,.p2-heygen-create{display:inline-flex;align-items:center;gap:6px;border:1px solid #cbded4;border-radius:10px;padding:9px 12px;background:#f5faf7;color:#1f5b42;font-size:12px;font-weight:750;cursor:pointer}
+.p2-mindmap-create:hover,.p2-heygen-create:hover{background:#e9f5ee}
+.p2-mindmap-dialog{width:min(1000px,calc(100vw - 24px));max-width:1000px;max-height:90vh;overflow:auto;padding:0;border:1px solid #d6e4dc;border-radius:18px;background:#fff;color:#17382b;box-shadow:0 25px 80px #07180f35}
+.p2-mindmap-dialog::backdrop{background:#07140d9c;backdrop-filter:blur(3px)}
+.p2-mindmap-shell{padding:20px}
+.p2-mindmap-head{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.p2-mindmap-title{font-size:19px;font-weight:850}
+.p2-mindmap-close,.p2-mindmap-copy{border:1px solid #d6e4dc;border-radius:9px;background:#fff;color:#315644;padding:8px 12px;font-size:12px;font-weight:700;cursor:pointer}
+.p2-mindmap-hint{font-size:12px;line-height:1.6;color:#687a70}
+.p2-mindmap-canvas{display:grid;grid-template-columns:minmax(170px,230px) minmax(0,1fr);gap:18px;align-items:stretch;margin:16px 0}
+.p2-mindmap-core{display:flex;align-items:center;justify-content:center;text-align:center;align-self:center;min-height:90px;padding:18px;border-radius:18px;background:#1d513c;color:#fff;font-weight:850;line-height:1.5;overflow-wrap:anywhere;box-shadow:0 8px 22px #1d513c22}
+.p2-mindmap-branches{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;position:relative}
+.p2-mindmap-branch{min-width:0;padding:12px 13px;border:1px solid #d9e7df;border-left:4px solid #77b796;border-radius:12px;background:#f8fbf9;overflow-wrap:anywhere}
+.p2-mindmap-branch-title{font-size:13px;font-weight:800;color:#20563e;line-height:1.5}
+.p2-mindmap-list{margin:7px 0 0;padding-left:18px;color:#405b4c;font-size:12px;line-height:1.65}
+.p2-mindmap-list li+li{margin-top:4px}
+.p2-mindmap-actions{display:flex;justify-content:flex-end}
+@media(max-width:650px){.p2-mindmap-shell{padding:13px}.p2-mindmap-canvas{grid-template-columns:1fr}.p2-mindmap-core{min-height:60px}.p2-mindmap-branches{grid-template-columns:1fr}.p2-mindmap-title{font-size:16px}}

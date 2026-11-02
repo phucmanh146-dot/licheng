@@ -1,0 +1,9 @@
+/* Harmonize Obsidian, WeChat, web sources into one focused workspace */
+#knowledgeBody .pma-source-drawer{border:1px solid #d9e6e8;border-radius:13px;background:#fafdfe;margin:10px 0;padding:3px 13px}
+#knowledgeBody .pma-source-drawer>summary{font-size:13px;font-weight:750;color:#36646d;padding:11px 5px;cursor:pointer}
+#knowledgeBody .pma-source-drawer[open]>summary{border-bottom:1px solid #e1eaed;margin-bottom:12px}
+#knowledgeBody .pma-source-drawer>#sywx-root{margin:0 0 13px;box-shadow:none;border-radius:13px}
+#knowledgeBody .pma-source-drawer>.sykv-toolbar{margin:0 0 13px}
+#pma-root .pma-quick-nav{display:flex;gap:9px;flex-wrap:wrap;background:#f3fafb;border-radius:13px;border:1px solid #d7e5e8;padding:11px;margin:4px 0 14px}
+#pma-root .pma-quick-nav button{border:1px solid #c0d8db;background:#fff;border-radius:99px;padding:9px 12px;font-weight:750;color:#225e68;font-size:12px;cursor:pointer}
+#pma-root .pma-quick-nav button:hover{background:#e1f1f3}

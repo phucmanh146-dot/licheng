@@ -1,0 +1,15 @@
+#pma-root .pma-material{flex-wrap:wrap;align-items:flex-start}
+#pma-root .pmas-inline-original{flex-basis:100%;width:100%;margin:6px 0 0 24px;border-top:1px dashed #b9d2df;padding:7px 0;color:#305a70}
+#pma-root .pmas-inline-original>summary{cursor:pointer;font-size:12px;font-weight:750;color:#275e7a;padding:4px 1px}
+#pma-root .pmas-raw,.sykv-dialog .pmas-raw{white-space:pre-wrap;overflow-wrap:anywhere;word-break:break-word;font-size:12px;line-height:1.85;font-family:inherit;background:#fbfdff;border:1px solid #e0e9f1;border-radius:9px;padding:13px;max-height:450px;overflow:auto;max-width:100%}
+#pma-root .pmas-source-links{display:grid;gap:4px;margin:12px 0}
+#pma-root .pmas-source-links strong{font-size:12px}
+#pma-root .pmas-source-links a{color:#245f7d;font-size:11px;white-space:normal;overflow-wrap:anywhere}
+#pma-root .pmas-local-refs summary{font-size:11px;cursor:pointer}
+#pma-root .pmas-local-refs code{display:block;font-size:11px;white-space:pre-wrap;overflow-wrap:anywhere;background:#e9f2f7;margin:7px 0;padding:6px}
+#pma-root .pmas-actions{display:flex;gap:8px;flex-wrap:wrap;margin:11px 0}
+#pma-root .pmas-actions button,.sykv-dialog .pmas-import{background:#e8f4fa;color:#205e7d;border:1px solid #a8c7d9;border-radius:9px;font-size:11px;font-weight:720;padding:9px 12px;cursor:pointer}
+.sykv-dialog .pmas-search-source{border:1px solid #d7e4ea;border-radius:10px;padding:10px;margin:10px 0;max-width:100%}
+.sykv-dialog .pmas-search-source summary{cursor:pointer;font-size:12px;color:#27617d;font-weight:720}
+.sykv-dialog .pmas-note{font-size:12px;line-height:1.7;color:#56707d;word-break:break-word}
+.sykv-dialog .sykv-snippet{white-space:pre-wrap;overflow-wrap:anywhere;word-break:break-word;max-height:130px;overflow:hidden}
