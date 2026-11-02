@@ -127,6 +127,13 @@ def logout(request: Request):
     return response
 
 
+@app.get('/api/v1/engineering/health')
+def engineering_health(request: Request, deep: bool = False):
+    identity(request)
+    import engineering_health as probes
+    return probes.report(deep=deep)
+
+
 @app.get('/api/v1/health')
 def health(request: Request):
     identity(request)
@@ -184,7 +191,7 @@ def grant(request: Request, pid: str, data: dict):
 
 HANDLERS = {'context':team_inputs.save_context, 'member':team_inputs.save_member,
             'artifact-import':artifact_store.import_file, 'apply':team.apply,
-            'feedback':team.feedback, 'review-receive':team_handoff.receive_review,
+            'feedback':team.feedback, 'review-receive':team_handoff.receive_manual_review,
             'recovery-pause':team_recovery.pause, 'recovery-condition':team_recovery.signal,
             'recovery-resume':team_recovery.resume, 'recovery-attempt':team_recovery.attempt,
             'advance-review':team_revision.advance, 'runtime-focus':team_runtime.focus,
