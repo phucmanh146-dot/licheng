@@ -8,7 +8,7 @@
 
 - Cross-Encoder 支持 Hugging Face TEI 的 `/rerank`（`texts` 参数）以及 Jina/Cohere 风格 `documents` 参数；真实服务没有响应时仍明确降级，不伪造 AVAILABLE。
 - 增加 `engineering_health.py` 和登录保护的 `GET /api/v1/engineering/health`（Docker 生产入口）。普通探测区分已配置与真实可用；`?deep=1` 执行 BGE-M3 embedding 与 reranker 的真实推理探测。
-- `compose.engineering.yml` 增加持久化 Ollama、BGE-M3 模型拉取、TEI BGE Reranker、Qdrant、PostgreSQL、Redis；PostgreSQL/Redis 有健康检查和持久化卷。
+- `compose.engineering.yml` 增加持久化 Ollama、BGE-M3 模型拉取、TEI BGE Reranker、Qdrant、PostgreSQL、Redis 和 MinIO/S3 对象存储；PostgreSQL/Redis 有健康检查和持久化卷。
 - 增加 OCR 人工标注评测器 `evaluate_ocr.py`，输出 corpus CER、字符准确率和低置信度数量；没有真实扫描件+人工转录时不能产出“准确率通过”结论。
 - 增加 `verify_two_real_projects.py`，必须传两个不同项目 ID，并核对 V1/V2 文件哈希、显式执行人、非执行者人工复核回执及最终人工确认。
 - 增加人工复核专用入口 `review-manual`：复核包必须声明 `method=manual`、`content_read_confirmed=true`，且服务端仍验证当前提交版本、非执行者身份、逐项判据和原文证据引用。
