@@ -65,6 +65,29 @@ services:
       - reranker-cache:/data/huggingface
     restart: unless-stopped
 
+  minio:
+    image: minio/minio:latest
+    command: [server, /data, --console-address, ":9001"]
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:?Set MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:?Set MINIO_ROOT_PASSWORD}
+    volumes:
+      - minio-data:/data
+    restart: unless-stopped
+
+  minio-init:
+    image: minio/mc:latest
+    depends_on:
+      minio:
+        condition: service_started
+    entrypoint: [/bin/sh, -c]
+    command: ["until mc alias set local http://minio:9000 $MINIO_ROOT_USER $MINIO_ROOT_PASSWORD; do sleep 2; done; mc mb --ignore-existing local/$SHANGAN_S3_BUCKET"]
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:?Set MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:?Set MINIO_ROOT_PASSWORD}
+      SHANGAN_S3_BUCKET: ${SHANGAN_S3_BUCKET:?Set SHANGAN_S3_BUCKET}
+    restart: "no"
+
   api:
     build:
       context: .
@@ -91,6 +114,8 @@ services:
         condition: service_completed_successfully
       reranker:
         condition: service_started
+      minio-init:
+        condition: service_completed_successfully
     restart: unless-stopped
 
   worker:
@@ -111,6 +136,8 @@ services:
         condition: service_completed_successfully
       reranker:
         condition: service_started
+      minio-init:
+        condition: service_completed_successfully
     restart: unless-stopped
 
 volumes:
@@ -119,3 +146,4 @@ volumes:
   redis-data:
   ollama-data:
   reranker-cache:
+  minio-data:
