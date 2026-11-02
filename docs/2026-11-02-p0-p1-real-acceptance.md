@@ -33,6 +33,24 @@
 
 - BGE-M3：deep health probe 返回实际 embedding dimensions=1024；在真实项目上完成语义查询并确认 Qdrant 点数、项目隔离、版本与 SHA256 过滤。
 - BGE Reranker：deep health probe 返回 provider=tei、scored_candidates=2；准备至少30条人工标注 query/相关 artifact-version-locator，运行 `python evaluate_reranker.py annotations.json --output reranker-report.json`，对照 RRF 与 Cross-Encoder 的 Recall@5、Precision@5、MRR@10、nDCG@5，并保留逐题 trace。只有真实 Cross-Encoder 每题都返回 AVAILABLE 才算完成评测；delta 才说明效果是否提升。
+
+  标注文件示例（至少30条；每条 expected 都要由人工核实到真实材料版本和 locator）：
+  ```json
+  {
+    "human_labeled": true,
+    "cases": [
+      {
+        "case_id": "q-001",
+        "project_id": "真实项目ID",
+        "query": "哪份V1材料能证明目标用户的真实增长？",
+        "filters": {"purpose": "input"},
+        "expected": [
+          {"artifact_id": "材料ID", "artifact_version": 1, "locator": "page:2/line:4"}
+        ]
+      }
+    ]
+  }
+  ```
 - 两个真实项目：分别上传真实 V1，完成实际任务执行并上传真实 V2；执行：
   ```powershell
   python verify_two_real_projects.py --project-id <真实项目ID1> --project-id <真实项目ID2>
