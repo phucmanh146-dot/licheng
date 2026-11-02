@@ -26,18 +26,21 @@ class UnifiedContractTests(unittest.TestCase):
         team_ai.bind_selected_location(ambiguous)
         self.assertNotIn('current_locator',ambiguous)
 
-    def test_current_quote_ids_replace_conflicting_legacy_example(self):
+    def test_diagnosis_contract_does_not_seed_first_quote_into_every_gap(self):
         payload={'stage':'diagnosis','documents':[{'artifact_id':'new','artifact_version':7,
             'units':[{'locator':'line:3','text':'现有数据为1项，原始凭证待核。'}]}],
             'member_profiles':[{'member_id':'student'}],
             'output_contract':{'gaps':[{'evidence_refs':[{'quote':'原文引文'}],
-                'micro_steps':[{'input_version':{'artifact_id':'输入ID','artifact_version':1}}]}]}}
+                'micro_steps':[{'input_version':{'artifact_id':'输入ID','artifact_version':1}}]},
+                {'evidence_refs':[{'quote':'另一个原文引文'}], 'micro_steps':[{}]}]}}
         before=copy.deepcopy(payload)
-        result=team_ai.prepare_output_contract(payload)['gaps'][0]
-        ref=team_ai.resolve_quote_refs(result['evidence_refs'],payload['documents'])[0]
-        self.assertEqual(ref['artifact_version'],7)
-        self.assertEqual(result['current_locator'],'line:3')
-        self.assertEqual(result['micro_steps'][0]['input_version']['artifact_id'],'new')
+        result=team_ai.prepare_output_contract(payload)['gaps']
+        self.assertEqual(len(result),2)
+        for gap in result:
+            self.assertEqual(gap['evidence_refs'],[])
+            self.assertEqual(gap['current_locator'],'')
+            self.assertEqual(gap['current_artifact'],{'artifact_id':'','artifact_version':0})
+            self.assertEqual(gap['micro_steps'][0]['input_version'],{'artifact_id':'','artifact_version':0})
         self.assertEqual(payload,before)
 
     def test_review_contract_keeps_existing_schema(self):
