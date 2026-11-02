@@ -32,7 +32,7 @@
 ## P0 验收
 
 - BGE-M3：deep health probe 返回实际 embedding dimensions=1024；在真实项目上完成语义查询并确认 Qdrant 点数、项目隔离、版本与 SHA256 过滤。
-- BGE Reranker：deep health probe 返回 provider=tei、scored_candidates=2；用人工标注集对比 RRF 前后 MRR/nDCG/Recall@K，保留原始结果和模型 trace。
+- BGE Reranker：deep health probe 返回 provider=tei、scored_candidates=2；准备至少30条人工标注 query/相关 artifact-version-locator，运行 `python evaluate_reranker.py annotations.json --output reranker-report.json`，对照 RRF 与 Cross-Encoder 的 Recall@5、Precision@5、MRR@10、nDCG@5，并保留逐题 trace。只有真实 Cross-Encoder 每题都返回 AVAILABLE 才算完成评测；delta 才说明效果是否提升。
 - 两个真实项目：分别上传真实 V1，完成实际任务执行并上传真实 V2；执行：
   ```powershell
   python verify_two_real_projects.py --project-id <真实项目ID1> --project-id <真实项目ID2>
