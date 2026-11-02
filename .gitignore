@@ -3,3 +3,7 @@
 **/test-output/
 
 demo-runs/
+**/.growth-data/
+**/.growth-tmp/
+**/.growth-backup-*/
+**/obsidian-bridge/data.json

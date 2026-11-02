@@ -1,0 +1,9 @@
+{
+  "id": "shanganya-bridge",
+  "name": "上岸鸭 Bridge",
+  "version": "1.0.0",
+  "minAppVersion": "1.4.0",
+  "description": "把实际打开的笔记交给本机上岸鸭资料池，并将分析保存回当前知识库。",
+  "author": "上岸鸭",
+  "isDesktopOnly": true
+}
