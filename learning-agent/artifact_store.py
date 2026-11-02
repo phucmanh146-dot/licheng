@@ -26,10 +26,19 @@ def init(c):
       project_id TEXT, artifact_id TEXT, version INTEGER, filename TEXT,
       sha256 TEXT, data BLOB, parsed TEXT,
       PRIMARY KEY(project_id, artifact_id, version))''')
+    c.execute('''CREATE TABLE IF NOT EXISTS artifact_blobs(
+      project_id TEXT,artifact_id TEXT,version INTEGER,object_key TEXT,
+      PRIMARY KEY(project_id,artifact_id,version))''')
 
 
 def parse(filename, raw):
     suffix = PurePath(filename).suffix.lower()
+    if suffix in ('.png', '.jpg', '.jpeg', '.webp'):
+        from document_ocr import parse_image
+        try:
+            return parse_image(raw)
+        except (OSError, ImportError) as exc:
+            raise ValueError('图像无法读取或OCR依赖不可用') from exc
     units, stats = [], {}
     def add(locator, text):
         if text.strip():
@@ -117,6 +126,9 @@ def parse(filename, raw):
     else:
         raise ValueError('当前支持 TXT、MD、CSV、JSON、DOCX、PPTX 和文本 PDF；图片/视频请走求助入口')
     if not units:
+        if suffix == '.pdf':
+            from document_ocr import parse_scanned_pdf
+            return parse_scanned_pdf(raw)
         raise ValueError('没有提取到文本；扫描图像与视频未进行 OCR/音频识别')
     if len(units) > MAX_UNITS or sum(len(x['text']) for x in units) > MAX_TEXT:
         raise ValueError('正文超过本轮读取上限，请拆分材料；没有静默截断')
@@ -154,13 +166,17 @@ def import_file(data):
             'limitations': parsed['limitations']}
     catalog.append(meta)
     p['artifact_storage_required'] = True
+    import private_blobs
+    object_key = private_blobs.put(p['project_id'], raw)
     if purpose == 'input':
         p['diagnosis_needs_refresh'] = True
         p['proposal'] = None
     def write(c):
         init(c)
         c.execute('INSERT INTO team_artifacts VALUES(?,?,?,?,?,?,?)',
-                  (p['project_id'], identifier, version, name, digest, raw, team.agent.dump(parsed)))
+                  (p['project_id'], identifier, version, name, digest, b'' if object_key else raw, team.agent.dump(parsed)))
+        if object_key:
+            c.execute('INSERT INTO artifact_blobs VALUES(?,?,?,?)', (p['project_id'], identifier, version, object_key))
     return team.commit(p, p['version'], '保存实际文件：' + name + ' v' + str(version), write=write)
 
 
@@ -171,9 +187,19 @@ def read(project, identifier, version):
         init(c)
         row = c.execute('SELECT * FROM team_artifacts WHERE project_id=? AND artifact_id=? AND version=?',
                         (project['project_id'], identifier, version)).fetchone()
-    if not row or hashlib.sha256(row['data']).hexdigest() != row['sha256']:
+        blob = c.execute('SELECT object_key FROM artifact_blobs WHERE project_id=? AND artifact_id=? AND version=?',
+                         (project['project_id'], identifier, version)).fetchone()
+    if not row:
+        raise ValueError('实际材料不存在')
+    raw = row['data']
+    if blob:
+        import private_blobs
+        raw = private_blobs.get(blob['object_key'], row['sha256'])
+    if hashlib.sha256(raw).hexdigest() != row['sha256']:
         raise ValueError('实际材料不可读或内容校验失败')
-    value = parse(row['filename'], row['data'])
+    value = json.loads(row['parsed'])
+    if value.get('parser') != 'rapidocr-onnx':
+        value = parse(row['filename'], raw)
     return {**value, 'artifact_id': identifier, 'artifact_version': version,
             'filename': row['filename'], 'sha256': row['sha256']}
 

@@ -62,6 +62,9 @@ def resolve_quote_refs(refs, docs):
         raise ValueError('evidence_refs必须为列表')
     resolved = []
     for ref in refs:
+        # Normalize only exact quote IDs from this request's source catalog.
+        if isinstance(ref, str):
+            ref = {'quote_id': ref}
         if not isinstance(ref, dict):
             raise ValueError('引用必须为对象')
         if not ref.get('quote_id'):
@@ -172,6 +175,36 @@ def prepare_output_contract(payload):
         })
     return contract
 
+def bind_micro_step_input_sources(gap, source_by_id):
+    """Ensure every micro-step cites the exact artifact version it says it edits."""
+    for step in gap.get('micro_steps', []):
+        version = step.get('input_version') or {}
+        artifact_id = version.get('artifact_id')
+        artifact_version = version.get('artifact_version')
+        if not artifact_id or type(artifact_version) is not int:
+            continue
+        source_id = f'material:{artifact_id}:{artifact_version}'
+        if source_id not in source_by_id:
+            raise ValueError('micro-step input_version is not a source in the current evidence catalog')
+        refs = step.setdefault('source_refs', [])
+        if source_id not in refs:
+            refs.append(source_id)
+    return gap.get('micro_steps', [])
+
+
+def validate_extract_pattern(gap, source_by_id):
+    # A transfer pattern is required only when the diagnosis actually cites
+    # an external reference source. Current-artifact-only diagnoses already
+    # carry exact quote IDs and locators; requiring a pattern there is noise.
+    uses_reference = any(source_by_id.get(sid, {}).get('kind') == 'reference'
+                         for sid in gap.get('source_refs', []))
+    if uses_reference:
+        team.required(gap, 'extract_pattern')
+    else:
+        gap['extract_pattern'] = str(gap.get('extract_pattern', '')).strip()[:1200]
+    return gap['extract_pattern']
+
+
 def validate_diagnosis_content(gap):
     """Reject observed placeholder copying; not a semantic correctness oracle."""
     for key in ('current_evidence','priority_reason','reason','target_result'):
@@ -255,12 +288,12 @@ def call_json(p, stage, payload, validator):
         raise
 
 
-def researcher(p):
+def researcher(p, retrieved_documents=None, retrieval_trace=None):
     ctx = p.get('project_context')
     members = p.get('member_task_briefs')
     if not ctx or not members:
         raise ValueError('先保存本项目条件及本人任务/理解，再生成诊断')
-    docs = documents(p)
+    docs = documents(p) if retrieved_documents is None else retrieved_documents
     catalog = [copy.deepcopy(x) for x in p['stored_artifacts']]
     sources = [{'source_id':'material:'+r['artifact_id']+':'+str(r['artifact_version']),
                 'kind':r['kind'],'title':r['title']+' v'+str(r['artifact_version'])} for r in catalog]
@@ -294,6 +327,9 @@ def researcher(p):
                    'target_locator':'具体位置','action':'具体操作','reason':'理由','expected_change':'预期变化',
                    'output':'真实产物','self_check':'怎样核对','failure_next':'卡住后检查','capability_basis':'输入能力证据及未知'}]}],
                  'unknowns':['缺口'],'understanding_checks':['本人理解与标准的核对']}}
+    if retrieval_trace is not None:
+        payload['retrieval_scope'] = retrieval_trace
+        payload['scope_rule'] = '仅对召回片段诊断；未召回部分一律未知，不能据此判断整份作品通过。'
     def validate(value):
         gaps = team.required(value, 'gaps', list)
         if not 1 <= len(gaps) <= 20:
@@ -301,6 +337,12 @@ def researcher(p):
         for g in gaps:
             validate_diagnosis_content(g)
             g['evidence_refs'] = resolve_quote_refs(g.get('evidence_refs'), docs)
+            if retrieval_trace is not None:
+                allowed = {(doc['artifact_id'], doc['artifact_version'], unit['locator'])
+                           for doc in docs for unit in doc['units']}
+                if any((r.get('artifact_id'), r.get('artifact_version'), r.get('locator')) not in allowed
+                       for r in g['evidence_refs']):
+                    raise ValueError('检索诊断引用了本轮未召回的位置')
             bind_selected_location(g)
             g['status'] = 'open'
             for key in ('history_only','manual_hold','confirmed_review_id'):
@@ -310,8 +352,24 @@ def researcher(p):
             locator = team.required(g, 'current_locator')
             if not any(r['artifact_id'] == ref['artifact_id'] and r['artifact_version'] == ref['artifact_version'] and r['locator'] == locator for r in g['evidence_refs']):
                 raise ValueError('现状位置必须对应同一材料版本的实际引文')
-            team.required(g, 'extract_pattern')
             source_by_id = {s['source_id']:s for s in sources}
+            source_by_title = {s.get('title'):s['source_id'] for s in sources if s.get('title')}
+            quote_by_id = {r['quote_id']:r for r in quote_catalog(docs)}
+            normalized_sources = []
+            for raw_sid in g.get('source_refs', []):
+                sid = raw_sid
+                if sid not in source_by_id and sid in source_by_title:
+                    sid = source_by_title[sid]
+                elif sid not in source_by_id and sid in quote_by_id:
+                    quote = quote_by_id[sid]
+                    sid = 'material:' + quote['artifact_id'] + ':' + str(quote['artifact_version'])
+                if sid not in source_by_id:
+                    raise ValueError('source_refs must point to a real source ID, source title, or current quote ID')
+                if sid not in normalized_sources:
+                    normalized_sources.append(sid)
+            g['source_refs'] = normalized_sources
+            validate_extract_pattern(g, source_by_id)
+            bind_micro_step_input_sources(g, source_by_id)
             for sid in g.get('source_refs', []):
                 source = source_by_id.get(sid, {})
                 if source.get('kind') == 'reference' and not (source.get('reference_locator') or g.get('reference_locator')):
@@ -324,6 +382,10 @@ def researcher(p):
             if not g.get('micro_steps'):
                 raise ValueError('诊断需提供基于实际材料的细操作候选')
             for row in g['micro_steps']:
+                if retrieval_trace is not None:
+                    version_ref = row.get('input_version', {})
+                    if (version_ref.get('artifact_id'), version_ref.get('artifact_version'), row.get('target_locator')) not in allowed:
+                        raise ValueError('检索诊断动作指向本轮未召回的位置')
                 validate_action_specificity(row)
                 row.setdefault('source_refs', g.get('source_refs', []))
                 row['capability_basis'] = personal_guidance.capability_basis(g, profiles)
@@ -340,6 +402,9 @@ def researcher(p):
              'unknowns':team.strings(value, 'unknowns'),
              'understanding_checks':team.strings({'checks':checks}, 'checks'),
              'understanding_confirmation_required':True}
+        if retrieval_trace is not None:
+            d['retrieval_scope'] = copy.deepcopy(retrieval_trace)
+            d['unknowns'].append('本次仅检索片段诊断，未召回材料尚未评估')
         from team_revision import retain_history
         retain_history(d, p.get('diagnosis'), p.get('plan'))
         team.validate_diagnosis(d)

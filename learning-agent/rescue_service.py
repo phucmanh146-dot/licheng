@@ -578,6 +578,17 @@ def set_config(data):
     return public_config()
 
 
+def model_request_timeout(cfg, has_body=True):
+    """Give local agent gateways enough time for evidence-heavy multi-step prompts."""
+    local = urlparse(cfg["base"]).hostname in ("localhost", "127.0.0.1", "::1")
+    default = 180 if local and has_body else (90 if has_body else 30)
+    try:
+        requested = int(os.getenv("SHANGAN_MODEL_TIMEOUT_SECONDS", str(default)))
+    except (TypeError, ValueError):
+        requested = default
+    return max(10, min(requested, 300))
+
+
 def model_request(cfg, path, body=None, stage="connection"):
     validate_url(cfg["base"], local_ai=True)
     headers = {"Content-Type": "application/json", "Accept": "application/json"}
@@ -587,7 +598,7 @@ def model_request(cfg, path, body=None, stage="connection"):
         headers["Authorization"] = "Bearer " + cfg["key"]
     try:
         req = Request(cfg["base"] + path, data=None if body is None else json.dumps(body).encode("utf-8"), headers=headers)
-        with build_opener(NoRedirect()).open(req, timeout=30 if body is None else 65) as response:
+        with build_opener(NoRedirect()).open(req, timeout=model_request_timeout(cfg, body is not None)) as response:
             raw = response.read(2_000_001)
             if len(raw) > 2_000_000:
                 raise RescueError("服务返回的数据过大，请缩小请求后重试。", "MODEL_FORMAT", stage=stage)
@@ -630,12 +641,29 @@ def list_models(data):
     return {"models": sorted(models, key=lambda row: row["id"].lower()), "base": cfg["base"], "source": "live", "count": len(models)}
 
 
+def model_json_mode(cfg):
+    local = urlparse(cfg.get("base", "")).hostname in ("localhost", "127.0.0.1", "::1")
+    return local and os.getenv("SHANGAN_MODEL_JSON_MODE", "1").strip().lower() not in ("0", "false", "off")
+
+
+def model_output_limit(cfg):
+    local = urlparse(cfg.get("base", "")).hostname in ("localhost", "127.0.0.1", "::1")
+    default = 8192 if local else 4096
+    try:
+        value = int(os.getenv("SHANGAN_MODEL_MAX_OUTPUT_TOKENS", str(default)))
+    except (TypeError, ValueError):
+        value = default
+    return max(512, min(value, 16384))
+
+
 def complete(messages, cfg=None):
     cfg = cfg or config_snapshot()
     if not cfg["base"] or not cfg["model"]:
         raise RescueError("还差一次 AI 连接设置。填好后，每次提问都会自动联网查资料。", "CONFIG_REQUIRED", 409)
     protocol = cfg.get("protocol", "chat")
-    body = {"model": cfg["model"], "messages": messages, "stream": False}
+    body = {"model": cfg["model"], "messages": messages, "stream": False, "max_tokens": model_output_limit(cfg)}
+    if protocol == "chat" and model_json_mode(cfg):
+        body["response_format"] = {"type": "json_object"}
     path = "/chat/completions"
     if protocol == "anthropic":
         converted = []

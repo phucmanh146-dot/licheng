@@ -42,6 +42,20 @@ def diagnosis_reply(p, skills=None):
 
 
 class GeneralLoopTests(unittest.TestCase):
+    def test_rag_preview_uses_existing_model_and_citation_gate(self):
+        import artifact_retrieval
+        self.setup_inputs()
+        original_version = self.p['version']
+        reply = diagnosis_reply(self.p)
+        with patch.object(ai.rescue, 'public_config', return_value={'configured':True}), \
+             patch.object(ai.rescue, 'config_snapshot', return_value={'model':'SYNTHETIC-fixture'}), \
+             patch.object(ai.rescue, 'complete', return_value=json.dumps(reply, ensure_ascii=False)):
+            result = artifact_retrieval.diagnosis_preview({**self.ctx(), 'query':'有效分母'})
+        self.assertTrue(result['preview_only'])
+        self.assertEqual(result['diagnosis']['retrieval_scope']['coverage'], 'partial')
+        self.assertEqual(result['diagnosis']['gaps'][0]['evidence_refs'][0]['quote'], '人数=3；有效分母未知')
+        self.assertEqual(team.current(self.ctx())['version'], original_version)
+
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
         self.db = patch.object(agent, 'DB', self.tmp.name+'/team.sqlite3')

@@ -1,0 +1,8 @@
+FROM python:3.12-slim
+WORKDIR /app
+COPY learning-agent/requirements-engineering.txt requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
+COPY learning-agent /app/learning-agent
+WORKDIR /app/learning-agent
+ENV SHANGAN_AGENT_DATA=/data
+CMD ["uvicorn","shared_api:app","--host","0.0.0.0","--port","8000"]

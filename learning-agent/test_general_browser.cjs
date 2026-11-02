@@ -1,4 +1,4 @@
-// Real Chromium/file upload/HTTP/SQLite; model output is a controlled fixture.
+﻿// Real Chromium/file upload/HTTP/SQLite; model output is a controlled fixture.
 const {spawn}=require('node:child_process');
 const fs=require('node:fs'), os=require('node:os'), path=require('node:path');
 const assert=require('node:assert/strict');
@@ -8,6 +8,7 @@ const base='http://127.0.0.1:8962', errors=[], checks=[];
 let server,browser;
 const bootstrap=`import json,runpy,sys
 import learning_agent as agent, rescue_service as rescue, team_orchestrator as team
+import team_dispatch, team_ai
 from test_general_loop import diagnosis_reply
 original=rescue.public_config
 rescue.public_config=lambda:{**original(),'configured':(agent.DATA/'fixture-ready').exists(),'verified':False}
@@ -22,6 +23,7 @@ def controlled(messages,cfg):
        'criterion_results':[{'criterion':c,'passed':True,'evidence':'控制夹具核对','evidence_refs':[ref]} for c in task['acceptance_criteria']],
        'gap_results':[{'gap_id':k,'status':'closed','evidence':'控制夹具核对','evidence_refs':[ref]} for k in task['gap_ids']]},ensure_ascii=False)
 rescue.complete=controlled
+team_dispatch.REVIEWER=team_ai.reviewer
 sys.argv=['learning_agent_server.py','--port','8962','--with-team-ai']
 runpy.run_path('learning_agent_server.py',run_name='__main__')`;
 async function state(id){return (await fetch(base+'/api/agent/team?id='+id)).json();}
@@ -33,6 +35,7 @@ async function start(){server=spawn('python',['-c',bootstrap],{cwd:__dirname,env
  const id=await page.locator('#projects').inputValue();
  await page.locator('#context-form').evaluate(f=>f.closest('details').open=true);await page.locator('#context-type').selectOption('research');await page.locator('#context-target').fill('可复查的人数报告');await page.locator('#context-criteria').fill('写明有效分母和缺失人数');await page.locator('#context-form button').click();await page.waitForFunction(()=>project?.project_context?.project_type==='research');
  await page.locator('#member-form').evaluate(f=>f.closest('details').open=true);await page.locator('#member-name').fill('成员甲 <img src=x onerror="window.__unsafe=1">');await page.locator('#member-task').fill('核对人数和缺失口径');await page.locator('#member-understanding').fill('缺失不是0，有效分母必须可回查');await page.locator('#member-skills').fill('数据清洗');await page.locator('#member-form button').click();await page.waitForFunction(()=>project?.member_task_briefs?.length===1);
+ await page.locator('#member-name').fill('??????');await page.locator('#member-task').fill('?????? V2');await page.locator('#member-understanding').fill('?????????????????');await page.locator('#member-skills').fill('????');await page.locator('#member-form button').click();await page.waitForFunction(()=>project?.member_task_briefs?.length===2);
  assert.equal(await page.locator('#member-summary img').count(),0);assert.equal(await page.evaluate(()=>!!window.__unsafe),false);
  checks.push('project-context-and-self-report-saved-as-text');
  async function upload(name,text,purpose,existing=''){await page.locator('#artifact-file').setInputFiles({name,mimeType:'text/plain',buffer:Buffer.from(text)});await page.locator('#artifact-purpose').selectOption(purpose);await page.locator('#artifact-existing').selectOption(existing);const n=(await state(id)).stored_artifacts?.length||0;await page.locator('#artifact-form button').click();await page.waitForFunction(n=>project?.stored_artifacts?.length===n+1,n);return (await state(id)).stored_artifacts.at(-1);}

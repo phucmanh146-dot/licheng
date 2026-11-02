@@ -171,7 +171,14 @@ def validate_diagnosis(d):
         if 'current_artifact' in gap:
             validate_artifact_ref(required(gap, 'current_artifact', dict), catalog)
 
-def diagnosis(data):
+def require_extract_pattern_for_references(gap, sources):
+    referenced = [source for source in sources if source.get('source_id') in gap.get('source_refs', [])]
+    if any(source.get('kind') == 'reference' for source in referenced):
+        required(gap, 'extract_pattern')
+    return referenced
+
+
+def diagnosis(data, persist=True):
     p = current(data)
     d = copy.deepcopy(required(data,'diagnosis',dict))
     validate_diagnosis(d)
@@ -204,8 +211,7 @@ def diagnosis(data):
                 if gap.get('verification_status') in ('verified', 'evidence_linked_pending_confirmation'):
                     required(gap, 'current_locator')
                     required(gap, 'current_evidence')
-                    required(gap, 'extract_pattern')
-                    referenced = [s for s in d['sources'] if s['source_id'] in gap.get('source_refs', [])]
+                    referenced = require_extract_pattern_for_references(gap, d['sources'])
                     if not referenced:
                         raise ValueError('已核验差距必须绑定真实来源')
                     for source in referenced:
@@ -226,7 +232,7 @@ def diagnosis(data):
         p['plan_diagnosis'] = copy.deepcopy(p['diagnosis'])
     p['diagnosis'], p['proposal'] = d, None
     p['diagnosis_needs_refresh'] = False
-    return commit(p,p['version'],'接收 A 的诊断；原计划保留并检查是否过期')
+    return commit(p,p['version'],'接收 A 的诊断；原计划保留并检查是否过期') if persist else p
 
 def validate_plan(plan, d):
     integer(plan,'plan_version',1)
@@ -301,8 +307,8 @@ def protected(old, new):
         if block.get('locked') and block not in new['time_blocks']:
             raise ValueError('锁定时段不能被重排覆盖')
 
-def propose(data):
-    p = current(data)
+def propose(data, prepared_project=None, persist=True):
+    p = copy.deepcopy(prepared_project) if prepared_project is not None else current(data)
     if not p['diagnosis'] or p.get('diagnosis_needs_refresh'):
         raise ValueError('先接收基于最新补充信息的 A 诊断')
     plan = copy.deepcopy(required(data,'plan',dict))
@@ -316,7 +322,7 @@ def propose(data):
                      'diff':{'added':sorted(new.keys()-old.keys()),'removed':sorted(old.keys()-new.keys()),
                              'changed':[k for k in new.keys()&old.keys() if new[k]!=old[k]],
                              'time_blocks_before':(p['plan'] or {}).get('time_blocks',[]),'time_blocks_after':plan['time_blocks']}}
-    return commit(p,p['version'],'保存 B 的计划预览，等待用户采用')
+    return commit(p,p['version'],'保存 B 的计划预览，等待用户采用') if persist else p
 
 def apply(data):
     p = current(data)

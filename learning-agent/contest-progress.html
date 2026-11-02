@@ -1,0 +1,16 @@
+<!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>赛事证据与调用进度</title>
+<style>body{font:16px system-ui;max-width:1100px;margin:32px auto;padding:16px;background:#f6f8fb;color:#17233b}section{background:white;padding:20px;margin:16px 0;border-radius:12px}td,th{text-align:left;padding:12px;border-bottom:1px solid #ddd}table{width:100%}input,button{font:inherit;padding:10px}pre{white-space:pre-wrap;overflow-wrap:anywhere}.warn{color:#8b3500}</style>
+<h1>赛事证据与调用进度</h1><p>第二届人工智能应用创新大赛 · 项目内部验收视图</p>
+<section><strong class="warn">官方权重待核实，当前不计算官方分数。</strong><p>公开通知要求真实业务场景与可验证的智能体交互。下表为内部验收映射；流程证据覆盖分不能换算成赛事成绩。</p><a href="https://cxcy.wust.edu.cn/info/1482/12942.htm">高校赛事通知</a> · <a href="https://www.ai-race.com.cn/">赛事官网</a></section>
+<section><h2>评分关注点如何落实</h2><table><thead><tr><th>关注点（内部）</th><th>机制与调用</th><th>通过门槛</th></tr></thead><tbody>
+<tr><td>真实性</td><td>真实材料导入 → 版本及原文定位 → A 诊断</td><td>每项结论能追溯到当前材料；缺失事实保留未知</td></tr>
+<tr><td>业务价值</td><td>本人目标与约束 → B 个性化行动 → 实际耗时反馈</td><td>真实用户完成产物；同条件基线、成本与返工记录；目前效果未验证</td></tr>
+<tr><td>系统完整度</td><td>A 诊断 → B 排程 → C 调度 → 提交 → 独立复核 → 剩余项重排</td><td>调用及失败记录可查；无凭据或校验失败须阻断，不能伪装成功</td></tr>
+<tr><td>实际应用</td><td>本人确认事实 → 采用路线 → 真人执行 → V2 → 非执行者复核</td><td>草稿、夹具、模型建议均不能当作真人完成；缺证据不能放行</td></tr></tbody></table></section>
+<section><h2>查看当前项目</h2><form id="lookup"><label>项目 ID <input id="projectId" required maxlength="128" autocomplete="off"></label> <button>读取进度</button></form><p id="status" role="status">等待项目 ID；不会自动创建项目或调用模型。</p><div id="result"></div></section>
+<section><h2>验收依据</h2><p><a href="https://airc.nist.gov/airmf-resources/airmf/5-sec-core/">NIST AI RMF</a>用于业务上下文、测量与用户反馈；<a href="https://www.anthropic.com/research/demystifying-evals-for-ai-agents">Anthropic Agent 评估指南</a>用于区分执行轨迹与最终成果。两者均为内部参考，不是本赛事官方评分规则。</p><a href="team.html">返回团队应用</a></section>
+<script>
+const form=document.querySelector('#lookup'),status=document.querySelector('#status'),result=document.querySelector('#result');
+function block(title,value){const h=document.createElement('h3'),p=document.createElement('pre');h.textContent=title;p.textContent=value;result.append(h,p)}
+form.addEventListener('submit',async e=>{e.preventDefault();result.replaceChildren();status.textContent='读取中…';const id=document.querySelector('#projectId').value.trim();try{const data=await Promise.all(['evidence-score','cc-board'].map(async name=>{const r=await fetch('/api/agent/team/'+name+'?id='+encodeURIComponent(id),{cache:'no-store'});if(!r.ok)throw Error('接口 '+name+' 返回 '+r.status);const d=await r.json();if(d.error)throw Error(d.error);return d}));status.textContent='读取成功 · '+new Date().toLocaleString()+' · 仅查询，无模型调用';const [score,board]=data;block('项目版本',String(score.project_version));block('流程证据（非官方评分）',score.rubric);for(const role of score.roles)block(role.role+' 证据记录',role.criteria.map(c=>c.label+'：'+c.status+'；'+c.comment).join('\n'));for(const w of board.windows)block(w.label,w.stage+' / '+w.status+'\n'+w.current_item+'\n'+(w.blocker||'')+'\n来源：'+(w.source==='derived'?'项目状态推导，非实时窗口心跳':w.live?'窗口上报，心跳有效':'窗口上报，心跳已过期'));block('真实效果','未验证；需本人产物、独立复核与同条件对照记录。')}catch(err){result.replaceChildren();status.textContent='BLOCKED：'+err.message+'。请核对项目 ID 与服务后重试；不展示旧进度。'}});
+</script></html>

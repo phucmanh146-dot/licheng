@@ -1,0 +1,41 @@
+services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: shangan
+      POSTGRES_DB: shangan
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}
+    volumes: [postgres-data:/var/lib/postgresql/data]
+    healthcheck:
+      test: [CMD-SHELL, pg_isready -U shangan]
+      interval: 5s
+      retries: 10
+  qdrant:
+    image: qdrant/qdrant:v1.12.6
+    volumes: [qdrant-data:/qdrant/storage]
+  redis:
+    image: redis:7.4-alpine
+  api:
+    build: {context: ., dockerfile: Dockerfile.engineering}
+    env_file: .env.engineering
+    environment: &shared
+      SHANGAN_ENV: production
+      SHANGAN_DATABASE_URL: postgresql://shangan:${POSTGRES_PASSWORD}@postgres:5432/shangan
+      SHANGAN_QDRANT_URL: http://qdrant:6333
+      SHANGAN_REDIS_URL: redis://redis:6379/0
+    ports: ["127.0.0.1:8000:8000"]
+    depends_on:
+      postgres: {condition: service_healthy}
+      qdrant: {condition: service_started}
+      redis: {condition: service_started}
+  worker:
+    build: {context: ., dockerfile: Dockerfile.engineering}
+    env_file: .env.engineering
+    environment: *shared
+    command: [python, research_graph.py]
+    depends_on:
+      postgres: {condition: service_healthy}
+      qdrant: {condition: service_started}
+volumes:
+  postgres-data:
+  qdrant-data:
