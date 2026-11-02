@@ -7,7 +7,7 @@
 ## 本轮工程改动
 
 - Cross-Encoder 支持 Hugging Face TEI 的 `/rerank`（`texts` 参数）以及 Jina/Cohere 风格 `documents` 参数；真实服务没有响应时仍明确降级，不伪造 AVAILABLE。
-- 增加 `engineering_health.py` 和 `GET /api/agent/engineering-health`。普通探测区分已配置与真实可用；`?deep=1` 执行 BGE-M3 embedding 与 reranker 的真实推理探测。
+- 增加 `engineering_health.py` 和登录保护的 `GET /api/v1/engineering/health`（Docker 生产入口）。普通探测区分已配置与真实可用；`?deep=1` 执行 BGE-M3 embedding 与 reranker 的真实推理探测。
 - `compose.engineering.yml` 增加持久化 Ollama、BGE-M3 模型拉取、TEI BGE Reranker、Qdrant、PostgreSQL、Redis；PostgreSQL/Redis 有健康检查和持久化卷。
 - 增加 OCR 人工标注评测器 `evaluate_ocr.py`，输出 corpus CER、字符准确率和低置信度数量；没有真实扫描件+人工转录时不能产出“准确率通过”结论。
 - 增加 `verify_two_real_projects.py`，必须传两个不同项目 ID，并核对 V1/V2 文件哈希、显式执行人、非执行者人工复核回执及最终人工确认。
@@ -15,17 +15,17 @@
 
 ## 本机/Compose 部署
 
-1. 复制 `.env.engineering.example` 为 `.env.engineering`，设置随机强密码和真实业务 AI 模型凭据；不要提交密钥。
+1. 复制 `.env.engineering.example` 为 `.env.engineering`，替换 PostgreSQL/MinIO 随机强密码、实际前端 Origin 和真实业务 AI 模型凭据；不要提交密钥。MinIO 用于满足现有生产 API 的对象存储要求。
 2. 在有 Docker Engine 的部署机执行：
    ```powershell
    docker compose --env-file .env.engineering -f compose.engineering.yml up -d --build
    docker compose --env-file .env.engineering -f compose.engineering.yml ps
    ```
 3. 首次启动会拉取 Ollama 的 `bge-m3`。TEI 容器首次启动会下载 `BAAI/bge-reranker-v2-m3`，CPU 推理较慢；生产建议独立 GPU/模型服务或受控推理 API。
-4. API 健康检查：
+4. API 健康检查（需先登录并携带同一会话 Cookie）：
    ```powershell
-   Invoke-RestMethod http://127.0.0.1:8000/api/agent/engineering-health
-   Invoke-RestMethod 'http://127.0.0.1:8000/api/agent/engineering-health?deep=1'
+   Invoke-RestMethod 'http://127.0.0.1:8000/api/v1/engineering/health'
+   Invoke-RestMethod 'http://127.0.0.1:8000/api/v1/engineering/health?deep=true'
    ```
    只有每项返回 `AVAILABLE` 且 summary.ready=true 才能认为本部署的依赖就绪。RAG 实测还需把真实项目资料导入并执行带人工标注的检索集。
 
