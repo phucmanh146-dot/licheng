@@ -178,6 +178,7 @@ class CaptainRuntimeTests(unittest.TestCase):
         self.ready();card=self.pause()
         code='import json,sys; import learning_agent as a; a.DB=sys.argv[1]; import team_orchestrator as t; import team_runtime as r; print(json.dumps(r.snapshot(t.state(sys.argv[2])),ensure_ascii=False))'
         env={**os.environ,'SHANGAN_AGENT_DATA':self.tmp.name}
+        env['PYTHONPATH']=os.pathsep.join([str(Path(__file__).parent),env.get('PYTHONPATH','')])
         output=subprocess.check_output([sys.executable,'-X','utf8','-c',code,str(agent.DB),self.p['project_id']],env=env,text=True,encoding='utf-8')
         restored=json.loads(output)
         self.assertEqual(restored['current']['context']['checkpoint']['checkpoint_id'],card['checkpoint_id'])

@@ -284,9 +284,9 @@ class RecoveryTests(unittest.TestCase):
             def handle_starttag(self,tag,attrs):
                 self.ids.extend(v for k,v in attrs if k=='id')
         root=Path(__file__).parent
-        parser=IDs();parser.feed((root/'team.html').read_text())
+        parser=IDs();parser.feed((root/'team.html').read_text(encoding='utf-8'))
         self.assertEqual(len(parser.ids),len(set(parser.ids)))
-        script=(root/'team-recovery.js').read_text()
+        script=(root/'team-recovery.js').read_text(encoding='utf-8')
         referenced=set(re.findall(r"\$\('([^']+)'\)",script))
         self.assertEqual(referenced-set(parser.ids),set())
 

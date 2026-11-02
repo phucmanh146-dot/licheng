@@ -124,30 +124,48 @@ def trace(project, body):
 
 
 def prepare_output_contract(payload):
-    """One consistent citation contract; examples contain current IDs, never facts."""
-    contract = copy.deepcopy(payload['output_contract'])
-    if payload.get('stage') != 'diagnosis':
+    """Return a schema-only diagnosis template; never seed every gap with one real quote."""
+    contract = copy.deepcopy(payload["output_contract"])
+    if payload.get("stage") != "diagnosis":
         return contract
-    snippets = quote_catalog(payload.get('documents', []))
-    if not snippets:
-        return contract
-    first = snippets[0]
-    for gap in contract.get('gaps', []):
-        gap['evidence_refs'] = [{'quote_id':first['quote_id']}]
-        gap['current_artifact'] = {k:first[k] for k in ('artifact_id','artifact_version')}
-        gap['current_locator'] = first['locator']
-        gap['gap_type'] = 'artifact'
-        gap['current_evidence'] = '用本次原文描述已有什么；这是格式说明，请替换，不能声称原文没有已经写出的信息'
-        gap['related_member_ids'] = [m['member_id'] for m in payload.get('member_profiles', [])[:1]]
-        gap['source_refs'] = ['material:'+first['artifact_id']+':'+str(first['artifact_version'])]
-        for step in gap.get('micro_steps', []):
-            step['input_version'] = copy.deepcopy(gap['current_artifact'])
-            step['target_locator'] = first['locator']
-            step['action'] = '写明在哪个原文位置，把哪项现有信息填到哪个表格字段；这是说明，必须替换为当前项目操作'
-            step['output'] = '写出本次具体可交付的一行表格或一个修改点；这是说明，必须替换'
-            step['failure_next'] = '缺附件时写出缺哪个附件以及向谁索取，不要反复阅读寻找输入中没有的附件'
-    return contract
 
+    gaps = contract.get("gaps")
+    if not isinstance(gaps, list):
+        return contract
+    for gap in gaps:
+        if not isinstance(gap, dict):
+            continue
+        # Empty values communicate shape, not facts. A copied placeholder fails
+        # the existing validators instead of being mistaken for source evidence.
+        gap.update({
+            "current_evidence": "",
+            "target_result": "",
+            "gap_type": "",
+            "priority_reason": "",
+            "related_member_ids": [],
+            "required_capabilities": [],
+            "source_refs": [],
+            "acceptance_criteria": [],
+            "current_artifact": {"artifact_id": "", "artifact_version": 0},
+            "current_locator": "",
+            "reason": "",
+            "extract_pattern": "",
+            "reference_locator": "",
+            "evidence_refs": [],
+            "micro_steps": [{
+                "step_id": "",
+                "input_version": {"artifact_id": "", "artifact_version": 0},
+                "target_locator": "",
+                "action": "",
+                "reason": "",
+                "expected_change": "",
+                "output": "",
+                "self_check": "",
+                "failure_next": "",
+                "capability_basis": ""
+            }]
+        })
+    return contract
 
 def validate_diagnosis_content(gap):
     """Reject observed placeholder copying; not a semantic correctness oracle."""
@@ -187,7 +205,7 @@ def call_json(p, stage, payload, validator):
         '不支持结论的片段不能选；没有合适片段就保留未知，不伪造ID。也可继续返回原有逐字引用，但不得改写。'
         '即使选择quote_id，current_locator仍必须从allowed_locations中选一个实际位置。'
         '每条action须包含具体对象及填写/复制/摘录/记录/计算等可观察操作，不能只有阅读、分析、理解或泛泛提取。'
-        '专利任务可填写一条申请/授权日期；访谈任务可摘一条用途并记位置；账表任务可计算一行收入减成本；只取适合当前材料的动作。')
+        '专利任务可填写一条申请/授权日期；访谈任务可摘一条用途并记位置；账表任务可计算一行收入减成本；只取适合当前材料的动作。每个gap必须独立选择能支持它的quote_id；不得把同一个示例引用复制到所有gap，除非该原文确实同时支持各项判断。')
     content = team.agent.dump(request_payload)
     cfg = rescue.config_snapshot()
     run = {'run_id':uuid.uuid4().hex,'stage':stage,'project_version':p['version'],'boot_id':BOOT_ID,
