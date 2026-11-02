@@ -1,0 +1,20 @@
+import {readFileSync} from "node:fs";
+import assert from "node:assert/strict";
+import {parseIssue,taskStates,dependenciesMet,filterTasks,escapeHtml} from "../logic.mjs";
+const data=JSON.parse(readFileSync(new URL("../data.json",import.meta.url),"utf8"));
+assert.equal(data.schema,1);assert.equal(data.tasks.length,8);
+const ids=new Set(data.tasks.map(t=>t.id));assert.equal(ids.size,8);
+const walk=(id,path=[])=>{assert(!path.includes(id),"依赖存在循环");const t=data.tasks.find(t=>t.id===id);assert(t);for(const dep of t.dependsOn){assert(ids.has(dep));walk(dep,[...path,id]);}};
+for(const t of data.tasks){walk(t.id);for(const f of ["deliverables","acceptance","evidence"])assert(t[f].length>0);assert.equal(t.issue.url,`https://github.com/${data.repo}/issues/${t.issue.number}`);}
+let states=taskStates(data);assert.deepEqual(data.tasks.filter(t=>dependenciesMet(t,states)).map(t=>t.id),["U-01","U-05"]);
+assert.equal(parseIssue({body:"状态：进行中",state:"closed"}).status,"review");
+assert.equal(parseIssue({body:"状态：已验收",state:"open"}).status,"review");
+assert.equal(parseIssue({body:"状态：已验收\n验收证据：https://example.org/proof",state:"closed"}).status,"passed");
+states["U-01"]={status:"passed"};assert(dependenciesMet(data.tasks[1],states));assert(!dependenciesMet(data.tasks[5],states));
+assert.equal(filterTasks(data.tasks,states,{owner:"B"}).length,2);
+assert.equal(filterTasks(data.tasks,states,{query:"U-05"}).length,1);
+assert(!escapeHtml('<img src=x onerror="alert(1)">').includes("<img"));
+assert(data.scope.includes("自己解决不了"));
+const html=readFileSync(new URL("../index.html",import.meta.url),"utf8");assert(html.includes('lang="zh-CN"'));assert(html.includes('aria-live="polite"'));
+for(const f of ["styles.css","app.js","logic.mjs","data.json"])assert(readFileSync(new URL("../"+f,import.meta.url)).length>0);
+console.log("PASS · 8项任务、真实issue映射、依赖无环、验收证据规则、筛选、转义和页面资产");

@@ -1,0 +1,20 @@
+{
+  "nature": "synthetic_development_case",
+  "oracle_authoring": "manual_reference_not_agent_output",
+  "target": "修订第2.1节并补需求到产品动作的对应表",
+  "known_gaps": [
+    {"id": "R-G1", "locator": "input-report.md/第2.1节/第1段", "problem": "80%的总体比例没有依据", "required_evidence": "五条片段不能推出总体比例"},
+    {"id": "R-G2", "locator": "input-report.md/第2.1节/第1段", "problem": "所有人不会使用工具的断言与I02、I04存在不同情况", "required_evidence": "保留不同意见，不把原因写成确定事实"},
+    {"id": "R-G3", "locator": "input-report.md/第2.1节/第1段", "problem": "消除拖延的效果未经测量", "required_evidence": "列为待验证假设，给出实际对照办法"}
+  ],
+  "checks": [
+    "每条已核对的结论能沿编号、段落、材料版本返回原文",
+    "不编造80%或总体代表性，不遗漏I04的不同情况",
+    "第一步不超过5分钟，并有明确位置、操作和成果",
+    "能力未知时安排试做，不把自述记为已验证能力",
+    "v1保留，v2有修改差异和逐条件复核证据",
+    "突发少30分钟后只调整剩余安排，容量不足如实报告"
+  ],
+  "live_model_status": "not_run",
+  "user_effect_status": "not_measured"
+}

@@ -1,0 +1,902 @@
+{
+  "project_version": 41,
+  "source_documents": 22,
+  "archive_images": 10,
+  "text_documents_tested": 19,
+  "chunks": 21,
+  "checks_passed": 126,
+  "not_model_or_human_result": true,
+  "results": [
+    {
+      "id": "work-001",
+      "status": "reference_gate_verified_semantics_unverified",
+      "chunks": 1,
+      "checks": [
+        {
+          "artifact_id": "corpus-work-001-1",
+          "locator": "line:4",
+          "case": "actual_quote",
+          "result": "accepted"
+        },
+        {
+          "artifact_id": "corpus-work-001-1",
+          "locator": "line:359",
+          "case": "actual_quote",
+          "result": "accepted"
+        },
+        {
+          "artifact_id": "corpus-work-001-1",
+          "locator": "line:714",
+          "case": "actual_quote",
+          "result": "accepted"
+        },
+        {
+          "artifact_id": "corpus-work-001-1",
+          "case": "wrong_quote",
+          "result": "rejected"
+        },
+        {
+          "artifact_id": "corpus-work-001-1",
+          "case": "wrong_locator",
+          "result": "rejected"
+        },
+        {
+          "artifact_id": "corpus-work-001-1",
+          "case": "wrong_artifact_version",
+          "result": "rejected"
+        }
+      ]
+    },
+    {
+      "id": "work-002",
+      "status": "reference_gate_verified_semantics_unverified",
+      "chunks": 2,
+      "checks": [
+        {
+          "artifact_id": "corpus-work-002-1",
+          "locator": "line:4",
+          "case": "actual_quote",
+          "result": "accepted"
+        },
+        {
+          "artifact_id": "corpus-work-002-1",
+          "locator": "line:494",
+          "case": "actual_quote",
+          "result": "accepted"
+        },
+        {
+          "artifact_id": "corpus-work-002-1",
+          "locator": "line:983",
+          "case": "actual_quote",
+          "result": "accepted"
+        },
+        {
+          "artifact_id": "corpus-work-002-1",
+          "case": "wrong_quote",
+          "result": "rejected"
+        },
+        {
+          "artifact_id": "corpus-work-002-1",
+          "case": "wrong_locator",
+          "result": "rejected"
+        },
+        {
+          "artifact_id": "corpus-work-002-1",
+          "case": "wrong_artifact_version",
+          "result": "rejected"
+        },
+        {
+          "artifact_id": "corpus-work-002-2",
+          "locator": "line:4",
+          "case": "actual_quote",
+          "result": "accepted"
+        },
+        {
+          "artifact_id": "corpus-work-002-2",
+          "locator": "line:149",
+          "case": "actual_quote",
+          "result": "accepted"
+        },
+        {
+          "artifact_id": "corpus-work-002-2",
+          "locator": "line:293",
+          "case": "actual_quote",
+          "result": "accepted"
+        },
+        {
+          "artifact_id": "corpus-work-002-2",
+          "case": "wrong_quote",
+          "result": "rejected"
+        },
+        {
+          "artifact_id": "corpus-work-002-2",
+          "case": "wrong_locator",
+          "result": "rejected"
+        },
+        {
+          "artifact_id": "corpus-work-002-2",
+          "case": "wrong_artifact_version",
+          "result": "rejected"
+        }
+      ]
+    },
+    {
+      "id": "work-003",
+      "status": "reference_gate_verified_semantics_unverified",
+      "chunks": 2,
+      "checks": [
+        {
+          "artifact_id": "corpus-work-003-1",
+          "locator": "line:4",
+          "case": "actual_quote",
+          "result": "accepted"
+        },
+        {
+          "artifact_id": "corpus-work-003-1",
+          "locator": "line:57",
+          "case": "actual_quote",
+          "result": "accepted"
+        },
+        {
+          "artifact_id": "corpus-work-003-1",
+          "locator": "line:110",
+          "case": "actual_quote",
+          "result": "accepted"
+        },
+        {
+          "artifact_id": "corpus-work-003-1",
+          "case": "wrong_quote",
+          "result": "rejected"
+        },
+        {
+          "artifact_id": "corpus-work-003-1",
+          "case": "wrong_locator",
+          "result": "rejected"
+        },
+        {
+          "artifact_id": "corpus-work-003-1",
+          "case": "wrong_artifact_version",
+          "result": "rejected"
+        },
+        {
+          "artifact_id": "corpus-work-003-2",
+          "locator": "line:4",
+          "case": "actual_quote",
+          "result": "accepted"
+        },
+        {
+          "artifact_id": "corpus-work-003-2",
+          "locator": "line:19",
+          "case": "actual_quote",
+          "result": "accepted"
+        },
+        {
+          "artifact_id": "corpus-work-003-2",
+          "locator": "line:34",
+          "case": "actual_quote",
+          "result": "accepted"
+        },
+        {
+          "artifact_id": "corpus-work-003-2",
+          "case": "wrong_quote",
+          "result": "rejected"
+        },
+        {
+          "artifact_id": "corpus-work-003-2",
+          "case": "wrong_locator",
+          "result": "rejected"
+        },
+        {
+          "artifact_id": "corpus-work-003-2",
+          "case": "wrong_artifact_version",
+          "result": "rejected"
+        }
+      ]
+    },
+    {
+      "id": "work-004",
+      "status": "reference_gate_verified_semantics_unverified",
+      "chunks": 1,
+      "checks": [
+        {
+          "artifact_id": "corpus-work-004-1",
+          "locator": "line:4",
+          "case": "actual_quote",
+          "result": "accepted"
+        },
+        {
+          "artifact_id": "corpus-work-004-1",
+          "locator": "line:246",
+          "case": "actual_quote",
+          "result": "accepted"
+        },
+        {
+          "artifact_id": "corpus-work-004-1",
+          "locator": "line:487",
+          "case": "actual_quote",
+          "result": "accepted"
+        },
+        {
+          "artifact_id": "corpus-work-004-1",
+          "case": "wrong_quote",
+          "result": "rejected"
+        },
+        {
+          "artifact_id": "corpus-work-004-1",
+          "case": "wrong_locator",
+          "result": "rejected"
+        },
+        {
+          "artifact_id": "corpus-work-004-1",
+          "case": "wrong_artifact_version",
+          "result": "rejected"
+        }
+      ]
+    },
+    {
+      "id": "work-005",
+      "status": "reference_gate_verified_semantics_unverified",
+      "chunks": 1,
+      "checks": [
+        {
+          "artifact_id": "corpus-work-005-1",
+          "locator": "line:4",
+          "case": "actual_quote",
+          "result": "accepted"
+        },
+        {
+          "artifact_id": "corpus-work-005-1",
+          "locator": "line:302",
+          "case": "actual_quote",
+          "result": "accepted"
+        },
+        {
+          "artifact_id": "corpus-work-005-1",
+          "locator": "line:599",
+          "case": "actual_quote",
+          "result": "accepted"
+        },
+        {
+          "artifact_id": "corpus-work-005-1",
+          "case": "wrong_quote",
+          "result": "rejected"
+        },
+        {
+          "artifact_id": "corpus-work-005-1",
+          "case": "wrong_locator",
+          "result": "rejected"
+        },
+        {
+          "artifact_id": "corpus-work-005-1",
+          "case": "wrong_artifact_version",
+          "result": "rejected"
+        }
+      ]
+    },
+    {
+      "id": "work-006",
+      "status": "reference_gate_verified_semantics_unverified",
+      "chunks": 1,
+      "checks": [
+        {
+          "artifact_id": "corpus-work-006-1",
+          "locator": "line:4",
+          "case": "actual_quote",
+          "result": "accepted"
+        },
+        {
+          "artifact_id": "corpus-work-006-1",
+          "locator": "line:148",
+          "case": "actual_quote",
+          "result": "accepted"
+        },
+        {
+          "artifact_id": "corpus-work-006-1",
+          "locator": "line:291",
+          "case": "actual_quote",
+          "result": "accepted"
+        },
+        {
+          "artifact_id": "corpus-work-006-1",
+          "case": "wrong_quote",
+          "result": "rejected"
+        },
+        {
+          "artifact_id": "corpus-work-006-1",
+          "case": "wrong_locator",
+          "result": "rejected"
+        },
+        {
+          "artifact_id": "corpus-work-006-1",
+          "case": "wrong_artifact_version",
+          "result": "rejected"
+        }
+      ]
+    },
+    {
+      "id": "work-007",
+      "status": "reference_gate_verified_semantics_unverified",
+      "chunks": 1,
+      "checks": [
+        {
+          "artifact_id": "corpus-work-007-1",
+          "locator": "line:4",
+          "case": "actual_quote",
+          "result": "accepted"
+        },
+        {
+          "artifact_id": "corpus-work-007-1",
+          "locator": "line:326",
+          "case": "actual_quote",
+          "result": "accepted"
+        },
+        {
+          "artifact_id": "corpus-work-007-1",
+          "locator": "line:648",
+          "case": "actual_quote",
+          "result": "accepted"
+        },
+        {
+          "artifact_id": "corpus-work-007-1",
+          "case": "wrong_quote",
+          "result": "rejected"
+        },
+        {
+          "artifact_id": "corpus-work-007-1",
+          "case": "wrong_locator",
+          "result": "rejected"
+        },
+        {
+          "artifact_id": "corpus-work-007-1",
+          "case": "wrong_artifact_version",
+          "result": "rejected"
+        }
+      ]
+    },
+    {
+      "id": "work-008",
+      "status": "reference_gate_verified_semantics_unverified",
+      "chunks": 1,
+      "checks": [
+        {
+          "artifact_id": "corpus-work-008-1",
+          "locator": "line:4",
+          "case": "actual_quote",
+          "result": "accepted"
+        },
+        {
+          "artifact_id": "corpus-work-008-1",
+          "locator": "line:279",
+          "case": "actual_quote",
+          "result": "accepted"
+        },
+        {
+          "artifact_id": "corpus-work-008-1",
+          "locator": "line:553",
+          "case": "actual_quote",
+          "result": "accepted"
+        },
+        {
+          "artifact_id": "corpus-work-008-1",
+          "case": "wrong_quote",
+          "result": "rejected"
+        },
+        {
+          "artifact_id": "corpus-work-008-1",
+          "case": "wrong_locator",
+          "result": "rejected"
+        },
+        {
+          "artifact_id": "corpus-work-008-1",
+          "case": "wrong_artifact_version",
+          "result": "rejected"
+        }
+      ]
+    },
+    {
+      "id": "work-009",
+      "status": "reference_gate_verified_semantics_unverified",
+      "chunks": 1,
+      "checks": [
+        {
+          "artifact_id": "corpus-work-009-1",
+          "locator": "line:4",
+          "case": "actual_quote",
+          "result": "accepted"
+        },
+        {
+          "artifact_id": "corpus-work-009-1",
+          "locator": "line:322",
+          "case": "actual_quote",
+          "result": "accepted"
+        },
+        {
+          "artifact_id": "corpus-work-009-1",
+          "locator": "line:640",
+          "case": "actual_quote",
+          "result": "accepted"
+        },
+        {
+          "artifact_id": "corpus-work-009-1",
+          "case": "wrong_quote",
+          "result": "rejected"
+        },
+        {
+          "artifact_id": "corpus-work-009-1",
+          "case": "wrong_locator",
+          "result": "rejected"
+        },
+        {
+          "artifact_id": "corpus-work-009-1",
+          "case": "wrong_artifact_version",
+          "result": "rejected"
+        }
+      ]
+    },
+    {
+      "id": "work-010",
+      "status": "reference_gate_verified_semantics_unverified",
+      "chunks": 1,
+      "checks": [
+        {
+          "artifact_id": "corpus-work-010-1",
+          "locator": "line:4",
+          "case": "actual_quote",
+          "result": "accepted"
+        },
+        {
+          "artifact_id": "corpus-work-010-1",
+          "locator": "line:146",
+          "case": "actual_quote",
+          "result": "accepted"
+        },
+        {
+          "artifact_id": "corpus-work-010-1",
+          "locator": "line:288",
+          "case": "actual_quote",
+          "result": "accepted"
+        },
+        {
+          "artifact_id": "corpus-work-010-1",
+          "case": "wrong_quote",
+          "result": "rejected"
+        },
+        {
+          "artifact_id": "corpus-work-010-1",
+          "case": "wrong_locator",
+          "result": "rejected"
+        },
+        {
+          "artifact_id": "corpus-work-010-1",
+          "case": "wrong_artifact_version",
+          "result": "rejected"
+        }
+      ]
+    },
+    {
+      "id": "work-011",
+      "status": "reference_gate_verified_semantics_unverified",
+      "chunks": 1,
+      "checks": [
+        {
+          "artifact_id": "corpus-work-011-1",
+          "locator": "line:4",
+          "case": "actual_quote",
+          "result": "accepted"
+        },
+        {
+          "artifact_id": "corpus-work-011-1",
+          "locator": "line:47",
+          "case": "actual_quote",
+          "result": "accepted"
+        },
+        {
+          "artifact_id": "corpus-work-011-1",
+          "locator": "line:90",
+          "case": "actual_quote",
+          "result": "accepted"
+        },
+        {
+          "artifact_id": "corpus-work-011-1",
+          "case": "wrong_quote",
+          "result": "rejected"
+        },
+        {
+          "artifact_id": "corpus-work-011-1",
+          "case": "wrong_locator",
+          "result": "rejected"
+        },
+        {
+          "artifact_id": "corpus-work-011-1",
+          "case": "wrong_artifact_version",
+          "result": "rejected"
+        }
+      ]
+    },
+    {
+      "id": "work-012",
+      "status": "not_text_verified",
+      "reason": "image_only_needs_visual_review"
+    },
+    {
+      "id": "work-013",
+      "status": "not_text_verified",
+      "reason": "not_parsed"
+    },
+    {
+      "id": "work-014",
+      "status": "reference_gate_verified_semantics_unverified",
+      "chunks": 1,
+      "checks": [
+        {
+          "artifact_id": "corpus-work-014-1",
+          "locator": "line:4",
+          "case": "actual_quote",
+          "result": "accepted"
+        },
+        {
+          "artifact_id": "corpus-work-014-1",
+          "locator": "line:79",
+          "case": "actual_quote",
+          "result": "accepted"
+        },
+        {
+          "artifact_id": "corpus-work-014-1",
+          "locator": "line:154",
+          "case": "actual_quote",
+          "result": "accepted"
+        },
+        {
+          "artifact_id": "corpus-work-014-1",
+          "case": "wrong_quote",
+          "result": "rejected"
+        },
+        {
+          "artifact_id": "corpus-work-014-1",
+          "case": "wrong_locator",
+          "result": "rejected"
+        },
+        {
+          "artifact_id": "corpus-work-014-1",
+          "case": "wrong_artifact_version",
+          "result": "rejected"
+        }
+      ]
+    },
+    {
+      "id": "work-015",
+      "status": "not_text_verified",
+      "reason": "image_registered_needs_visual_review"
+    },
+    {
+      "id": "work-016",
+      "status": "not_text_verified",
+      "reason": "image_registered_needs_visual_review"
+    },
+    {
+      "id": "work-017",
+      "status": "not_text_verified",
+      "reason": "image_registered_needs_visual_review"
+    },
+    {
+      "id": "work-018",
+      "status": "not_text_verified",
+      "reason": "image_registered_needs_visual_review"
+    },
+    {
+      "id": "work-019",
+      "status": "not_text_verified",
+      "reason": "image_registered_needs_visual_review"
+    },
+    {
+      "id": "work-020",
+      "status": "not_text_verified",
+      "reason": "image_registered_needs_visual_review"
+    },
+    {
+      "id": "work-021",
+      "status": "not_text_verified",
+      "reason": "image_registered_needs_visual_review"
+    },
+    {
+      "id": "work-022",
+      "status": "not_text_verified",
+      "reason": "image_registered_needs_visual_review"
+    },
+    {
+      "id": "work-023",
+      "status": "not_text_verified",
+      "reason": "image_registered_needs_visual_review"
+    },
+    {
+      "id": "work-024",
+      "status": "not_text_verified",
+      "reason": "image_registered_needs_visual_review"
+    },
+    {
+      "id": "work-025",
+      "status": "reference_gate_verified_semantics_unverified",
+      "chunks": 1,
+      "checks": [
+        {
+          "artifact_id": "corpus-work-025-1",
+          "locator": "line:4",
+          "case": "actual_quote",
+          "result": "accepted"
+        },
+        {
+          "artifact_id": "corpus-work-025-1",
+          "locator": "line:177",
+          "case": "actual_quote",
+          "result": "accepted"
+        },
+        {
+          "artifact_id": "corpus-work-025-1",
+          "locator": "line:350",
+          "case": "actual_quote",
+          "result": "accepted"
+        },
+        {
+          "artifact_id": "corpus-work-025-1",
+          "case": "wrong_quote",
+          "result": "rejected"
+        },
+        {
+          "artifact_id": "corpus-work-025-1",
+          "case": "wrong_locator",
+          "result": "rejected"
+        },
+        {
+          "artifact_id": "corpus-work-025-1",
+          "case": "wrong_artifact_version",
+          "result": "rejected"
+        }
+      ]
+    },
+    {
+      "id": "work-026",
+      "status": "not_text_verified",
+      "reason": "image_only_needs_visual_review"
+    },
+    {
+      "id": "work-027",
+      "status": "reference_gate_verified_semantics_unverified",
+      "chunks": 1,
+      "checks": [
+        {
+          "artifact_id": "corpus-work-027-1",
+          "locator": "line:4",
+          "case": "actual_quote",
+          "result": "accepted"
+        },
+        {
+          "artifact_id": "corpus-work-027-1",
+          "locator": "line:18",
+          "case": "actual_quote",
+          "result": "accepted"
+        },
+        {
+          "artifact_id": "corpus-work-027-1",
+          "locator": "line:32",
+          "case": "actual_quote",
+          "result": "accepted"
+        },
+        {
+          "artifact_id": "corpus-work-027-1",
+          "case": "wrong_quote",
+          "result": "rejected"
+        },
+        {
+          "artifact_id": "corpus-work-027-1",
+          "case": "wrong_locator",
+          "result": "rejected"
+        },
+        {
+          "artifact_id": "corpus-work-027-1",
+          "case": "wrong_artifact_version",
+          "result": "rejected"
+        }
+      ]
+    },
+    {
+      "id": "work-028",
+      "status": "reference_gate_verified_semantics_unverified",
+      "chunks": 1,
+      "checks": [
+        {
+          "artifact_id": "corpus-work-028-1",
+          "locator": "line:4",
+          "case": "actual_quote",
+          "result": "accepted"
+        },
+        {
+          "artifact_id": "corpus-work-028-1",
+          "locator": "line:16",
+          "case": "actual_quote",
+          "result": "accepted"
+        },
+        {
+          "artifact_id": "corpus-work-028-1",
+          "locator": "line:28",
+          "case": "actual_quote",
+          "result": "accepted"
+        },
+        {
+          "artifact_id": "corpus-work-028-1",
+          "case": "wrong_quote",
+          "result": "rejected"
+        },
+        {
+          "artifact_id": "corpus-work-028-1",
+          "case": "wrong_locator",
+          "result": "rejected"
+        },
+        {
+          "artifact_id": "corpus-work-028-1",
+          "case": "wrong_artifact_version",
+          "result": "rejected"
+        }
+      ]
+    },
+    {
+      "id": "work-029",
+      "status": "reference_gate_verified_semantics_unverified",
+      "chunks": 1,
+      "checks": [
+        {
+          "artifact_id": "corpus-work-029-1",
+          "locator": "line:4",
+          "case": "actual_quote",
+          "result": "accepted"
+        },
+        {
+          "artifact_id": "corpus-work-029-1",
+          "locator": "line:9",
+          "case": "actual_quote",
+          "result": "accepted"
+        },
+        {
+          "artifact_id": "corpus-work-029-1",
+          "locator": "line:13",
+          "case": "actual_quote",
+          "result": "accepted"
+        },
+        {
+          "artifact_id": "corpus-work-029-1",
+          "case": "wrong_quote",
+          "result": "rejected"
+        },
+        {
+          "artifact_id": "corpus-work-029-1",
+          "case": "wrong_locator",
+          "result": "rejected"
+        },
+        {
+          "artifact_id": "corpus-work-029-1",
+          "case": "wrong_artifact_version",
+          "result": "rejected"
+        }
+      ]
+    },
+    {
+      "id": "work-030",
+      "status": "reference_gate_verified_semantics_unverified",
+      "chunks": 1,
+      "checks": [
+        {
+          "artifact_id": "corpus-work-030-1",
+          "locator": "line:4",
+          "case": "actual_quote",
+          "result": "accepted"
+        },
+        {
+          "artifact_id": "corpus-work-030-1",
+          "locator": "line:16",
+          "case": "actual_quote",
+          "result": "accepted"
+        },
+        {
+          "artifact_id": "corpus-work-030-1",
+          "locator": "line:28",
+          "case": "actual_quote",
+          "result": "accepted"
+        },
+        {
+          "artifact_id": "corpus-work-030-1",
+          "case": "wrong_quote",
+          "result": "rejected"
+        },
+        {
+          "artifact_id": "corpus-work-030-1",
+          "case": "wrong_locator",
+          "result": "rejected"
+        },
+        {
+          "artifact_id": "corpus-work-030-1",
+          "case": "wrong_artifact_version",
+          "result": "rejected"
+        }
+      ]
+    },
+    {
+      "id": "work-031",
+      "status": "reference_gate_verified_semantics_unverified",
+      "chunks": 1,
+      "checks": [
+        {
+          "artifact_id": "corpus-work-031-1",
+          "locator": "line:4",
+          "case": "actual_quote",
+          "result": "accepted"
+        },
+        {
+          "artifact_id": "corpus-work-031-1",
+          "locator": "line:39",
+          "case": "actual_quote",
+          "result": "accepted"
+        },
+        {
+          "artifact_id": "corpus-work-031-1",
+          "locator": "line:73",
+          "case": "actual_quote",
+          "result": "accepted"
+        },
+        {
+          "artifact_id": "corpus-work-031-1",
+          "case": "wrong_quote",
+          "result": "rejected"
+        },
+        {
+          "artifact_id": "corpus-work-031-1",
+          "case": "wrong_locator",
+          "result": "rejected"
+        },
+        {
+          "artifact_id": "corpus-work-031-1",
+          "case": "wrong_artifact_version",
+          "result": "rejected"
+        }
+      ]
+    },
+    {
+      "id": "work-032",
+      "status": "reference_gate_verified_semantics_unverified",
+      "chunks": 1,
+      "checks": [
+        {
+          "artifact_id": "corpus-work-032-1",
+          "locator": "line:4",
+          "case": "actual_quote",
+          "result": "accepted"
+        },
+        {
+          "artifact_id": "corpus-work-032-1",
+          "locator": "line:11",
+          "case": "actual_quote",
+          "result": "accepted"
+        },
+        {
+          "artifact_id": "corpus-work-032-1",
+          "locator": "line:17",
+          "case": "actual_quote",
+          "result": "accepted"
+        },
+        {
+          "artifact_id": "corpus-work-032-1",
+          "case": "wrong_quote",
+          "result": "rejected"
+        },
+        {
+          "artifact_id": "corpus-work-032-1",
+          "case": "wrong_locator",
+          "result": "rejected"
+        },
+        {
+          "artifact_id": "corpus-work-032-1",
+          "case": "wrong_artifact_version",
+          "result": "rejected"
+        }
+      ]
+    }
+  ]
+}

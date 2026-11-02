@@ -1,0 +1,463 @@
+{
+  "generated_at_utc": "2026-10-11T16:17:11.142631+00:00",
+  "runtime_input_commit": "b191d849af7ede9801ccb5dbd21f5d943ab307e1",
+  "status": "engineering_checks_passed",
+  "source_audit": {
+    "before_commit": "ce190280ab2deaad0f3aa6b9fdf0a67b512d010a",
+    "after_runtime_commit": "b191d849af7ede9801ccb5dbd21f5d943ab307e1",
+    "before_fixed_sources": [
+      {
+        "title": "当届比赛官网与章程",
+        "url": "https://www.ai-race.com.cn/"
+      },
+      {
+        "title": "2026年第二届赛事通知 · 电子科技大学",
+        "url": "https://www.mba.uestc.edu.cn/info/1013/8471.htm"
+      },
+      {
+        "title": "2025一等奖 Coco AI · 团队公开介绍",
+        "url": "https://infinilabs.cn/blog/2025/coco-ai-won-first-prize-at-the-2025-AI-innovation-competition/"
+      },
+      {
+        "title": "2025获奖案例 · 北京理工大学",
+        "url": "https://smen.bit.edu.cn/zhxw/8256cd984e014a369d1973691b85baaa.htm"
+      }
+    ],
+    "after_fixed_competition_source_count": 0,
+    "before_prefilled_goal": "参加全国人工智能应用创新大赛：把上岸鸭做成能联网查资料、安排学习路线、处理卡点和突发任务的 Agent。请给出从可用原型到参赛演示的具体路线。",
+    "after_prefilled_goal": "",
+    "before_prefilled_deadline": "2026-10-20",
+    "after_prefilled_deadline": "",
+    "pinned_python_files_checked": 26,
+    "meaning": "实际源码修复证明；不证明材料诊断或用户效果"
+  },
+  "capacity_and_progress": {
+    "input_nature": "synthetic",
+    "execution": "actual repository schedule function",
+    "base": {
+      "tasks": [
+        {
+          "id": "T0",
+          "title": "已保留的原稿",
+          "minutes": 10,
+          "status": "done",
+          "dependsOn": [],
+          "sessions": [
+            {
+              "date": "2026-10-11",
+              "minutes": 10
+            }
+          ],
+          "evidence": "模拟历史记录，不能丢失"
+        },
+        {
+          "id": "T1",
+          "title": "核对模拟访谈",
+          "minutes": 20,
+          "dependsOn": [
+            "T0"
+          ],
+          "status": "todo",
+          "sessions": [
+            {
+              "date": "2026-10-12",
+              "minutes": 20
+            }
+          ],
+          "unscheduledMinutes": 0
+        },
+        {
+          "id": "T2",
+          "title": "修改第2.1节",
+          "minutes": 15,
+          "dependsOn": [
+            "T1"
+          ],
+          "status": "todo",
+          "sessions": [
+            {
+              "date": "2026-10-12",
+              "minutes": 15
+            }
+          ],
+          "unscheduledMinutes": 0
+        },
+        {
+          "id": "T3",
+          "title": "补需求与动作表",
+          "minutes": 15,
+          "dependsOn": [
+            "T2"
+          ],
+          "status": "todo",
+          "sessions": [
+            {
+              "date": "2026-10-12",
+              "minutes": 15
+            }
+          ],
+          "unscheduledMinutes": 0
+        },
+        {
+          "id": "T4",
+          "title": "复核新版与证据",
+          "minutes": 10,
+          "dependsOn": [
+            "T3"
+          ],
+          "status": "todo",
+          "sessions": [
+            {
+              "date": "2026-10-12",
+              "minutes": 10
+            }
+          ],
+          "unscheduledMinutes": 0
+        }
+      ],
+      "days": [
+        {
+          "date": "2026-10-12",
+          "capacity": 60,
+          "used": 60,
+          "sessions": [
+            {
+              "taskId": "T1",
+              "title": "核对模拟访谈",
+              "minutes": 20
+            },
+            {
+              "taskId": "T2",
+              "title": "修改第2.1节",
+              "minutes": 15
+            },
+            {
+              "taskId": "T3",
+              "title": "补需求与动作表",
+              "minutes": 15
+            },
+            {
+              "taskId": "T4",
+              "title": "复核新版与证据",
+              "minutes": 10
+            }
+          ]
+        }
+      ],
+      "conflicts": [],
+      "totalMinutes": 60,
+      "unscheduledMinutes": 0,
+      "settings": {
+        "startDate": "2026-10-12",
+        "deadline": "2026-10-13",
+        "dailyMinutes": 90,
+        "dayBudgets": {
+          "2026-10-12": 60,
+          "2026-10-13": 60
+        }
+      }
+    },
+    "lost_30_minutes": {
+      "tasks": [
+        {
+          "id": "T0",
+          "title": "已保留的原稿",
+          "minutes": 10,
+          "status": "done",
+          "dependsOn": [],
+          "sessions": [
+            {
+              "date": "2026-10-11",
+              "minutes": 10
+            }
+          ],
+          "evidence": "模拟历史记录，不能丢失"
+        },
+        {
+          "id": "T1",
+          "title": "核对模拟访谈",
+          "minutes": 20,
+          "dependsOn": [
+            "T0"
+          ],
+          "status": "todo",
+          "sessions": [
+            {
+              "date": "2026-10-12",
+              "minutes": 20
+            }
+          ],
+          "unscheduledMinutes": 0
+        },
+        {
+          "id": "T2",
+          "title": "修改第2.1节",
+          "minutes": 15,
+          "dependsOn": [
+            "T1"
+          ],
+          "status": "todo",
+          "sessions": [
+            {
+              "date": "2026-10-12",
+              "minutes": 10
+            },
+            {
+              "date": "2026-10-13",
+              "minutes": 5
+            }
+          ],
+          "unscheduledMinutes": 0
+        },
+        {
+          "id": "T3",
+          "title": "补需求与动作表",
+          "minutes": 15,
+          "dependsOn": [
+            "T2"
+          ],
+          "status": "todo",
+          "sessions": [
+            {
+              "date": "2026-10-13",
+              "minutes": 15
+            }
+          ],
+          "unscheduledMinutes": 0
+        },
+        {
+          "id": "T4",
+          "title": "复核新版与证据",
+          "minutes": 10,
+          "dependsOn": [
+            "T3"
+          ],
+          "status": "todo",
+          "sessions": [
+            {
+              "date": "2026-10-13",
+              "minutes": 10
+            }
+          ],
+          "unscheduledMinutes": 0
+        }
+      ],
+      "days": [
+        {
+          "date": "2026-10-12",
+          "capacity": 30,
+          "used": 30,
+          "sessions": [
+            {
+              "taskId": "T1",
+              "title": "核对模拟访谈",
+              "minutes": 20
+            },
+            {
+              "taskId": "T2",
+              "title": "修改第2.1节",
+              "minutes": 10
+            }
+          ]
+        },
+        {
+          "date": "2026-10-13",
+          "capacity": 60,
+          "used": 30,
+          "sessions": [
+            {
+              "taskId": "T2",
+              "title": "修改第2.1节",
+              "minutes": 5
+            },
+            {
+              "taskId": "T3",
+              "title": "补需求与动作表",
+              "minutes": 15
+            },
+            {
+              "taskId": "T4",
+              "title": "复核新版与证据",
+              "minutes": 10
+            }
+          ]
+        }
+      ],
+      "conflicts": [],
+      "totalMinutes": 60,
+      "unscheduledMinutes": 0,
+      "settings": {
+        "startDate": "2026-10-12",
+        "deadline": "2026-10-13",
+        "dailyMinutes": 90,
+        "dayBudgets": {
+          "2026-10-12": 30,
+          "2026-10-13": 60
+        }
+      }
+    },
+    "same_day_deadline": {
+      "tasks": [
+        {
+          "id": "T0",
+          "title": "已保留的原稿",
+          "minutes": 10,
+          "status": "done",
+          "dependsOn": [],
+          "sessions": [
+            {
+              "date": "2026-10-11",
+              "minutes": 10
+            }
+          ],
+          "evidence": "模拟历史记录，不能丢失"
+        },
+        {
+          "id": "T1",
+          "title": "核对模拟访谈",
+          "minutes": 20,
+          "dependsOn": [
+            "T0"
+          ],
+          "status": "todo",
+          "sessions": [
+            {
+              "date": "2026-10-12",
+              "minutes": 20
+            }
+          ],
+          "unscheduledMinutes": 0
+        },
+        {
+          "id": "T2",
+          "title": "修改第2.1节",
+          "minutes": 15,
+          "dependsOn": [
+            "T1"
+          ],
+          "status": "todo",
+          "sessions": [
+            {
+              "date": "2026-10-12",
+              "minutes": 10
+            }
+          ],
+          "unscheduledMinutes": 5
+        },
+        {
+          "id": "T3",
+          "title": "补需求与动作表",
+          "minutes": 15,
+          "dependsOn": [
+            "T2"
+          ],
+          "status": "todo",
+          "sessions": [],
+          "unscheduledMinutes": 15
+        },
+        {
+          "id": "T4",
+          "title": "复核新版与证据",
+          "minutes": 10,
+          "dependsOn": [
+            "T3"
+          ],
+          "status": "todo",
+          "sessions": [],
+          "unscheduledMinutes": 10
+        }
+      ],
+      "days": [
+        {
+          "date": "2026-10-12",
+          "capacity": 30,
+          "used": 30,
+          "sessions": [
+            {
+              "taskId": "T1",
+              "title": "核对模拟访谈",
+              "minutes": 20
+            },
+            {
+              "taskId": "T2",
+              "title": "修改第2.1节",
+              "minutes": 10
+            }
+          ]
+        }
+      ],
+      "conflicts": [
+        {
+          "taskId": "T2",
+          "title": "修改第2.1节",
+          "reason": "截止前可用时间不足",
+          "minutes": 5
+        },
+        {
+          "taskId": "T3",
+          "title": "补需求与动作表",
+          "reason": "前置任务未能排完",
+          "minutes": 15
+        },
+        {
+          "taskId": "T4",
+          "title": "复核新版与证据",
+          "reason": "前置任务未能排完",
+          "minutes": 10
+        }
+      ],
+      "totalMinutes": 60,
+      "unscheduledMinutes": 30,
+      "settings": {
+        "startDate": "2026-10-12",
+        "deadline": "2026-10-12",
+        "dailyMinutes": 90,
+        "dayBudgets": {
+          "2026-10-12": 30,
+          "2026-10-13": 60
+        }
+      }
+    },
+    "meaning": "真实代码在指定输入下守容量、保留完成记录、报告缺口；不是模型估时准确性或实际用户效果"
+  },
+  "reference_arithmetic": {
+    "input_nature": "synthetic",
+    "oracle": "manual reference independently recomputed",
+    "rows": 6,
+    "excluded_duplicate_lines": [
+      5
+    ],
+    "missing_denominator_lines": [
+      7
+    ],
+    "zero_denominator_lines": [
+      6
+    ],
+    "collected": 60,
+    "returned": 42,
+    "aggregate_rate": 0.7,
+    "meaning": "验证人工期望结果的算术；不证明A/B生成质量"
+  },
+  "interface_guards": {
+    "tests_run": 9,
+    "failures": 0,
+    "errors": 0,
+    "fixture_nature": "human A packets and mocked model/search replies; B is actual delivered code",
+    "raw_test_log": "test_empty_A_template_and_missing_criteria_cannot_generate (test_handoff.HandoffTests.test_empty_A_template_and_missing_criteria_cannot_generate) ... ok\ntest_incremental_A_addition_preserves_completed_task_and_evidence (test_handoff.HandoffTests.test_incremental_A_addition_preserves_completed_task_and_evidence) ... ok\ntest_review_export_exact_submission_and_receive_does_not_complete (test_handoff.HandoffTests.test_review_export_exact_submission_and_receive_does_not_complete) ... ok\ntest_review_guards_wrong_versions_members_gap_and_criterion (test_handoff.HandoffTests.test_review_guards_wrong_versions_members_gap_and_criterion) ... ok\ntest_different_contest_queries_do_not_reuse_another_contests_sources (test_competition_context.CompetitionContextTests.test_different_contest_queries_do_not_reuse_another_contests_sources) ... ok\ntest_missing_or_invalid_name_rejected_before_retrieval (test_competition_context.CompetitionContextTests.test_missing_or_invalid_name_rejected_before_retrieval) ... ok\ntest_model_receives_selected_contest_and_no_invented_deadline_is_saved (test_competition_context.CompetitionContextTests.test_model_receives_selected_contest_and_no_invented_deadline_is_saved) ... ok\ntest_same_second_saves_restore_the_latest_competition_route (test_competition_context.CompetitionContextTests.test_same_second_saves_restore_the_latest_competition_route) ... ok\ntest_user_supplied_material_still_read_without_fixed_official_seeds (test_competition_context.CompetitionContextTests.test_user_supplied_material_still_read_without_fixed_official_seeds) ... ok\n\n----------------------------------------------------------------------\nRan 9 tests in 0.037s\n\nOK\n",
+    "B_provider": "deterministic-action-planner",
+    "B_generated_tasks": 1,
+    "B_tasks_with_micro_steps": 0,
+    "live_model_verified": false,
+    "meaning": "交接、版本与保护行为的程序证明；精细动作质量和真实A复核仍未证明"
+  },
+  "live_model_evaluation": "not_run",
+  "user_study": "not_run",
+  "award_readiness": "not_established",
+  "not_proven": [
+    "A真实诊断和复核",
+    "B领域精细操作质量",
+    "能力预测准确性",
+    "用户效率提升",
+    "全国一等奖水平"
+  ]
+}
