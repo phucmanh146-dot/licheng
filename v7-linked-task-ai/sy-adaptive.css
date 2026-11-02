@@ -41,3 +41,11 @@
 #view-daily .sy-comfort-daily-button:hover{background:#f7ddd7;transform:translateY(-1px);box-shadow:0 6px 17px #5e39271a}
 #view-daily .sy-comfort-daily-button:focus-visible{outline:3px solid #d39e9c;outline-offset:3px}
 @media(max-width:680px){#view-daily .sy-comfort-daily-button{width:calc(100% - 8px);margin:10px 4px}}
+
+
+/* Experience-aware estimate and real-time calibration, additive to existing planner */
+.sy-adaptive-dialog .sycal-buffer{padding:12px 14px;border-radius:12px;background:#fff1f5;border:1px solid #efd2dc;color:#75435a;font-weight:650;line-height:1.6}
+.sy-adaptive-dialog .sycal-row{display:grid;grid-template-columns:90px minmax(80px,1fr) 52px minmax(100px,auto);gap:10px;align-items:center;padding:9px 0;border-bottom:1px solid #f1e4e9;font-size:.82rem}
+.sy-adaptive-dialog .sycal-track{height:9px;border-radius:10px;background:#f2e5ea;overflow:hidden}.sy-adaptive-dialog .sycal-track i{display:block;height:100%;border-radius:10px;background:linear-gradient(90deg,#e4a7bb,#b96b8b)}
+.sy-adaptive-dialog .sycal-row strong{color:#75435a}.sy-adaptive-dialog .sycal-row em{font-style:normal;color:#7c6c74}
+@media(max-width:650px){.sy-adaptive-dialog .sycal-row{grid-template-columns:72px minmax(40px,1fr) 40px}.sy-adaptive-dialog .sycal-row em{grid-column:2/4}}
