@@ -60,5 +60,38 @@ class EngineeringHealthTests(unittest.TestCase):
         self.assertEqual(result["actual_dimensions"], 768)
 
 
+    def test_empty_qdrant_collection_is_not_reported_available(self):
+        from types import SimpleNamespace
+        info = SimpleNamespace(points_count=0, config=SimpleNamespace(
+            params=SimpleNamespace(vectors=SimpleNamespace(size=1024))))
+        db = type("FakeQdrant", (), {
+            "collection_exists": lambda self, name: True,
+            "get_collection": lambda self, name: info,
+        })()
+        fake = type("FakeClient", (), {"__new__": lambda cls, **kwargs: db})
+        with patch.dict(os.environ, {"SHANGAN_QDRANT_URL":"http://qdrant.invalid",
+                                     "SHANGAN_EMBEDDING_DIMENSIONS":"1024"}), \
+             patch.dict("sys.modules", {"qdrant_client":SimpleNamespace(QdrantClient=fake)}):
+            result = engineering_health.check_qdrant()
+        self.assertEqual(result["status"], "COLLECTION_EMPTY")
+        self.assertEqual(result["points_count"], 0)
+
+    def test_qdrant_dimensions_must_match_expected_embedding(self):
+        from types import SimpleNamespace
+        info = SimpleNamespace(points_count=20, config=SimpleNamespace(
+            params=SimpleNamespace(vectors=SimpleNamespace(size=768))))
+        db = type("FakeQdrant", (), {
+            "collection_exists": lambda self, name: True,
+            "get_collection": lambda self, name: info,
+        })()
+        fake = type("FakeClient", (), {"__new__": lambda cls, **kwargs: db})
+        with patch.dict(os.environ, {"SHANGAN_QDRANT_URL":"http://qdrant.invalid",
+                                     "SHANGAN_EMBEDDING_DIMENSIONS":"1024"}), \
+             patch.dict("sys.modules", {"qdrant_client":SimpleNamespace(QdrantClient=fake)}):
+            result = engineering_health.check_qdrant()
+        self.assertEqual(result["status"], "VECTOR_DIMENSION_MISMATCH")
+        self.assertEqual(result["actual_dimensions"], 768)
+
+
 if __name__ == "__main__":
     unittest.main()
