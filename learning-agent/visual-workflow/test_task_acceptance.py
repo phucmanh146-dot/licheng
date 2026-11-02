@@ -37,4 +37,23 @@ class TaskAcceptanceTests(unittest.TestCase):
         status,b,_=self.call('/api/acceptance');self.assertEqual(status,200)
         rows=json.loads(b)['rows'];self.assertEqual(len(rows),55)
         self.assertEqual(next(x for x in rows if x['task']['id']==11)['effective_status'],'invalidated')
+    def test_null_or_nontext_cannot_count_as_review_evidence(self):
+        import copy
+        self.submit()
+        for value in (None,[],{},False,0,'   '):
+            for key in ('reviewer','requirement_note'):
+                d=self.review();d[key]=value
+                with self.subTest(key=key,value=value):self.assertEqual(self.task('review',d)[0],400)
+            for key in ('location','note'):
+                d=copy.deepcopy(self.review());d['checks']['交付产物'][key]=value
+                with self.subTest(key=key,value=value):self.assertEqual(self.task('review',d)[0],400)
+        self.assertEqual(self.store.get('JN')['acceptance_tasks']['11']['status'],'pending_review')
+    def test_unicode_cosmetic_identity_changes_do_not_bypass_self_review(self):
+        self.submit()
+        for reviewer in ['ＳＹＮＴＨＥＴＩＣ－Ａ','SYNTHETIC-\u200bA']:
+            d=self.review();d['reviewer']=reviewer
+            with self.subTest(reviewer=reviewer):self.assertEqual(self.task('review',d)[0],400)
+    def test_null_executor_cannot_create_submission(self):
+        aa={'交付产物':self.upload('test-result'),'执行记录':self.upload('test-log')}
+        self.assertEqual(self.task('submit',{'executor':None,'note':'SYNTHETIC','artifacts':aa})[0],400)
 
