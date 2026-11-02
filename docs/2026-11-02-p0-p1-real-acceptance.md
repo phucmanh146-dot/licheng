@@ -76,3 +76,11 @@
 ## 当前运行环境限制
 
 本次检查的远程 Windows 机器没有 Docker Engine；本机 Ollama endpoint 不可达，11434/6333/5432/6379 没有监听。因此本轮只能补齐部署定义、探测器和验收脚本，不能宣称真实 BGE-M3/Qdrant、Reranker、PostgreSQL/Redis 已连通。真实扫描件、两项目 V2 和独立复核也必须由实际材料与执行人完成。
+
+## 23:40 本机第二轮回归补充
+
+- 补充 Qdrant 空 collection 与 embedding 维度不匹配的 readiness 回归用例，确保不能仅凭 collection 存在就显示语义检索可用。
+- 修复 Windows 下 RAG 工作台静态资源测试的 HTTP 连接关闭竞争。
+- 修复 V1→V2 合成 API 测试：独立复核请求必须显式声明 `method=manual` 和 `content_read_confirmed=true`，与服务端真实人工复核契约保持一致。
+- 本机完整 Python 回归 345 tests 全部通过；Node 语法检查、Python 编译检查、Git whitespace 检查全部通过。
+- 当前设备 Docker Engine 未安装，C 盘剩余约 0.2GB，Ollama/Qdrant/Redis/PostgreSQL/TEI 端口均未监听；本轮没有下载模型或启动服务。真实模型推理和真实业务证据仍是 P0/P1 待验收项。
