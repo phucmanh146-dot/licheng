@@ -158,7 +158,7 @@ class Handler(LegacyHandler):
                 allowed += ('/team-recovery.js',)
                 allowed += ('/team-runtime.js',)
                 allowed += ('/team-intervention.js',)
-                allowed += ('/research-companion.js', '/contest-progress.html')
+                allowed += ('/research-companion.js', '/contest-progress.html', '/team-rag.js')
                 if self.path.split('?')[0] not in allowed:
                     return self.send_json({'error': '文件不可读取'}, 404)
             return super().do_GET()

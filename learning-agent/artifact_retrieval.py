@@ -85,12 +85,30 @@ def select(project, query, limit=12, max_chars=18000, filters=None):
             fused[identity] = fused.get(identity, 0) + 1/(60+rank)
             candidates[identity] = row
             channels.setdefault(identity, []).append(name)
-    # Second stage favors content support over a title-only metadata match.
-    reranked = {k:fused[k] * (1 + 0.2 * len(terms.intersection(tokens(candidates[k][2]['text']))) / max(1, len(terms))) for k in fused}
-    ranked = [(reranked[k], candidates[k][1], candidates[k][2])
-              for k in sorted(fused, key=lambda k: (-reranked[k], k))]
+    # Cross-Encoder reranks a bounded RRF candidate set. When the service is
+    # absent or unhealthy, keep a clearly labelled deterministic fallback.
+    ordered = sorted(
+        [(fused[k], candidates[k][1], candidates[k][2], channels[k]) for k in fused],
+        key=lambda row: (-row[0], row[1]['artifact_id'], row[2]['locator']))
+    import cross_encoder_rerank
+    rerank_pool = ordered[:min(50, len(ordered))]
+    cross_scores, cross_trace = cross_encoder_rerank.rank(
+        query, [row[2]['text'][:6000] for row in rerank_pool])
+    if cross_scores is not None:
+        ranked = [(rerank_pool[index][0], rerank_pool[index][1],
+                   rerank_pool[index][2], rerank_pool[index][3], score)
+                  for index, score in cross_scores]
+        ranked.extend((row[0], row[1], row[2], row[3], row[0])
+                      for row in ordered[len(rerank_pool):])
+        reranker_name = 'cross_encoder'
+    else:
+        fallback = [(row[0] * (1 + 0.2 * len(terms.intersection(tokens(row[2]['text']))) / max(1, len(terms))), row)
+                    for row in ordered]
+        fallback.sort(key=lambda item: (-item[0], item[1][1]['artifact_id'], item[1][2]['locator']))
+        ranked = [(row[0], row[1], row[2], row[3], score) for score, row in fallback]
+        reranker_name = 'content_overlap_fallback'
     hits, used = [], 0
-    for score, doc, unit in ranked:
+    for _, doc, unit, recall_channels, score in ranked:
         if len(hits) >= limit:
             break
         if used + len(unit['text']) > max_chars:
@@ -98,12 +116,13 @@ def select(project, query, limit=12, max_chars=18000, filters=None):
         hits.append({'artifact_id':doc['artifact_id'], 'artifact_version':doc['artifact_version'],
                      'sha256':doc['sha256'], 'locator':unit['locator'],
                      'text':unit['text'], 'score':round(score, 6),
-                     'recall_channels':channels[key((score, doc, unit))], 'data_is_untrusted':True})
+                     'recall_channels':recall_channels, 'data_is_untrusted':True})
         used += len(unit['text'])
-    return {'method':'bm25_metadata_rrf_v1', 'fusion':'rrf(k=60)',
+    return {'method':'bm25_metadata_dense_rrf_v2', 'fusion':'rrf(k=60)',
             'channels':{name:len(route) for name, route in routes.items()},
             'dense_status':dense_trace['status'], 'dense_trace':dense_trace,
-            'reranker':'content_overlap_v1', 'filters':filters, 'query':query, 'hits':copy.deepcopy(hits),
+            'reranker':reranker_name, 'reranker_trace':cross_trace,
+            'filters':filters, 'query':query, 'hits':copy.deepcopy(hits),
             'coverage':'partial', 'scanned_units':len(rows), 'matched_units':len(ranked),
             'selected_chars':used, 'max_chars':max_chars,
             'omitted_matches':len(ranked)-len(hits),
