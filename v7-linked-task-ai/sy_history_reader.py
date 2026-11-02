@@ -101,4 +101,3 @@ def history(data):
    if len(rows)<50:exhausted=True;break
   if scanned:_STATE.update(phase='history_ready',historyVerified=True,checkedAt=time.time())
  return {'items':items,'group':name,'scanned':scanned,'nextOffset':offset+scanned,'hasMore':not exhausted,'checkedAt':time.time(),'scope':'当前授权账号在设备上保存的历史；不含设备尚未同步或已删除的记录。'}
-
