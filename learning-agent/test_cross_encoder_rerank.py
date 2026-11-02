@@ -68,7 +68,6 @@ class CrossEncoderTests(unittest.TestCase):
             hit = result["hits"][0]
             artifact_store.references(project, [{**hit, "quote": hit["text"]}])
 
-
     def test_rag_workbench_assets_are_served(self):
         import threading
         from http.server import ThreadingHTTPServer
@@ -91,6 +90,26 @@ class CrossEncoderTests(unittest.TestCase):
             server.shutdown()
             server.server_close()
             thread.join(timeout=5)
+
+
+class CrossEncoderProviderTests(unittest.TestCase):
+    def test_tei_uses_texts_contract(self):
+        payload = cross_encoder_rerank._payload("tei", "query", ["a", "b"], "model")
+        self.assertEqual(payload, {"query":"query", "texts":["a","b"], "raw_scores":True})
+        self.assertNotIn("documents", payload)
+
+    def test_jina_uses_documents_contract(self):
+        payload = cross_encoder_rerank._payload("jina", "query", ["a"], "model")
+        self.assertEqual(payload["documents"], ["a"])
+        self.assertEqual(payload["top_n"], 1)
+
+    def test_unsupported_provider_fails_closed(self):
+        with patch.dict(os.environ, {"SHANGAN_RERANKER_URL":"https://example.invalid",
+                                     "SHANGAN_RERANKER_PROVIDER":"unknown"}):
+            result, trace = cross_encoder_rerank.rank("query", ["document"])
+        self.assertIsNone(result)
+        self.assertEqual(trace["status"], "UNAVAILABLE")
+        self.assertEqual(trace["error_code"], "UnsupportedProvider")
 
 
 if __name__ == "__main__":

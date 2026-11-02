@@ -93,4 +93,23 @@ class IndependentReviewTests(unittest.TestCase):
                 ai.reviewer(p,request)
         model.assert_not_called()
 
+    def test_manual_review_requires_explicit_read_and_records_independent_attestation(self):
+        self.submitted()
+        packet = self.packet()
+        packet['content_read_confirmed'] = True
+        self.p = handoff.receive_manual_review({**self.ctx(), 'review': packet})
+        record = self.p['plan']['tasks'][0]['external_review']
+        self.assertTrue(record['content_read_verified'])
+        self.assertTrue(record['content_independently_verified'])
+        self.assertEqual(record['review_method'], 'manual')
+        self.assertEqual(record['reviewer_id'], 'member-reviewer')
+        self.assertEqual(self.p['plan']['tasks'][0]['status'], 'pending_review')
+
+    def test_manual_review_without_read_attestation_is_rejected(self):
+        self.submitted()
+        packet = self.packet()
+        with self.assertRaisesRegex(ValueError, '已打开当前 V2'):
+            handoff.receive_manual_review({**self.ctx(), 'review': packet})
+
+
 if __name__ == '__main__': unittest.main()

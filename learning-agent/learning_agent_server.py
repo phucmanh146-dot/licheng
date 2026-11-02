@@ -73,6 +73,10 @@ class Handler(LegacyHandler):
         parsed = urlparse(self.path)
         path = parsed.path
         try:
+            if path == '/api/agent/engineering-health':
+                import engineering_health
+                deep = parse_qs(parsed.query).get('deep', ['0'])[0] == '1'
+                return self.send_json(engineering_health.report(deep=deep))
             if path == '/api/agent/health':
                 import shutil, importlib.util
                 return self.send_json({'ok': True, 'version': 'learning-agent-1', 'ai': rescue.public_config(),
@@ -221,7 +225,8 @@ class Handler(LegacyHandler):
                             'period-replan':team.period_replan,'undo-plan':team.undo_plan,
                             'dispatch':dispatch.dispatch,'brief':dispatch.brief,
                             'handoff-check':handoff.check,'generate-b':handoff.generate,
-                            'review-receive':handoff.receive_review,'review-run':handoff.invoke_review,
+                            'review-receive':handoff.receive_review,'review-manual':handoff.receive_manual_review,
+                            'review-run':handoff.invoke_review,
                             'context':team_inputs.save_context,'member':team_inputs.save_member,
                             'capability':team_inputs.record_capability,'artifact-import':artifact_store.import_file,
                             'artifact-retrieve':artifact_retrieval.retrieve,

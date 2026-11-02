@@ -5,37 +5,117 @@ services:
       POSTGRES_USER: shangan
       POSTGRES_DB: shangan
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}
-    volumes: [postgres-data:/var/lib/postgresql/data]
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
     healthcheck:
-      test: [CMD-SHELL, pg_isready -U shangan]
+      test: [CMD-SHELL, pg_isready -U shangan -d shangan]
       interval: 5s
-      retries: 10
+      timeout: 3s
+      retries: 12
+    restart: unless-stopped
+
   qdrant:
     image: qdrant/qdrant:v1.12.6
-    volumes: [qdrant-data:/qdrant/storage]
+    volumes:
+      - qdrant-data:/qdrant/storage
+    restart: unless-stopped
+
   redis:
     image: redis:7.4-alpine
+    command: [redis-server, --appendonly, "yes", --maxmemory, 256mb, --maxmemory-policy, allkeys-lru]
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: [CMD, redis-cli, ping]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+    restart: unless-stopped
+
+  ollama:
+    image: ollama/ollama:latest
+    environment:
+      OLLAMA_KEEP_ALIVE: 24h
+    volumes:
+      - ollama-data:/root/.ollama
+    healthcheck:
+      test: [CMD-SHELL, ollama list >/dev/null 2>&1]
+      interval: 10s
+      timeout: 5s
+      retries: 18
+    restart: unless-stopped
+
+  ollama-model-init:
+    image: ollama/ollama:latest
+    environment:
+      OLLAMA_HOST: http://ollama:11434
+    entrypoint: [/bin/sh, -c]
+    command: ["ollama pull bge-m3"]
+    depends_on:
+      ollama:
+        condition: service_healthy
+    restart: "no"
+
+  reranker:
+    image: ghcr.io/huggingface/text-embeddings-inference:cpu-1.8
+    command: [--model-id, BAAI/bge-reranker-v2-m3, --port, "8080"]
+    environment:
+      HF_HOME: /data/huggingface
+    volumes:
+      - reranker-cache:/data/huggingface
+    restart: unless-stopped
+
   api:
-    build: {context: ., dockerfile: Dockerfile.engineering}
+    build:
+      context: .
+      dockerfile: Dockerfile.engineering
     env_file: .env.engineering
     environment: &shared
       SHANGAN_ENV: production
       SHANGAN_DATABASE_URL: postgresql://shangan:${POSTGRES_PASSWORD}@postgres:5432/shangan
       SHANGAN_QDRANT_URL: http://qdrant:6333
       SHANGAN_REDIS_URL: redis://redis:6379/0
+      SHANGAN_OLLAMA_URL: http://ollama:11434
+      SHANGAN_RERANKER_URL: http://reranker:8080/rerank
+      SHANGAN_RERANKER_PROVIDER: tei
+      SHANGAN_RERANKER_MODEL: BAAI/bge-reranker-v2-m3
     ports: ["127.0.0.1:8000:8000"]
     depends_on:
-      postgres: {condition: service_healthy}
-      qdrant: {condition: service_started}
-      redis: {condition: service_started}
+      postgres:
+        condition: service_healthy
+      qdrant:
+        condition: service_started
+      redis:
+        condition: service_healthy
+      ollama-model-init:
+        condition: service_completed_successfully
+      reranker:
+        condition: service_started
+    restart: unless-stopped
+
   worker:
-    build: {context: ., dockerfile: Dockerfile.engineering}
+    build:
+      context: .
+      dockerfile: Dockerfile.engineering
     env_file: .env.engineering
     environment: *shared
     command: [python, research_graph.py]
     depends_on:
-      postgres: {condition: service_healthy}
-      qdrant: {condition: service_started}
+      postgres:
+        condition: service_healthy
+      qdrant:
+        condition: service_started
+      redis:
+        condition: service_healthy
+      ollama-model-init:
+        condition: service_completed_successfully
+      reranker:
+        condition: service_started
+    restart: unless-stopped
+
 volumes:
   postgres-data:
   qdrant-data:
+  redis-data:
+  ollama-data:
+  reranker-cache:
