@@ -18,8 +18,13 @@ DDL倒排，先排依赖和关键路径，预留缓冲与休息；不得虚构�
 遇到“知道目标但不知道怎么做”，区分：没想清具体形式、上下文/截图/材料不足、能力或工具阻塞；
 给一个能在10-30分钟内验证的最小试做，必要时要求用户补截图或原文位置。
 材料没提供就明确说没看到；网页没读取成功就明确说未读取；引用必须来自上下文。
+特别规则：用户只说“有12页PPT”不等于你读过PPT；没有正文、截图或附件原文时，不得说出PPT具体问题，
+不得生成“审阅PPT、优化视觉、准备演讲稿”这类泛任务。用户要按比赛80分改进，但没有官方评分标准时，
+必须明确“尚未看到评分标准”，先请求上传评分标准和作品内容；可先做资料准备任务，不得伪造评分项或打分。
+日期必须按context.now和context.timezone解释；用户给了未来DDL，不能把它写成“今天截止”。
+任务草案必须有可追溯依据、具体操作、目标位置、交付物、自检和失败下一步；不能只有“分析/完善/优化”。
 不声称已执行、已保存、已部署或已验收。计划仅是候选，用户确认后才能加入本地任务。
-只输出JSON对象：{"reply":"给用户看的自然中文回答","questions":["最多一个最关键问题"],"task_drafts":[{"title":"任务名","estimate_minutes":30,"deliverable":"具体产物","acceptance_criteria":["可检查标准"],"deadline":"ISO时间或空字符串","depends_on_titles":[],"priority":1,"parallel":false}],"schedule_notes":["排期判断或未安排原因"],"confidence":"high|medium|low"}。
+只输出JSON对象：{"reply":"给用户看的自然中文回答","questions":["最多一个最关键问题"],"task_drafts":[{"title":"任务名","estimate_minutes":30,"target_locator":"材料页码/章节/任务位置","action":"对该位置执行的具体操作","reason":"为什么做这一步","source_basis":"来自哪段已提供的材料；无材料时为空","deliverable":"具体产物","acceptance_criteria":["可检查标准"],"self_check":"如何核对","failure_next":"失败后做什么","deadline":"带时区ISO时间或空字符串","depends_on_titles":[],"priority":1,"parallel":false}],"schedule_notes":["排期判断或未安排原因"],"confidence":"high|medium|low"}。
 信息不足时task_drafts必须为空，只提出最关键问题。estimate_minutes为正整数，最多10项。
 不要返回Markdown围栏，不要生成用户未提供的事实。"""
 
@@ -63,11 +68,25 @@ def respond(data):
         deliverable = str(row.get("deliverable", "")).strip()[:500]
         estimate = row.get("estimate_minutes")
         criteria = row.get("acceptance_criteria", [])
-        if not title or not deliverable or type(estimate) is not int or not 1 <= estimate <= 1440 or not isinstance(criteria, list) or not criteria:
-            raise rescue.RescueError("任务草案缺少标题、产物、有效估时或验收标准，未写入任务。", "MODEL_FORMAT")
+        required_action = ("target_locator", "action", "reason", "self_check", "failure_next", "source_basis")
+        if not title or not deliverable or type(estimate) is not int or not 1 <= estimate <= 1440 or not isinstance(criteria, list) or not criteria or any(not str(row.get(k, "")).strip() for k in required_action):
+            raise rescue.RescueError("任务草案缺少材料位置、具体动作、依据、自检或失败下一步，未写入任务。", "MODEL_FORMAT")
+        deadline = str(row.get("deadline", "")).strip()
+        if deadline:
+            from datetime import datetime
+            try:
+                parsed = datetime.fromisoformat(deadline.replace("Z", "+00:00"))
+                if parsed.tzinfo is None:
+                    raise ValueError()
+            except ValueError as exc:
+                raise rescue.RescueError("任务截止时间必须是带时区的ISO时间，未写入任务。", "MODEL_FORMAT") from exc
         normalized.append({"title":title, "estimate_minutes":estimate, "deliverable":deliverable,
+                           "target_locator":str(row["target_locator"])[:300],
+                           "action":str(row["action"])[:800], "reason":str(row["reason"])[:500],
+                           "source_basis":str(row["source_basis"])[:500],
+                           "self_check":str(row["self_check"])[:500], "failure_next":str(row["failure_next"])[:500],
                            "acceptance_criteria":[str(x)[:300] for x in criteria[:8] if str(x).strip()],
-                           "deadline":str(row.get("deadline",""))[:80],
+                           "deadline":deadline[:80],
                            "depends_on_titles":[str(x)[:180] for x in row.get("depends_on_titles",[])[:10]],
                            "priority":max(1,min(5,int(row.get("priority",3)))),
                            "parallel":row.get("parallel") is True})
