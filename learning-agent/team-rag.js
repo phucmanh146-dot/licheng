@@ -8,6 +8,25 @@
   const query = document.getElementById('rag-query');
   const limit = document.getElementById('rag-limit');
 
+  const healthStatus = document.getElementById('agent-health-status');
+  const healthDetails = document.getElementById('agent-health-details');
+  const healthButton = document.getElementById('agent-health-refresh');
+  async function refreshHealth() {
+    healthButton.disabled = true; healthStatus.textContent = '正在读取当前运行环境……'; healthDetails.replaceChildren();
+    try {
+      const response = await fetch('/api/agent/health', {cache:'no-store'}); const data = await response.json();
+      if (!response.ok || !data.ok) throw new Error(data.error || '健康检查接口不可用');
+      const rows = [['AI 模型',data.ai?.configured?'已配置':'未配置',data.ai?.verified?'本次连接已验证':'本次连接未验证'],['联网搜索',data.search?.provider||'未知',data.search?.verified?'本次搜索已验证':'本次搜索未验证']];
+      for (const [name,value,note] of rows) { const item=document.createElement('article'); item.className='gap-card'; const h=document.createElement('h4'); h.textContent=name+'：'+value; const p=document.createElement('p'); p.textContent=note; item.append(h,p); healthDetails.append(item); }
+      const missing=Object.entries(data.capabilities||{}).filter(([,v])=>!v).map(([k])=>k); const cap=document.createElement('p'); cap.textContent='已声明功能：'+Object.keys(data.capabilities||{}).length+'项；未启用：'+(missing.join('、')||'无'); healthDetails.append(cap);
+      const blockers=[]; if(!data.ai?.configured) blockers.push('AI 模型未配置，不能执行真实模型诊断'); else if(!data.ai?.verified) blockers.push('AI 模型尚未完成连接验证'); if(!data.search?.verified) blockers.push('联网搜索尚未验证，检索结果可能为空或不完整');
+      healthStatus.textContent=blockers.length?'当前有 '+blockers.length+'项运行阻塞：'+blockers.join('；'):'基础连接检查通过；仍需用真实材料验证输出质量。'; healthStatus.className=blockers.length?'error':'hint';
+    } catch(error) { healthStatus.textContent='健康检查失败：'+error.message; healthStatus.className='error'; }
+    finally { healthButton.disabled=false; }
+  }
+  healthButton.addEventListener('click',refreshHealth); refreshHealth();
+
+
   function message(text, error = false) {
     status.textContent = text;
     status.className = error ? 'error' : 'hint';
