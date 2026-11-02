@@ -53,9 +53,17 @@ def check_qdrant(deep=False):
         if exists:
             info = db.get_collection(collection)
             result["points_count"] = info.points_count
-            result["vectors_configured"] = bool(info.config.params.vectors)
-            result["expected_dimensions"] = int(os.getenv("SHANGAN_EMBEDDING_DIMENSIONS", "1024"))
-        if deep and exists:
+            vector_config = info.config.params.vectors
+            if isinstance(vector_config, dict):
+                vector_config = vector_config.get("")
+            actual_dimensions = getattr(vector_config, "size", None)
+            expected_dimensions = int(os.getenv("SHANGAN_EMBEDDING_DIMENSIONS", "1024"))
+            result["vectors_configured"] = bool(vector_config)
+            result["expected_dimensions"] = expected_dimensions
+            result["actual_dimensions"] = actual_dimensions
+            if actual_dimensions is not None and actual_dimensions != expected_dimensions:
+                result["status"] = "VECTOR_DIMENSION_MISMATCH"
+        if deep and exists and result["status"] == "AVAILABLE":
             result["count_probe"] = "PASSED"
         return result
     except Exception as exc:
@@ -139,7 +147,7 @@ def report(deep=False):
         "redis": check_redis(),
         "ocr": check_ocr(),
     }
-    blocking = ("NOT_CONFIGURED", "MODEL_NOT_INSTALLED", "COLLECTION_NOT_INITIALIZED", "UNAVAILABLE")
+    blocking = ("NOT_CONFIGURED", "MODEL_NOT_INSTALLED", "COLLECTION_NOT_INITIALIZED", "VECTOR_DIMENSION_MISMATCH", "UNAVAILABLE")
     checks["summary"] = {
         "ready": all(row["status"] == "AVAILABLE" for row in checks.values()),
         "blocking_services": [name for name, row in checks.items()
