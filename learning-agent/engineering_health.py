@@ -1,4 +1,4 @@
-"""Read-only readiness probes for the real engineering dependencies.
+""""Read-only readiness probes for the real engineering dependencies.
 
 A configured URL is not treated as a successful connection. Deep probes perform
 one real embedding and one real reranker inference; no secrets or endpoint URLs
@@ -48,7 +48,7 @@ def check_qdrant(deep=False):
             url=url, api_key=os.getenv("SHANGAN_QDRANT_API_KEY") or None, timeout=5)
         collection = os.getenv("SHANGAN_QDRANT_COLLECTION", "shangan_artifacts_v1")
         exists = db.collection_exists(collection)
-        result = {"status": "AVAILABLE" if exists else "COLLECTION_NOT_INITIALIZED",
+        result = {"status": "COLLECTION_EMPTY" if exists else "COLLECTION_NOT_INITIALIZED",
                   "collection_exists": exists, "collection": collection}
         if exists:
             info = db.get_collection(collection)
@@ -63,6 +63,8 @@ def check_qdrant(deep=False):
             result["actual_dimensions"] = actual_dimensions
             if actual_dimensions is not None and actual_dimensions != expected_dimensions:
                 result["status"] = "VECTOR_DIMENSION_MISMATCH"
+            elif int(info.points_count or 0) > 0:
+                result["status"] = "AVAILABLE"
         if deep and exists and result["status"] == "AVAILABLE":
             result["count_probe"] = "PASSED"
         return result
@@ -80,8 +82,7 @@ def check_reranker(deep=False):
         import cross_encoder_rerank
         scores, trace = cross_encoder_rerank.rank(
             "哪份材料说明了真实用户增长？",
-            ["材料记录了用户增长数据和统计口径。",
-             "这是一段与用户增长无关的页面颜色说明。"])
+            ["材料记录了用户增长数据和统计口径。", "这是一段与用户增长无关的页面颜色说明。"])
         if scores is None or trace.get("status") != "AVAILABLE":
             return _item("UNAVAILABLE", model=trace.get("model"),
                          provider=trace.get("provider"), error_code=trace.get("error_code"))
@@ -127,9 +128,10 @@ def check_ocr():
         import onnxruntime
         from PIL import Image
         import rapidocr
-        return _item("AVAILABLE", engine="RapidOCR/ONNX",
+        return _item("BENCHMARK_PENDING", engine="RapidOCR/ONNX",
                      benchmark="NOT_RUN", numpy=numpy.__version__,
-                     onnxruntime=onnxruntime.__version__)
+                     onnxruntime=onnxruntime.__version__,
+                     note="依赖可用不代表真实扫描件识别准确率达标")
     except Exception as exc:
         return _item("UNAVAILABLE", error_code=type(exc).__name__)
 
@@ -144,7 +146,9 @@ def report(deep=False):
         "redis": check_redis(),
         "ocr": check_ocr(),
     }
-    blocking = ("NOT_CONFIGURED", "MODEL_NOT_INSTALLED", "COLLECTION_NOT_INITIALIZED", "VECTOR_DIMENSION_MISMATCH", "UNAVAILABLE")
+    blocking = ("NOT_CONFIGURED", "MODEL_NOT_INSTALLED", "COLLECTION_NOT_INITIALIZED",
+                "COLLECTION_EMPTY", "VECTOR_DIMENSION_MISMATCH", "BENCHMARK_PENDING",
+                "CONFIGURED_NOT_PROBED", "UNAVAILABLE")
     checks["summary"] = {
         "ready": all(row["status"] == "AVAILABLE" for row in checks.values()),
         "blocking_services": [name for name, row in checks.items()
