@@ -1,0 +1,41 @@
+#pma-root .pmah-hub{border:1px solid #a1c4ba;border-radius:22px;padding:22px;margin:16px 0;background:linear-gradient(160deg,#f0f9f2 0%,#fafff9 55%,#fffdf7 100%);box-shadow:0 10px 32px #0a3f2c0b;max-width:100%;box-sizing:border-box}
+#pma-root .pmah-top{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;flex-wrap:wrap}
+#pma-root .pmah-top h2{font-size:clamp(24px,3vw,32px);font-weight:850;color:#103b32;line-height:1.25;letter-spacing:-.03em;margin:4px 0 9px}
+#pma-root .pmah-kicker{font-size:10px;color:#3c8068;letter-spacing:2.1px;font-weight:820;margin:0}
+#pma-root .pmah-desc{font-size:13px;color:#477063;line-height:1.7;margin:0}
+#pma-root .pmah-status{display:flex;flex-direction:column;align-items:flex-end;gap:6px;margin-top:3px}
+#pma-root .pmah-status span{font-size:11px;color:#306450;background:#e5f3eb;border-radius:9px;padding:7px 11px}
+#pma-root .pmah-themes{display:flex;gap:7px;flex-wrap:wrap;margin-top:19px}
+#pma-root .pmah-themes button{border:1px solid #bfdbd0;border-radius:100px;padding:9px 13px;font-size:12px;font-weight:720;background:#ffffff;color:#275846;cursor:pointer}
+#pma-root .pmah-themes button.active{background:#1d674a;color:white;border-color:#1d674a}
+#pma-root .pmah-question-slot{margin-top:11px}
+#pma-root .pmah-question-slot textarea{width:100%;min-height:132px;border:1px solid #9dc4b4;border-radius:14px;background:#fff;font-size:15px;padding:15px;line-height:1.75}
+#pma-root .pmah-question-slot textarea:focus{outline:2px solid #5daa91;outline-offset:2px}
+#pma-root .pmah-actions{display:flex;gap:9px;flex-wrap:wrap;align-items:center;margin:12px 0}
+#pma-root .pmah-actions button,#pma-root .pmah-upload{background:#fff;color:#245f48;border:1px solid #c4dcd1;border-radius:12px;padding:11px 13px;cursor:pointer;font-size:12px;font-weight:740;display:inline-block}
+#pma-root .pmah-actions button:hover,#pma-root .pmah-upload:hover{background:#e8f6ef;border-color:#75af94}
+#pma-root .pmah-upload input{position:absolute;width:1px;height:1px;opacity:0;overflow:hidden}
+#pma-root .pmah-files-status{background:#eff7ee;border:1px dashed #accfba;padding:10px 13px;border-radius:11px;font-size:12px;color:#43715d;line-height:1.6;overflow-wrap:anywhere}
+#pma-root .pmah-main-ask{justify-content:flex-start}
+#pma-root .pmah-main-ask #pma-ask{background:#eca83f;color:#192f28;border:0;font-size:15px;padding:12px 24px;box-shadow:0 3px 0 #d29035}
+#pma-root .pmah-help{font-size:11px;color:#618475}
+#pma-root .pmah-answer-slot{margin-top:14px}
+#pma-root .pmah-answer-slot #pma-answer{background:#fff;border-radius:14px;padding:0 16px}
+#pma-root .pmah-answer-slot #pma-answer:not(:empty){padding:17px;border:1px solid #c4dfd1}
+#pma-root .pmah-vault-mini{display:flex;align-items:center;flex-wrap:wrap;gap:8px;border:1px solid #c5ded0;background:#f5fbf7;border-radius:14px;padding:13px 14px;margin-top:16px}
+#pma-root .pmah-vault-mini>div{margin-right:auto;max-width:100%;flex:1 1 220px}
+#pma-root .pmah-vault-mini strong{font-size:13px;color:#204d39}
+#pma-root .pmah-vault-mini p{margin:6px 0 0;overflow-wrap:anywhere;font-size:11px;color:#608072}
+#pma-root .pmah-vault-mini button{background:white;border:1px solid #b9d9c7;border-radius:10px;padding:9px 11px;font-size:12px;color:#285a45;font-weight:740;cursor:pointer}
+#pma-root .pmah-vault-manual,#pma-root .pmah-transcribe{margin:12px 0;border:1px solid #d4e5dc;border-radius:11px;padding:11px 14px;background:#fcfffd}
+#pma-root .pmah-vault-manual summary,#pma-root .pmah-transcribe summary{font-size:12px;color:#507b63;cursor:pointer;font-weight:680}
+#pma-root .pmah-vault-pick,#pma-root .pmah-transcriber-config{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
+#pma-root .pmah-vault-pick input,#pma-root .pmah-transcriber-config input{flex:1 1 240px}
+#pma-root .pmah-vault-pick button,#pma-root .pmah-transcriber-config button{border:1px solid #a6cbb7;background:#e7f5ed;border-radius:9px;padding:8px 12px;cursor:pointer;font-size:12px;color:#225941}
+#pma-root .pmah-transcribe>p,#pma-root .pmah-transcribe>label{font-size:12px;line-height:1.7;color:#4c7762}
+#pma-root .pmah-transcribe label{display:flex;gap:8px;align-items:center;margin:9px 0}
+#pma-root .pmah-transcribe input[type=checkbox]{width:16px;height:16px}
+#pma-root .pmah-foot-status{font-size:12px;line-height:1.6;color:#537969;margin-bottom:0}
+#pma-root .pmah-foot-status[data-error=true]{color:#ad433d}
+#pma-root .pma-quick-nav{margin:9px 0 16px;gap:7px}
+@media(max-width:720px){#pma-root .pmah-hub{padding:14px;border-radius:16px}#pma-root .pmah-status{align-items:flex-start;flex-direction:row;flex-wrap:wrap}#pma-root .pmah-vault-mini{align-items:stretch}#pma-root .pmah-main-ask #pma-ask{width:100%}}

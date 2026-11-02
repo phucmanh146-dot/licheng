@@ -1,0 +1,26 @@
+.p2-wechat-dialog{width:min(980px,94vw);max-width:980px;max-height:88vh;overflow:auto}
+.p2-wechat-dialog h2{margin-top:8px}
+.p2-wechat-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:12px 0}
+.p2-wechat-card{border:1px solid #d9e4dc;background:#f8fbf9;border-radius:12px;padding:12px;margin:10px 0}
+.p2-wechat-card h3{margin:0 0 8px;font-size:14px}
+.p2-wechat-card label{display:block;margin:8px 0;font-size:12px;font-weight:650}
+.p2-wechat-card input:not([type=checkbox]),.p2-wechat-card select,.p2-wechat-card textarea{display:block;width:100%;box-sizing:border-box;margin-top:4px;padding:9px;border:1px solid #cbd8cf;border-radius:8px;background:#fff;color:#193126;font:13px/1.45 system-ui,sans-serif}
+.p2-wechat-card input[type=checkbox]{width:auto;display:inline-block;margin-right:6px}
+.p2-wechat-heading{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.p2-wechat-heading label{margin:0}
+.p2-wechat-messages{max-height:300px;overflow:auto;display:grid;gap:7px;margin:8px 0}
+.p2-wechat-message{background:#fff;border:1px solid #e0e8e2;border-radius:9px;padding:8px;display:grid;grid-template-columns:auto 1fr;gap:8px;align-items:start}
+.p2-wechat-message input{margin-top:4px}
+.p2-wechat-message strong{font-size:12px;color:#285b43}
+.p2-wechat-message .p2-wechat-text{white-space:pre-wrap;overflow-wrap:anywhere;font-size:12px;max-height:110px;overflow:auto;margin-top:4px}
+.p2-wechat-dialog .p2-small{font-size:11px;line-height:1.55;color:#6a7b70}
+.p2-wechat-dialog button{cursor:pointer}
+.p2-wechat-dialog #p2-wechat-status{white-space:pre-wrap}
+@media(max-width:680px){.p2-wechat-grid{grid-template-columns:1fr}.p2-wechat-dialog{padding:14px}.p2-wechat-message .p2-wechat-text{max-height:150px}}
+.p2-wechat-preview{margin:8px 0;padding:8px;border:1px solid var(--border,#dce8e0);border-radius:9px;background:var(--surface,#fff);color:var(--text,#18342b);min-height:34px;font-size:12px;overflow-wrap:anywhere}
+.p2-wechat-preview img{display:block;max-width:100%;height:auto;margin:0 auto}
+#p2-wechat-local-answer{max-height:420px}
+#p2-wechat-local-answer>div{white-space:pre-wrap;overflow-wrap:anywhere}
+#p2-wechat-local-model-settings{margin-top:12px;padding:8px;border:1px solid var(--border,#dce8e0);border-radius:9px}
+#p2-wechat-local-model-settings summary{cursor:pointer;font-weight:700}
+#p2-wechat-bridge-state,#p2-wechat-model-state,#p2-wechat-link-status{overflow-wrap:anywhere;white-space:pre-wrap}

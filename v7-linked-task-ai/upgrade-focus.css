@@ -1,0 +1,87 @@
+.sy-support-dialog{color:#eaf5ef;background:linear-gradient(150deg,#173e38,#142f33 65%,#243144);border:1px solid rgba(120,167,138,0.4667);border:1px solid #78a78a77;border-radius:24px;padding:0;width:calc(100vw - 28px);max-width:620px;width:min(620px,calc(100vw - 28px));max-height:86vh;box-shadow:0 32px 100px rgba(0,28,32,0.6588);box-shadow:0 32px 100px #001c20a8;font-family:inherit;}
+.sy-support-dialog::backdrop{background:rgba(0,21,25,0.7098);background:#001519b5;-webkit-backdrop-filter:blur(7px);backdrop-filter:blur(7px);}
+.sy-support-dialog header{padding:24px 26px 18px;display:flex;justify-content:space-between;align-items:flex-start;border-bottom:1px solid rgba(183,222,194,0.1216);border-bottom:1px solid #b7dec21f;}
+.sy-support-dialog h2{margin:6px 0;font-size:23px;line-height:1.4;}
+.sy-support-dialog header>button{border:0;background:rgba(233,248,237,0.0706);background:#e9f8ed12;color:inherit;font-size:25px;border-radius:50%;width:34px;height:34px;}
+.sy-eyebrow{font-size:11px;letter-spacing:3px;color:#bfe27c;}
+.sy-dialog-body{padding:24px 26px;}
+.sy-dialog-body p{line-height:1.8;}
+.sy-dialog-body button,.sy-focus-card button{font:inherit;border:1px solid rgba(172,208,182,0.2196);border:1px solid #acd0b638;border-radius:12px;background:rgba(186,216,186,0.0784);background:#bad8ba14;color:#e9f8ed;padding:11px 15px;cursor:pointer;line-height:1.4;}
+.sy-dialog-body button:hover,.sy-focus-card button:hover{background:rgba(183,231,119,0.1569);background:#b7e77728;border-color:#b7e777;}
+.sy-dialog-body .sy-primary,.sy-focus-card .sy-primary{background:#c6e58b;color:#20392d;border-color:transparent;font-weight:700;}
+.sy-support-actions{display:flex;flex-wrap:wrap;grid-gap:9px;--mini-row-gap:9px;--mini-column-gap:9px;gap:9px;margin:16px 0;}
+.sy-check{display:flex;grid-gap:10px;--mini-row-gap:10px;--mini-column-gap:10px;gap:10px;align-items:flex-start;line-height:1.7;margin:14px 0;font-size:14px;}
+.sy-check input{accent-color:#bde281;margin-top:5px;flex-shrink:0;}
+.sy-dialog-lead{font-size:18px;color:#d6eabc;}
+.sy-field{display:flex;flex-direction:column;grid-gap:8px;--mini-row-gap:8px;--mini-column-gap:8px;gap:8px;margin-bottom:16px;font-size:13px;color:#c5dcca;}
+.sy-field input,.sy-field textarea,.sy-dialog-body>textarea{box-sizing:border-box;width:100%;font:inherit;padding:12px 14px;border:1px solid rgba(172,208,182,0.2510);border:1px solid #acd0b640;border-radius:12px;background:#082924;color:#f0faf3;resize:vertical;}
+.sy-field input:focus,.sy-field textarea:focus{outline:2px solid #c4e892;outline-offset:2px;}
+.sy-checkin-grid{display:grid;grid-template-columns:1fr 1fr;grid-gap:10px;--mini-row-gap:10px;--mini-column-gap:10px;gap:10px;margin:22px 0;}
+.sy-focus-card{background:linear-gradient(145deg,#203f3a,#192f34);border:1px solid rgba(162,197,142,0.2196);border:1px solid #a2c58e38;border-radius:22px;padding:22px;margin-top:24px;text-align:left;color:#edf8ed;box-shadow:inset 0 1px 0 rgba(221,245,207,0.0902),0 10px 35px rgba(3,31,37,0.2196);box-shadow:inset 0 1px 0 #ddf5cf17,0 10px 35px #031f2538;}
+.sy-focus-heading{display:flex;grid-gap:14px;--mini-row-gap:14px;--mini-column-gap:14px;gap:14px;align-items:center;}
+.sy-focus-heading h3{margin:0;font-size:18px;}
+.sy-focus-heading p{margin:6px 0 0;font-size:12px;color:#a5c3b3;}
+.sy-orbit-icon{font-size:34px;color:#d9ed9a;background:radial-gradient(circle,rgba(134,183,126,0.2314),transparent);background:radial-gradient(circle,#86b77e3b,transparent);width:52px;text-align:center;text-shadow:0 0 24px #bbec7a;}
+.sy-focus-card video{width:100%;max-height:230px;object-fit:contain;background:#092623;margin:18px 0 0;border-radius:14px;transform:scaleX(-1);}
+.sy-focus-note{font-size:12px!important;line-height:1.8!important;color:#9cbbaa!important;}
+.sy-focus-card [role=status],.sy-support-dialog [role=status]{font-size:13px;line-height:1.8;color:#c3dd99;white-space:pre-wrap;}
+.sy-movement{border-left:3px solid #c6df9f;background:rgba(210,240,164,0.0314);background:#d2f0a408;padding:16px 18px;border-radius:0 14px 14px 0;}
+.sy-movement p{margin:8px 0;font-size:13px;}
+.sy-source-list{padding-left:20px;}
+.sy-source-list li{margin:14px 0;}
+.sy-source-list p{color:#a9c1b4;font-size:12px;margin:4px 0;}
+.sy-support-dialog a{color:#d4eba2;text-underline-offset:3px;}
+.sy-peer-grid{display:grid;grid-template-columns:1fr 1fr;grid-gap:12px;--mini-row-gap:12px;--mini-column-gap:12px;gap:12px;}
+.sy-peer-card{padding:18px;margin-top:12px;background:rgba(201,223,182,0.0510);background:#c9dfb60d;border:1px solid rgba(197,226,182,0.1451);border:1px solid #c5e2b625;border-radius:16px;}
+.sy-peer-card h3{margin:0;font-size:17px;}
+.sy-peer-card p{font-size:13px;color:#c1d2c3;}
+.sy-peer-card footer{font-size:12px;color:#a8c69c;}
+.sy-peer-empty{padding:24px;background:rgba(194,228,151,0.0392);background:#c2e4970a;border-radius:16px;}
+.camfocus-block-overlay{display:none!important;}
+@media(max-width:520px){.sy-dialog-body,.sy-support-dialog header{padding:20px;}
+.sy-peer-grid,.sy-checkin-grid{grid-template-columns:1fr;}
+.sy-support-dialog h2{font-size:20px;}
+.sy-support-actions button{flex:1 1 auto;}
+}
+
+/* ===== v7.2 版式留白与层级：解决「信息都挤在一团」 =====
+   参考获奖作品的做法：统一间距刻度 + 三级字号 + 每个开关独立成行，
+   弱背景浅描边代替纯靠文字堆叠；主色只用于强调，不铺满。 */
+.sy-focus-card{padding:28px 26px 26px;}
+.sy-focus-heading{gap:16px;margin-bottom:4px;}
+.sy-focus-heading h3{font-size:19px;letter-spacing:.2px;}
+.sy-focus-heading p{font-size:12.5px;line-height:1.6;margin-top:8px;}
+.sy-focus-card .sy-focus-note{margin:12px 0 16px;}
+.sy-support-actions{gap:10px;margin:16px 0 24px;}
+.sy-support-actions button{flex:1 1 44%;min-height:46px;}
+/* 每个勾选项独立成行卡片：拉开距离，一眼能扫。
+   配色用半透明中性色 + color:inherit，深浅两种面板底色都不会糊。 */
+.sy-focus-card .sy-check{display:flex;align-items:center;gap:12px;margin:0 0 10px;padding:13px 15px;
+  background:rgba(127,127,127,.10);border:1px solid rgba(127,127,127,.20);border-radius:14px;
+  font-size:13.5px;line-height:1.55;color:inherit;}
+.sy-focus-card .sy-check:last-of-type{margin-bottom:0;}
+.sy-focus-card .sy-check input{margin-top:0;}
+.sy-focus-card .sy-check button{padding:6px 12px;font-size:12.5px;margin-left:auto;flex-shrink:0;}
+/* 说明文字退到第二层：左侧强调条 + 浅底，与开关拉开层级 */
+.sy-focus-card .sy-check + .sy-focus-note{margin:10px 0 18px;padding:12px 15px;
+  background:rgba(163,224,199,.14);border-left:3px solid #5fae90;border-radius:0 12px 12px 0;font-size:12.5px;color:inherit;opacity:.92;}
+.sy-focus-card [role=status]{margin-top:18px;padding-top:14px;border-top:1px solid rgba(127,127,127,.25);}
+.sy-focus-card > .sy-primary{display:block;width:100%;margin-top:18px;min-height:48px;font-size:15px;}
+.sy-focus-card video{margin-bottom:4px;}
+/* 弹窗与工作台：统一间距刻度，去掉过密的行 */
+.sy-support-dialog .sy-dialog-body{padding:26px 28px 28px;}
+.sy-dialog-body p{margin:10px 0 14px;}
+.sy-check{margin:12px 0;line-height:1.65;}
+.sy-checkin-grid{gap:12px;margin:24px 0;}
+.syv7-grid{gap:16px;}
+.syv7-service{padding:22px;}
+.syv7-dialog header{padding:28px 30px 20px;}
+.syv7-panel{padding:12px 30px 30px;}
+.syv7-row{gap:10px;margin:14px 0;}
+.app-topbar-right{align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end;}
+@media(max-width:650px){
+  .sy-focus-card{padding:22px 18px 20px;}
+  .sy-support-actions button{flex:1 1 100%;}
+  .sy-support-dialog .sy-dialog-body{padding:20px 18px 22px;}
+}
+

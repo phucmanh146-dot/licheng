@@ -1,0 +1,16 @@
+.p2-heygen-dialog{width:min(760px,calc(100vw - 24px));max-height:92vh;overflow:auto;padding:0;border:1px solid #d5e4db;border-radius:18px;background:#fff;color:#17382b;box-shadow:0 25px 80px #07180f45}
+.p2-heygen-dialog::backdrop{background:#07140d9c;backdrop-filter:blur(3px)}
+.p2-heygen-shell{padding:18px;display:flex;flex-direction:column;gap:10px}
+.p2-heygen-head{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.p2-heygen-title{font-size:18px;font-weight:850}
+.p2-heygen-close,.p2-heygen-secondary,.p2-heygen-primary{border:1px solid #d6e4dc;border-radius:9px;padding:9px 12px;font-size:12px;font-weight:750;cursor:pointer}
+.p2-heygen-close,.p2-heygen-secondary{background:#fff;color:#315644}
+.p2-heygen-primary{background:#1d513c;color:#fff;border-color:#1d513c}
+.p2-heygen-hint,.p2-heygen-state{margin:0;font-size:12px;line-height:1.65;color:#60756a;overflow-wrap:anywhere}
+.p2-heygen-label{display:flex;flex-direction:column;gap:6px;font-size:12px;font-weight:750;color:#315644}
+.p2-heygen-label input,.p2-heygen-label select,.p2-heygen-label textarea{box-sizing:border-box;width:100%;min-width:0;border:1px solid #d5e2da;border-radius:9px;padding:10px;background:#fff;color:#19392b;font:inherit;font-size:13px}
+.p2-heygen-label textarea{resize:vertical;line-height:1.6}
+.p2-heygen-actions{display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap}.p2-heygen-secondary{background:#f7fbf8;color:#315644}
+.p2-heygen-preview{width:100%;max-height:430px;background:#111;border-radius:12px}
+.p2-heygen-download{align-self:flex-start;color:#176544;font-size:13px;font-weight:750}
+@media(max-width:600px){.p2-heygen-shell{padding:13px}.p2-heygen-title{font-size:16px}.p2-heygen-actions{display:grid;grid-template-columns:1fr}.p2-heygen-actions button{width:100%}}

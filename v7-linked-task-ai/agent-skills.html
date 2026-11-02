@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>上岸鸭 · Agent 技能与飞书知识归类</title>
+<style>
+:root{color-scheme:light;font-family:system-ui,"Microsoft YaHei",sans-serif;color:#223047;background:#f4f6fb}
+*{box-sizing:border-box}body{max-width:1120px;margin:auto;padding:24px}
+a{color:#1d54b9}.lead{color:#667389;line-height:1.8}.panel{background:white;border:1px solid #e2e6f0;border-radius:18px;padding:22px;margin:20px 0}
+h1{font-size:27px}h2{font-size:19px}h3{font-size:16px;margin:8px 0}
+textarea,input,select{font:inherit;border:1px solid #bac4d4;border-radius:10px;padding:10px;width:100%}
+textarea{min-height:180px;line-height:1.65}
+button{background:#245bb4;color:white;border:0;border-radius:10px;padding:11px 20px;cursor:pointer}
+button:disabled{background:#95a5bc}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(225px,1fr));gap:12px}
+.tile{border:1px solid #dfe6f2;background:#fafbfe;padding:14px;border-radius:12px}
+.small{font-size:13px;color:#67758b}.warning{background:#fff8e5;padding:12px;border-radius:10px;color:#745622}
+table{border-collapse:collapse;width:100%;font-size:13px}td,th{border-bottom:1px solid #e5e9f0;padding:11px 8px;text-align:left;vertical-align:top}
+th{background:#f7f9fd}.scroll{overflow-x:auto}
+.pills{display:flex;gap:8px;flex-wrap:wrap}.pill{font-size:12px;background:#edf3ff;padding:6px 10px;border-radius:20px}
+details{margin-top:10px}code{font-size:12px;white-space:pre-wrap}
+</style></head>
+<body>
+<p><a href="/index.html">← 返回上岸鸭主页</a></p>
+<h1>Agent 技能中心 · 飞书资料智能分类</h1>
+<p class="lead">把课程、Agent、Skill、GitHub 和飞书链接统一管理：<b>先按内容类别，再按来源人物</b>。工具先生成可核验的目录与归档清单，不会伪装成已移动飞书原件。</p>
+<section class="panel"><h2>已有 Agent 与技能</h2><div id="agents" class="grid"><span>正在读取技能目录…</span></div></section>
+<section class="panel"><h2>????????????</h2><p class="small">?????????????????????????????????????</p><div id="observed" class="pills">????</div></section>
+<section class="panel"><h2>批量识别飞书和外部链接</h2>
+<p class="small">每行一条：<b>人物 | 文档标题 | 链接</b>。也可以粘贴只有标题或链接的单行，来源不确定会自动放入待核验。同一 URL 只标记重复，不删除资料。</p>
+<textarea id="items" placeholder="老秦 | Hermes Agent 入门教程 | https://example.com/tutorial&#10;小黎 | 学习路线和课程规划 | https://example.com/study&#10;咪小熙 | AI产品经理技术文档 | https://example.com/product"></textarea>
+<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:12px">
+<button id="run">生成分类目录</button><button id="download" disabled>下载归档清单 JSON</button><button id="csv" disabled>下载归档清单 CSV</button>
+<span class="small" id="status"></span></div>
+</section>
+<section class="panel" id="result" hidden><h2>分类结果</h2><div id="stats" class="pills"></div><h3>建议建立的飞书文件夹</h3><div id="folders" class="grid"></div>
+<h3>每篇资料的归属</h3><div class="scroll"><table><thead><tr><th>标题</th><th>类别</th><th>分享人</th><th>链接类型</th><th>目标目录</th><th>状态</th><th>Feishu style</th></tr></thead><tbody id="rows"></tbody></table></div>
+<p class="warning">所有结果仅为分类方案。真正创建飞书文件夹、移动文件、修改分享权限前，还需有可用的飞书写入能力及逐项验证；此页面绝不把“未执行”标为成功。</p></section>
+<script>
+const $=s=>document.querySelector(s);
+let last=null;
+function escapeHTML(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
+function safeLink(s){try{const u=new URL(String(s||''));return (u.protocol==='https:'||u.protocol==='http:')?u.href:'';}catch{return '';}}
+function parseRows(raw){return raw.split(/\r?\n/).map(x=>x.trim()).filter(Boolean).map(line=>{
+ const parts=line.split(/\s*\|\s*/);
+ if(parts.length>=3)return {sourcePerson:parts[0],title:parts[1],url:parts.slice(2).join("|")};
+ if(/^https?:\/\//i.test(line))return {url:line,title:line};
+ return {title:line};
+});}
+async function json(url,opts){const r=await fetch(url,opts);const v=await r.json();if(!r.ok||v.ok===false)throw new Error(v.error||'读取失败');return v;}
+function download(text,mime,file){const u=URL.createObjectURL(new Blob([text],{type:mime}));const a=document.createElement('a');a.href=u;a.download=file;a.click();setTimeout(()=>URL.revokeObjectURL(u),1500);}
+json('/api/agent/skill-catalog').then(v=>{
+ $('#observed').innerHTML=(v.observedFeishuFolders||[]).map(x=>'<span class="pill">'+escapeHTML(x)+'</span>').join('');
+ $('#agents').innerHTML=v.agents.map(a=>'<div class="tile"><h3>'+escapeHTML(a.name)+'</h3><p class="small">'+escapeHTML(a.state)+'</p><div class="pills">'+a.skills.map(s=>'<span class="pill">'+escapeHTML(s)+'</span>').join('')+'</div></div>').join('');
+}).catch(e=>$('#agents').textContent='本机技能接口暂不可用：'+e.message);
+$('#run').onclick=async()=>{
+ const items=parseRows($('#items').value);
+ if(!items.length){$('#status').textContent='请先粘贴资料标题或链接';return;}
+ $('#run').disabled=true;$('#status').textContent='分类中…';
+ try{
+ const v=await json('/api/agent/knowledge/classify',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({items})});
+ last=v;$('#result').hidden=false;
+ $('#stats').innerHTML=Object.entries(v.summary).map(([k,n])=>'<span class="pill">'+escapeHTML(k)+'：'+n+'</span>').join('');
+ const tree={};v.folders.forEach(folder=>{const [category,person]=folder.split('/');(tree[category]??=[]).push(person);});
+ $('#folders').innerHTML=Object.entries(tree).map(([cat,people])=>'<div class="tile"><h3>📁 '+escapeHTML(cat)+'</h3>'+people.map(p=>'<div>↳ 📁 '+escapeHTML(p)+'</div>').join('')+'</div>').join('');
+ $('#rows').innerHTML=v.items.map(x=>'<tr><td>'+escapeHTML(x.title)+(safeLink(x.url)?'<br><a target="_blank" rel="noopener noreferrer" href="'+escapeHTML(safeLink(x.url))+'">打开来源</a>':'')+'</td><td>'+escapeHTML(x.category)+'</td><td>'+escapeHTML(x.sourcePerson)+'</td><td>'+escapeHTML(x.linkType)+'</td><td>'+escapeHTML(x.targetFolder)+'</td><td>'+escapeHTML(x.feishuExistingStylePath||'???')+'</td><td>'+escapeHTML(x.requiresReview?'待核验':x.confidence+'置信度')+(x.duplicateOf!==undefined?'，重复第'+(x.duplicateOf+1)+'条':'')+'</td></tr>').join('');
+ $('#download').disabled=false;$('#csv').disabled=false;$('#status').textContent='已生成分类方案，未修改飞书原文';
+ }catch(e){$('#status').textContent=e.message;}finally{$('#run').disabled=false;}
+};
+$('#download').onclick=()=>{if(last)download(JSON.stringify(last,null,2),'application/json;charset=utf-8','上岸鸭-Agent分类清单.json');};
+$('#csv').onclick=()=>{if(!last)return;const cols=['title','sourcePerson','category','linkType','targetFolder','url','readStatus','operationStatus'];const csv=[cols.join(','),...last.items.map(x=>cols.map(k=>'"'+String(x[k]??'').replace(/"/g,'""')+'"').join(','))].join('\r\n');download('\ufeff'+csv,'text/csv;charset=utf-8','上岸鸭-Agent分类清单.csv');};
+</script></body></html>

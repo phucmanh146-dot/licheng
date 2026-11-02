@@ -1,0 +1,193 @@
+/* The rescue station shares the focus dialog, with room for reading and acting. */
+dialog.sy-support-dialog.sy-rescue-dialog {
+  --rescue-ink: #173c35;
+  --rescue-muted: #52695c;
+  --rescue-line: #d8deca;
+  color: var(--rescue-ink);
+  background: #f6f4e8;
+  border: 2px solid #6f9281;
+  border-radius: 28px;
+  width: min(1080px, calc(100vw - 40px));
+  max-width: 1080px;
+  max-height: calc(100dvh - 40px);
+  overflow: auto;
+  padding: 0;
+  font-size: 18px;
+  line-height: 1.7;
+  box-shadow: 0 30px 100px #08282080;
+  scrollbar-color: #91ac94 #f6f4e8;
+}
+.sy-rescue-dialog *, .sy-rescue-dialog *::before, .sy-rescue-dialog *::after { box-sizing: border-box; }
+dialog.sy-rescue-dialog::backdrop { background: #092920b3; backdrop-filter: blur(5px); }
+.sy-rescue-dialog header {
+  padding: 28px 34px 24px;
+  gap: 24px;
+  color: #fffdf0;
+  background: linear-gradient(120deg, #184e43, #244f45);
+  border-bottom: 4px solid #e8cf85;
+}
+.sy-rescue-dialog header .sy-eyebrow { color: #ebdfa5; font-size: 14px; letter-spacing: 2px; }
+.sy-rescue-dialog h2 { font-size: 28px; line-height: 1.4; margin: 6px 0 0; font-weight: 750; }
+.sy-rescue-dialog h3 { font-size: 22px; line-height: 1.5; margin: 24px 0 12px; }
+.sy-rescue-dialog header > button {
+  width: 48px;
+  height: 48px;
+  flex: 0 0 48px;
+  border: 1px solid #c0d6b873;
+  border-radius: 15px;
+  color: #fffdf0;
+  background: #ffffff12;
+  font-size: 30px;
+  cursor: pointer;
+}
+.sy-rescue-dialog .sy-dialog-body { padding: 28px 34px 34px; }
+.sy-rescue-dialog p { margin: 0 0 16px; }
+.sy-rescue-dialog .sy-rescue-intro { font-size: 20px; line-height: 1.8; max-width: 46em; margin-bottom: 22px; }
+.sy-rescue-dialog .sy-field { font-size: 18px; color: var(--rescue-ink); gap: 10px; margin-bottom: 22px; }
+.sy-rescue-dialog textarea,
+.sy-rescue-dialog input:not([type="checkbox"]):not([type="radio"]),
+.sy-rescue-dialog select {
+  width: 100%;
+  min-width: 0;
+  min-height: 50px;
+  padding: 12px 16px;
+  font: inherit;
+  color: var(--rescue-ink);
+  background: #fffef7;
+  border: 1px solid #a3b5a3;
+  border-radius: 15px;
+  box-shadow: none;
+}
+.sy-rescue-dialog textarea { min-height: 150px; resize: vertical; line-height: 1.75; }
+.sy-rescue-dialog input::placeholder, .sy-rescue-dialog textarea::placeholder { color: #697b70; opacity: 1; }
+.sy-rescue-dialog .sy-check { font-size: 17px; gap: 12px; align-items: flex-start; color: var(--rescue-ink); }
+.sy-rescue-dialog input[type="checkbox"], .sy-rescue-dialog input[type="radio"] { width: 21px; height: 21px; margin-top: 4px; accent-color: #236c54; }
+.sy-rescue-dialog .sy-dialog-body button {
+  min-height: 50px;
+  padding: 12px 20px;
+  font: inherit;
+  font-weight: 650;
+  line-height: 1.45;
+  border-radius: 15px;
+  color: var(--rescue-ink);
+  border: 1px solid #a4b9a4;
+  background: #edf0df;
+  cursor: pointer;
+}
+.sy-rescue-dialog .sy-dialog-body button:hover { background: #e1e9ce; border-color: #578264; }
+.sy-rescue-dialog .sy-dialog-body button.sy-primary { color: #fffdf0; background: #23634d; border-color: #23634d; }
+.sy-rescue-dialog .sy-dialog-body button.sy-primary:hover { background: #174d3b; }
+.sy-rescue-dialog .sy-dialog-body button:disabled { cursor: wait; opacity: .6; }
+.sy-rescue-dialog :is(button, input, textarea, select, summary, a):focus-visible { outline: 3px solid #ba8530; outline-offset: 4px; }
+.sy-rescue-dialog .sy-rescue-toolbar,
+.sy-rescue-dialog .sy-rescue-actions,
+.sy-rescue-dialog .sy-support-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin: 18px 0; }
+.sy-rescue-dialog .sy-rescue-task {
+  display: block;
+  padding: 16px 20px;
+  margin-bottom: 22px;
+  border: 1px solid #d3d9bc;
+  border-left: 5px solid #9cb16d;
+  border-radius: 16px;
+  background: #edf0dd;
+  font-size: 18px;
+  overflow-wrap: anywhere;
+}
+.sy-rescue-dialog .sy-rescue-chip { display: inline-flex; align-items: center; gap: 7px; padding: 5px 12px; border-radius: 10px; font-size: 15px; background: #e8edda; color: #355240; }
+.sy-rescue-dialog .sy-rescue-status,
+.sy-rescue-dialog [role="status"] { font-size: 17px; line-height: 1.8; color: #3a634b; white-space: pre-wrap; overflow-wrap: anywhere; }
+.sy-rescue-dialog .sy-rescue-status:not(:empty) { padding: 14px 18px; border-radius: 14px; background: #eaf0df; margin: 16px 0; }
+.sy-rescue-dialog .sy-rescue-answer {
+  padding: 26px 28px;
+  margin: 22px 0;
+  color: #203e34;
+  background: #fffef8;
+  border: 1px solid var(--rescue-line);
+  border-radius: 22px;
+  font-size: 19px;
+  line-height: 1.95;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.sy-rescue-dialog .sy-rescue-answer:empty { display: none; }
+.sy-rescue-dialog .sy-rescue-sources { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin: 18px 0 24px; }
+.sy-rescue-dialog .sy-rescue-source { min-width: 0; padding: 20px; border: 1px solid var(--rescue-line); border-radius: 18px; background: #fffef7; overflow-wrap: anywhere; }
+.sy-rescue-dialog .sy-rescue-source p { font-size: 16px; line-height: 1.75; margin: 10px 0 0; color: var(--rescue-muted); }
+.sy-rescue-dialog .sy-rescue-source strong, .sy-rescue-dialog .sy-rescue-source h4 { font-size: 18px; line-height: 1.6; margin: 0; }
+.sy-rescue-dialog a { color: #245e48; text-underline-offset: 4px; text-decoration-thickness: 1px; }
+.sy-rescue-dialog .sy-rescue-source a { display: inline-block; padding: 4px 0; }
+.sy-rescue-dialog .sy-rescue-config { margin-top: 24px; border: 1px solid #c6cfb8; border-radius: 18px; padding: 0 20px; background: #efefdf; }
+.sy-rescue-dialog .sy-rescue-config summary { min-height: 54px; padding: 14px 0; font-size: 18px; font-weight: 650; cursor: pointer; }
+.sy-rescue-dialog .sy-rescue-config[open] { padding-bottom: 20px; }
+.sy-rescue-dialog .sy-rescue-config[open] summary { margin-bottom: 14px; border-bottom: 1px solid var(--rescue-line); }
+.sy-rescue-dialog .sy-rescue-config-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px 22px; }
+.sy-rescue-dialog .sy-rescue-config-grid .sy-field { margin-bottom: 0; font-size: 17px; }
+.sy-rescue-dialog .sy-rescue-error { padding: 18px 20px; margin: 18px 0; color: #774923; background: #fff0d7; border: 1px solid #dabc84; border-radius: 16px; font-size: 18px; line-height: 1.8; overflow-wrap: anywhere; }
+.sy-rescue-dialog .sy-rescue-footnote { font-size: 15px; line-height: 1.8; color: var(--rescue-muted); margin: 16px 0 0; }
+.sy-rescue-dialog .sy-rescue-config { padding-inline: 26px; border-radius: 26px; background: #e8ecdb; }
+.sy-rescue-dialog .sy-ai-heading { display: flex; align-items: center; justify-content: space-between; gap: 24px; padding: 12px 0 20px; }
+.sy-rescue-dialog .sy-ai-heading h3 { margin: 8px 0; font-size: clamp(24px, 3vw, 34px); letter-spacing: -.03em; }
+.sy-rescue-dialog .sy-ai-heading p { color: #5d715e; font-size: 16px; margin: 0; }
+.sy-rescue-dialog .sy-ai-kicker { color: #6a7a53; font-size: 12px; font-weight: 750; letter-spacing: 2px; }
+.sy-rescue-dialog .sy-ai-orbit { display: grid; place-items: center; flex: 0 0 90px; height: 90px; font-size: 60px; color: #285746; background: #d5dfb8; border: 1px solid #a8be92; border-radius: 28px; transform: rotate(-7deg); box-shadow: 6px 6px 0 #cad3b3; }
+.sy-rescue-dialog .sy-ai-steps { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); list-style: none; padding: 0; margin: 0 0 24px; gap: 12px; }
+.sy-rescue-dialog .sy-ai-steps li { display: flex; gap: 10px; align-items: center; padding: 12px; border: 1px solid #c4ceb4; border-radius: 14px; font-size: 15px; color: #67765e; }
+.sy-rescue-dialog .sy-ai-steps li > span { display: grid; place-items: center; border-radius: 50%; width: 30px; height: 30px; background: #d6ddc7; font-size: 12px; font-weight: 800; }
+.sy-rescue-dialog .sy-ai-steps li.is-done { color: #25503c; background: #dae8c5; border-color: #93b57e; }
+.sy-rescue-dialog .sy-ai-steps li.is-done > span { color: #f5ffeb; background: #437759; }
+.sy-rescue-dialog .sy-ai-columns { display: grid; grid-template-columns: 1fr 1fr; align-items: start; gap: 20px; }
+.sy-rescue-dialog .sy-ai-card { min-width: 0; background: #fafbf2; border: 1px solid #c5d1bb; border-radius: 22px; padding: 24px; }
+.sy-rescue-dialog .sy-ai-card h4 { display: flex; align-items: center; gap: 12px; font-size: 20px; margin: 0 0 24px; }
+.sy-rescue-dialog .sy-ai-card h4 > span { font: 700 13px ui-monospace, monospace; color: #778767; padding: 7px 9px; border: 1px solid #c5d1bb; border-radius: 9px; }
+.sy-rescue-dialog .sy-ai-card .sy-field { font-size: 16px; margin-bottom: 18px; }
+.sy-rescue-dialog .sy-ai-card .sy-field:last-child { margin-bottom: 0; }
+.sy-rescue-dialog .sy-ai-card a { font-size: 14px; }
+.sy-rescue-dialog .sy-ai-card .sy-ai-fetch { width: 100%; background: #dfeacb; border-color: #9cb28b; margin-bottom: 22px; }
+.sy-rescue-dialog .sy-ai-advanced { margin-top: 20px; border-top: 1px solid #d3dcc9; }
+.sy-rescue-dialog .sy-ai-advanced summary { font-size: 15px; margin: 0 0 14px; border: 0; }
+.sy-rescue-dialog .sy-ai-launch { display: flex; align-items: center; justify-content: space-between; gap: 22px; margin-top: 24px; padding: 22px; border-radius: 20px; background: #dbe4cd; }
+.sy-rescue-dialog .sy-ai-launch [role="status"] { margin: 0; font-size: 16px; color: #35573e; flex: 1; }
+.sy-rescue-dialog .sy-ai-launch [role="status"].is-error { color: #883c2c; }
+.sy-rescue-dialog .sy-ai-launch button { flex-shrink: 0; }
+@media(max-width:780px) {
+  .sy-rescue-dialog .sy-ai-columns { grid-template-columns: 1fr; }
+  .sy-rescue-dialog .sy-ai-orbit { display: none; }
+  .sy-rescue-dialog .sy-ai-launch { flex-direction: column; align-items: stretch; }
+  .sy-rescue-dialog .sy-ai-steps { gap: 6px; }
+  .sy-rescue-dialog .sy-ai-steps li { font-size: 13px; gap: 6px; padding: 9px 6px; }
+  .sy-rescue-dialog .sy-ai-steps li > span { width: 23px; height: 23px; flex-shrink: 0; }
+  .sy-rescue-dialog .sy-rescue-config { padding-inline: 16px; }
+  .sy-rescue-dialog .sy-ai-card { padding: 20px; }
+}
+@media (max-width: 700px) {
+  dialog.sy-support-dialog.sy-rescue-dialog { width: calc(100vw - 20px); max-height: calc(100dvh - 20px); border-radius: 22px; }
+  .sy-rescue-dialog header { padding: 22px 20px 20px; gap: 14px; }
+  .sy-rescue-dialog .sy-dialog-body { padding: 22px 20px; }
+  .sy-rescue-dialog h2 { font-size: 26px; }
+  .sy-rescue-dialog .sy-rescue-sources, .sy-rescue-dialog .sy-rescue-config-grid { grid-template-columns: minmax(0, 1fr); }
+  .sy-rescue-dialog .sy-rescue-answer { padding: 20px; font-size: 18px; }
+  .sy-rescue-dialog .sy-rescue-toolbar button, .sy-rescue-dialog .sy-rescue-actions button, .sy-rescue-dialog .sy-support-actions button { flex: 1 1 160px; }
+}
+@media (max-width: 390px) {
+  .sy-rescue-dialog header, .sy-rescue-dialog .sy-dialog-body { padding-left: 16px; padding-right: 16px; }
+  .sy-rescue-dialog h2 { font-size: 24px; }
+  .sy-rescue-dialog .sy-rescue-intro { font-size: 18px; }
+}
+
+.sy-rescue-dialog .sy-rescue-video-actions{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin:12px 0 4px;padding:10px 12px;border:1px solid #d7dfcd;border-radius:12px;background:#f6f7ed}.sy-rescue-dialog .sy-rescue-video-actions[hidden]{display:none}.sy-rescue-dialog .sy-rescue-video-actions .p2-mindmap-create,.sy-rescue-dialog .sy-rescue-video-actions .p2-video-create,.sy-rescue-dialog .sy-rescue-video-actions .p2-heygen-create{font:inherit;font-size:13px;line-height:1.4}
+
+
+/* Keep the rescue flow focused: configure models and web search in one shared place. */
+.sy-rescue-config{display:none!important}
+.sy-rescue-config-shortcut{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:12px 0;padding:11px 13px;border:1px solid #d7e5dc;border-radius:11px;background:#f5faf7;color:#4c685a;font-size:12px;line-height:1.6}
+.sy-rescue-config-shortcut a{display:inline-flex;align-items:center;justify-content:center;border:1px solid #cbded4;border-radius:8px;padding:7px 10px;background:#fff;color:#1f5b42;font-weight:750;text-decoration:none;white-space:nowrap}
+.sy-rescue-config-shortcut a:hover{background:#e8f4ed}
+
+
+/* One clear route from the blocker rescue modal to the embedded full AI workspace */
+.sy-rescue-config-shortcut{margin:18px 0 0;padding:14px 16px;border:1px solid #d8e8dd;border-radius:14px;background:#f5faf6;color:#4e6d5d;line-height:1.65}
+.sy-rescue-config-shortcut p{margin:0 0 10px}
+.sy-rescue-ai-entry-actions{display:flex;flex-wrap:wrap;gap:9px}
+.sy-rescue-ai-entry-actions button{border:1px solid #b9d5c3;border-radius:10px;background:#fff;color:#205741;padding:10px 14px;font-weight:750;cursor:pointer}
+.sy-rescue-ai-entry-actions button:first-child{background:#8fe0c5;border-color:#8fe0c5;color:#103f35}
+.sy-rescue-ai-entry-actions button:hover{filter:brightness(.97);transform:translateY(-1px)}

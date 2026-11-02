@@ -1,0 +1,34 @@
+#pma-root .pmaw-mini{margin:15px 0;background:linear-gradient(135deg,#edfaf2,#fffef9);border:1px solid #a7ceba;border-radius:15px;padding:15px;box-shadow:0 4px 17px #184e3409}
+#pma-root .pmaw-head{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:11px}
+#pma-root .pmaw-head strong{display:block;font-size:15px;color:#164d37}
+#pma-root .pmaw-head p{margin:5px 0;font-size:12px;color:#4a7961}
+#pma-root .pmaw-light,#pma-root .pmaw-filters button{cursor:pointer;border:1px solid #a8ceba;border-radius:9px;padding:9px 11px;background:#fff;color:#275d44;font-size:12px;font-weight:720}
+#pma-root .pmaw-filters{display:grid;grid-template-columns:minmax(140px,1fr) auto minmax(140px,1fr) auto;gap:8px;align-items:end;margin:13px 0}
+#pma-root .pmaw-filters label{font-size:11px;color:#47745d;font-weight:740;min-width:0}
+#pma-root .pmaw-filters input{width:100%;margin-top:5px}
+#pma-root .pmaw-note{font-size:11px;color:#637f6c;line-height:1.65}
+#pma-root .pmaw-results{display:grid;gap:5px;max-height:185px;overflow:auto;padding:2px 1px}
+#pma-root .pmaw-hit{display:grid;grid-template-columns:25px minmax(0,1fr) auto;align-items:center;gap:8px;border:1px solid #dbe8dc;background:white;border-radius:10px;padding:5px 8px}
+#pma-root .pmaw-hit-number{font-size:11px;color:#6b9276}
+#pma-root .pmaw-hit-name{font-size:12px;color:#1e4f36;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#pma-root .pmaw-preview{padding:8px 0;border-bottom:1px dashed #c1d7c7;margin:8px 0}
+#pma-root .pmaw-preview summary{font-size:12px;cursor:pointer;color:#406c52;font-weight:720}
+#pma-root .pmaw-preview img{max-width:100%;max-height:240px;object-fit:contain;display:block;border:1px solid #d7ded8;margin:7px auto;border-radius:9px}
+#pma-root .pmaw-preview img[hidden]{display:none}
+#pma-root .pmaw-row{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin:10px 0}
+#pma-root .pmaw-row span{font-size:11px;color:#52735c}
+#pma-root .pmaw-main{border:0;border-radius:10px;padding:11px 14px;background:#216949;color:#fff;font-size:12px;font-weight:800;cursor:pointer}
+#pma-root #pma-wx-frame{margin:8px 0;background:#fafffb;padding:7px 10px;border-radius:10px;min-width:0}
+#pma-root #pma-wx-frame summary{padding:5px 0;font-size:12px}
+#pma-root #pma-wx-canvas img{max-height:285px}
+#pma-root .pmaw-recognition{background:#fff;border:1px solid #c2dccb;border-radius:12px;padding:12px}
+#pma-root .pmaw-recognition h4{font-size:13px;margin:0 0 10px;color:#155539}
+#pma-root #pmaw-ocr{max-height:135px;overflow:auto;white-space:pre-wrap;font-family:inherit;font-size:12px;line-height:1.6;background:#f7faf6;padding:9px;border-radius:8px;word-break:break-word}
+#pma-root .pmaw-form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin:9px 0}
+#pma-root .pmaw-form label{font-size:12px;color:#416d54;min-width:0}
+#pma-root .pmaw-form input,#pma-root .pmaw-form select{width:100%;margin-top:5px}
+#pma-root #pmaw-new-task-fields{display:contents}
+#pma-root #pmaw-new-task-fields[hidden]{display:none}
+#pma-root .pmaw-status{font-size:11px;color:#35694b;line-height:1.7;margin:9px 0 0}
+#pma-root .pmaw-status[data-error=true]{color:#a53636}
+@media(max-width:830px){#pma-root .pmaw-filters{grid-template-columns:1fr 1fr}#pma-root .pmaw-form{grid-template-columns:1fr}#pma-root .pmaw-head>button{width:100%}}

@@ -1,0 +1,3 @@
+#p2-nav-entry{display:block;padding:13px 16px;color:#e5f9e9;background:#256c50;border:1px solid #438769;border-radius:11px;text-decoration:none;font-size:13px;font-weight:800;margin:14px 6px}#p2-nav-entry:hover{background:#378864}
+#p2-knowledge-entry{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin:13px 0 19px;background:#e9f5eb;border:1px solid #a8cfb7;border-radius:13px;padding:14px 17px;color:#23523a}
+#p2-knowledge-entry a{font-size:14px;font-weight:800;color:#1e6744;text-decoration:none}#p2-knowledge-entry span{font-size:11px;color:#577764}

@@ -1,0 +1,1 @@
+{"build": {"builder": "DOCKERFILE"}, "deploy": {"healthcheckPath": "/publichealth", "healthcheckTimeout": 120, "restartPolicyType": "ON_FAILURE"}}

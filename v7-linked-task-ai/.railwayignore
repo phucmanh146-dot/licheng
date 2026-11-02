@@ -1,0 +1,10 @@
+.git
+__pycache__
+*.log
+*.sqlite*
+.sessions
+.railway
+
+.cloud-data
+*.before-cloud-accounts-*
+public_server.before-cloud-accounts-20261018.py
