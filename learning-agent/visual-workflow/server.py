@@ -76,7 +76,7 @@ def apply_event(old,event,data,project):
     elif event=='review':
         if not s['submissions'] or s['stage']!='review':raise ValueError('先上传本轮修改产物')
         reviewer=require_text(data,'reviewer');executor=s['submissions'][-1]['executor']
-        norm=lambda x:''.join(x.lower().split())
+        from task_acceptance import identity as norm
         if norm(reviewer)==norm(executor):raise ValueError('执行者不能复核自己的产物，请换非执行者')
         checks=data.get('checks')
         if not isinstance(checks,list) or len(checks)!=len(s['criteria']):raise ValueError('请逐条复核冻结判据')
