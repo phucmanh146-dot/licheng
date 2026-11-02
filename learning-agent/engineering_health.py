@@ -96,14 +96,11 @@ def check_postgres():
     if not url:
         return _item("NOT_CONFIGURED")
     try:
-        from sqlalchemy import create_engine, text
-        engine = create_engine(url, pool_pre_ping=True, connect_args={"connect_timeout": 4})
-        try:
-            with engine.connect() as conn:
-                conn.execute(text("SELECT 1"))
-            return _item("AVAILABLE", query="SELECT 1")
-        finally:
-            engine.dispose()
+        # Use the same psycopg v3 compatibility adapter as the application.
+        import learning_agent as agent
+        with agent.connection() as conn:
+            conn.execute("SELECT 1")
+        return _item("AVAILABLE", query="SELECT 1", adapter="shared_database/psycopg")
     except Exception as exc:
         return _item("UNAVAILABLE", error_code=type(exc).__name__)
 
