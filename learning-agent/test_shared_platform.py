@@ -1,4 +1,4 @@
-"""Synthetic model, real HTTP/SQLite/LangGraph. No LIVE or human quality claim."""
+""""Synthetic model, real HTTP/SQLite/LangGraph. No LIVE or human quality claim."""
 import json
 import time
 import unittest
@@ -141,6 +141,7 @@ class SharedPlatformTests(unittest.TestCase):
             review_id=uuid.uuid4().hex
             review={'review_id':review_id,'task_id':tid,'plan_version':p['plan']['plan_version'],
                 'diagnosis_version':p['diagnosis']['diagnosis_version'],'artifact_id':'report','artifact_version':2,
+                'method':'manual','content_read_confirmed':True,
                 'note':'测试复核账号逐项核对','criterion_results':rows,
                 'gap_results':[{'gap_id':g,'status':'closed','evidence':'SYNTHETIC 已核对新版','evidence_refs':[ref]} for g in task['gap_ids']]}
             change(reviewer,rh,'review-receive',{'review':review})
