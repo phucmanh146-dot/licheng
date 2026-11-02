@@ -9,7 +9,7 @@ class AssistantChatTests(unittest.TestCase):
         raw = json.dumps({"reply":"我理解你要在DDL前交付作品。先把材料缺口拆出来。",
                           "questions":["你的最终截止时间是哪一天？"],
                           "task_drafts":[{"title":"核对评分标准","estimate_minutes":25,
-                            "deliverable":"评分标准对照表","acceptance_criteria":["每项标准有来源和对应作品位置"],
+                            "target_locator":"评分标准原文","action":"逐项摘录评分标准并标注来源","reason":"用于后续逐项对照作品","source_basis":"用户上传的评分标准原文","deliverable":"评分标准对照表","acceptance_criteria":["每项标准有来源和对应作品位置"],"self_check":"逐项回查原文","failure_next":"缺项时请求补充完整标准",
                             "deadline":"","depends_on_titles":[],"priority":1,"parallel":False}],
                           "schedule_notes":["固定时间不挤占；空档不足时标记未安排"],"confidence":"medium"},ensure_ascii=False)
         with patch.object(assistant_chat.rescue,"public_config",return_value={"configured":True}), \
