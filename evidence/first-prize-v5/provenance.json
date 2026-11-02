@@ -1,0 +1,148 @@
+{
+  "captured_at": "2026-10-12 Asia/Shanghai",
+  "repository": "phucmanh146-dot/shangan-ya",
+  "input_commit": "b191d849af7ede9801ccb5dbd21f5d943ab307e1",
+  "before_commit": "ce190280ab2deaad0f3aa6b9fdf0a67b512d010a",
+  "before_files": [
+    {
+      "path": "learning-agent/learning_agent.py",
+      "snapshot": "before/learning_agent.py.txt",
+      "git_blob_sha": "07770e9d4b25e67592791bd0d693f81d310511f3"
+    },
+    {
+      "path": "learning-agent/learning-agent.html",
+      "snapshot": "before/learning-agent.html.txt",
+      "git_blob_sha": "b4763790afaac9bce17d613a5cc767e9c7e7a89b"
+    }
+  ],
+  "module_blobs": [
+    {
+      "path": "learning-agent/action_planner.py",
+      "sha": "240033e4cda329f190b3186951af8adc68ab768d"
+    },
+    {
+      "path": "learning-agent/agent_day.py",
+      "sha": "c7a4e31efbdfb5135a6785f9e81114079c26ddb4"
+    },
+    {
+      "path": "learning-agent/agent_schedule.py",
+      "sha": "1b7097710b43a63d7a58fc5fe72b67fa129108c7"
+    },
+    {
+      "path": "learning-agent/agent_video.py",
+      "sha": "2a00cfbfbf7ad87424a6d728ba32878959618dc3"
+    },
+    {
+      "path": "learning-agent/b_capacity.py",
+      "sha": "45e67e3f2f6dc35d6fa2498867c57ebe18d48309"
+    },
+    {
+      "path": "learning-agent/b_joint_schedule.py",
+      "sha": "9f4cb16ab5487355c4368b998c92d045aeb51f23"
+    },
+    {
+      "path": "learning-agent/b_refinements.py",
+      "sha": "70e96852a7fd953138f22c96fab8ab77e5776168"
+    },
+    {
+      "path": "learning-agent/document_outline.py",
+      "sha": "2741b80ed98eef8b06f842e6834beba7041b2878"
+    },
+    {
+      "path": "learning-agent/install_local.py",
+      "sha": "93ace7ed9c74972c1269fce00c8d7e7ed632d894"
+    },
+    {
+      "path": "learning-agent/learning_agent.py",
+      "sha": "cd6fd23160758972af4c749e8398286cf6a2282a"
+    },
+    {
+      "path": "learning-agent/learning_agent_server.py",
+      "sha": "8562ef929ac3006be4c17a326f132797028c58ad"
+    },
+    {
+      "path": "learning-agent/period_planner.py",
+      "sha": "45e67e3f2f6dc35d6fa2498867c57ebe18d48309"
+    },
+    {
+      "path": "learning-agent/rescue_service.py",
+      "sha": "ca1d2db965c5b60b66b59c5f921652cd64f490ba"
+    },
+    {
+      "path": "learning-agent/source_support.py",
+      "sha": "776ccc23c0a74f66dca3cc6d0af6324b12dfe565"
+    },
+    {
+      "path": "learning-agent/team_dispatch.py",
+      "sha": "2a4c857bcc6475bf9d887fe53b83e4c5028cd4b3"
+    },
+    {
+      "path": "learning-agent/team_handoff.py",
+      "sha": "e2dfed5b6206a0a1d8c7098009fc2ef355483675"
+    },
+    {
+      "path": "learning-agent/team_orchestrator.py",
+      "sha": "923e45865d2dc02750c3211fae6984cf492ca4f9"
+    },
+    {
+      "path": "learning-agent/team_rescue.py",
+      "sha": "75b47808fe068d845155b1f59029b5b3b25e012a"
+    },
+    {
+      "path": "learning-agent/test_agent.py",
+      "sha": "b8ce3e2df10a193387b7745368248ecb6f962826"
+    },
+    {
+      "path": "learning-agent/test_competition_context.py",
+      "sha": "d5fa452c4615e662910842fda3a3fc0fe3d128d0"
+    },
+    {
+      "path": "learning-agent/test_dispatch.py",
+      "sha": "d64b0bd76e68d5c41d24a933a289cda28eea7e50"
+    },
+    {
+      "path": "learning-agent/test_guidance.py",
+      "sha": "cd2fa202edb9a67843919f92b27d79cc294945d1"
+    },
+    {
+      "path": "learning-agent/test_handoff.py",
+      "sha": "9deef57cb2a19bdb1431a567170050c4e847f1b3"
+    },
+    {
+      "path": "learning-agent/test_period.py",
+      "sha": "354cfb2e7159dcffdad9de634e109240f924db53"
+    },
+    {
+      "path": "learning-agent/test_team.py",
+      "sha": "757787c7bc9659a27f7f500795c4ce9a493ff1ba"
+    },
+    {
+      "path": "learning-agent/test_team_rescue.py",
+      "sha": "3f8b21bdb621d9bda0cada3d84b993804b988305"
+    }
+  ],
+  "branch_heads": [
+    {
+      "branch": "feature/action-planner-agent",
+      "commit": "59a1eaff7aa3fa61135c021f108a4d6cb9216f35"
+    },
+    {
+      "branch": "feature/diagnosis-research-agent",
+      "commit": "115f2671bb757b6a59ce12ea30c0760720f6d601"
+    },
+    {
+      "branch": "feature/orchestrator-agent",
+      "commit": "b191d849af7ede9801ccb5dbd21f5d943ab307e1"
+    },
+    {
+      "branch": "main",
+      "commit": "dab53e71bc8b51140f364c0378b8977f697628c0"
+    },
+    {
+      "branch": "p1/integration",
+      "commit": "115f2671bb757b6a59ce12ea30c0760720f6d601"
+    }
+  ],
+  "live_model_evaluation": "not_run",
+  "user_study": "not_run"
+}

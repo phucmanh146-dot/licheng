@@ -1,0 +1,434 @@
+{
+  "schema": 1,
+  "title": "上岸鸭 卡点解困与续做",
+  "checkedOn": "2026-10-16",
+  "repo": "phucmanh146-dot/shangan-ya",
+  "branch": "feat/task-unblocking-dispatch-20261016",
+  "baseBranch": "feat/general-agent-closed-loop-20261012",
+  "baseCommit": "9c98c5bc44350012a6d696ead0ac32e886d98253",
+  "scope": "学生想做，但遇到自己解决不了的具体问题。系统定位问题、提供可执行的尝试、检查结果，再帮助继续原任务。",
+  "notice": "本轮交付新分支任务与调度看板。解困模块仍待开发和真人验收；负责人为建议分工。",
+  "tasks": [
+    {
+      "id": "U-01",
+      "title": "把当前卡点绑定到真实作品和目标",
+      "owner": "A＋队长",
+      "lead": "A",
+      "phase": "先定位",
+      "priority": "P0",
+      "dependsOn": [],
+      "baseline": "目标、材料、本人任务与版本入口已有，A资料抓取已完成。",
+      "delta": "新增一份当前问题记录，绑定原任务、具体步骤、作品版本和目标判据，避免脱离作品泛聊。",
+      "deliverables": [
+        "卡点输入包与字段说明",
+        "同一作品的原始目标、当前片段和可回查位置"
+      ],
+      "acceptance": [
+        "用户可用一句话或截图发起求助，已有上下文自动复用。",
+        "能说清想达到什么、实际发生什么、正在做哪一步；缺关键事实时返回待补项。",
+        "抓取完成继续记为已完成；接入口不明只列交接缺口，不重复抓取。"
+      ],
+      "evidence": [
+        "真实作品V1与判据",
+        "带位置的卡点记录"
+      ],
+      "paths": [
+        "team_inputs.py",
+        "team_handoff.py",
+        "artifact_store.py"
+      ],
+      "mapping": "N1/N2/N3",
+      "issue": {
+        "id": "U-01",
+        "number": 13,
+        "url": "https://github.com/phucmanh146-dot/shangan-ya/issues/13"
+      },
+      "status": "todo"
+    },
+    {
+      "id": "U-02",
+      "title": "判断用户自己解决不了的具体问题",
+      "owner": "A",
+      "lead": "A",
+      "phase": "先定位",
+      "priority": "P0",
+      "dependsOn": [
+        "U-01"
+      ],
+      "baseline": "A能读取材料、返回差距和未知项，但判断质量仍需真人验收。",
+      "delta": "结合当前步骤与尝试，区分方法不清、操作报错、缺资料、外部依赖及精力不足；原因不明保持未知。",
+      "deliverables": [
+        "卡点诊断与证据",
+        "当前只需补充的一个关键问题"
+      ],
+      "acceptance": [
+        "说明判断来自哪条现象或证据，事实、推测与用户确认分开。",
+        "不能按停顿次数直接判拖延；网络或工具问题只是案例之一。",
+        "方法不清、实际报错、疲惫分别产生不同后续处理，不统一推荐换任务。"
+      ],
+      "evidence": [
+        "至少三类真实卡点及用户核对",
+        "错误分类与纠正记录"
+      ],
+      "paths": [
+        "team_ai.py",
+        "team_orchestrator.py"
+      ],
+      "mapping": "N3/N4",
+      "issue": {
+        "id": "U-02",
+        "number": 14,
+        "url": "https://github.com/phucmanh146-dot/shangan-ya/issues/14"
+      },
+      "status": "todo"
+    },
+    {
+      "id": "U-03",
+      "title": "给出当前一步能尝试的解决办法",
+      "owner": "B，A核对依据",
+      "lead": "B",
+      "phase": "真正解困",
+      "priority": "P0",
+      "dependsOn": [
+        "U-02"
+      ],
+      "baseline": "B有行动生成和micro_steps传递；独立入口仍可能回退通用三步。",
+      "delta": "收紧通用回退；围绕卡点选择检索、最小示例、工具检查或必要练习，给一次具体且可验证的动作。",
+      "deliverables": [
+        "带对象、位置、动作、预期变化与检查办法的行动卡",
+        "使用资料的出处和适用条件"
+      ],
+      "acceptance": [
+        "缺具体步骤时进入待补充，不能用“打开材料、完成产物、检查”充数。",
+        "第一步优先为约2至5分钟可开始的动作；估时是初估，实际用时另记。",
+        "搜索、计算、代码检查等只使用已配置工具，保留真实返回；不可用时显示缺口。"
+      ],
+      "evidence": [
+        "另一人照卡开始的记录",
+        "工具或资料原始结果"
+      ],
+      "paths": [
+        "action_planner.py",
+        "personal_guidance.py"
+      ],
+      "mapping": "N5/B-01/K-01",
+      "issue": {
+        "id": "U-03",
+        "number": 15,
+        "url": "https://github.com/phucmanh146-dot/shangan-ya/issues/15"
+      },
+      "status": "todo"
+    },
+    {
+      "id": "U-04",
+      "title": "检查尝试结果并决定下一步",
+      "owner": "A＋B",
+      "lead": "A",
+      "phase": "真正解困",
+      "priority": "P0",
+      "dependsOn": [
+        "U-03"
+      ],
+      "baseline": "反馈、求助关联和文件提交基础已有，完整解困效果尚未验收。",
+      "delta": "每次建议后读取实际尝试结果；未解决时依据新证据换路径，记录已排除方法。",
+      "deliverables": [
+        "尝试日志与结果证据",
+        "继续、换路径、求助或暂停的判断"
+      ],
+      "acceptance": [
+        "发出建议、看完教程或口头说成功都不能直接记问题已解决。",
+        "条件未变时不重复已经失败的建议；需要重试时说明新增依据。",
+        "允许无法判断、请求补证据或人工帮助，保留失败，不自动向他人发送消息。"
+      ],
+      "evidence": [
+        "一次失败后调整方法的完整记录",
+        "问题解决与未解决的独立核对"
+      ],
+      "paths": [
+        "team_ai.py",
+        "team_dispatch.py"
+      ],
+      "mapping": "N6/N7/K-02",
+      "issue": {
+        "id": "U-04",
+        "number": 16,
+        "url": "https://github.com/phucmanh146-dot/shangan-ya/issues/16"
+      },
+      "status": "todo"
+    },
+    {
+      "id": "U-05",
+      "title": "保存解题现场并接回原任务",
+      "owner": "队长，A/B配合",
+      "lead": "队长",
+      "phase": "继续原任务",
+      "priority": "P0",
+      "dependsOn": [],
+      "baseline": "任务、版本、冲突与失败保存已有，程序恢复不等于人能接上思路。",
+      "delta": "保存当前问题、已试方法及结果、下一验证动作；回来后检查版本和条件，再接回同一步骤。",
+      "deliverables": [
+        "checkpoint与attempt记录设计",
+        "暂停、切换、重启后的恢复入口"
+      ],
+      "acceptance": [
+        "用户可立即暂停，系统先用已有记录草拟现场，不强迫疲惫者填长表。",
+        "恢复展示具体作品位置与下一步；原作品改变时先检查动作是否仍适用。",
+        "确实暂时做不了时才提供可行分支或等待；保留原任务与恢复条件。"
+      ],
+      "evidence": [
+        "暂停前后相同任务与作品位置",
+        "恢复到首次有效操作的时间"
+      ],
+      "paths": [
+        "learning_agent.py",
+        "team_dispatch.py",
+        "team_revision.py"
+      ],
+      "mapping": "N8/C-02/K-07",
+      "issue": {
+        "id": "U-05",
+        "number": 17,
+        "url": "https://github.com/phucmanh146-dot/shangan-ya/issues/17"
+      },
+      "status": "todo"
+    },
+    {
+      "id": "U-06",
+      "title": "用实际新版复核成果是否达标",
+      "owner": "A，队长核对",
+      "lead": "A",
+      "phase": "继续原任务",
+      "priority": "P0",
+      "dependsOn": [
+        "U-04",
+        "U-05"
+      ],
+      "baseline": "新版读取、引文与版本校验、人工确认入口已有；真人语义复核尚待完整验收。",
+      "delta": "把卡点解决与整份作品达标分开，对实际V2按原标准逐项复核。",
+      "deliverables": [
+        "V1/V2差异",
+        "逐条件通过、未通过或无法判断的复核包"
+      ],
+      "acceptance": [
+        "依据指向实际提交的新版本和对应位置，旧回调拒收。",
+        "卡点解决、能力试做通过均不直接关闭整份成果差距。",
+        "数值/代码可用确定性检查；论证质量保留适用判据和独立人工核对。"
+      ],
+      "evidence": [
+        "真实V2与原判据",
+        "误放行、漏检和未知记录"
+      ],
+      "paths": [
+        "team_handoff.py",
+        "team_ai.py",
+        "team_revision.py"
+      ],
+      "mapping": "N7/A-04/K-02",
+      "issue": {
+        "id": "U-06",
+        "number": 18,
+        "url": "https://github.com/phucmanh146-dot/shangan-ya/issues/18"
+      },
+      "status": "todo"
+    },
+    {
+      "id": "U-07",
+      "title": "按复核和实际用时只调整剩余任务",
+      "owner": "B＋队长",
+      "lead": "B",
+      "phase": "继续原任务",
+      "priority": "P0",
+      "dependsOn": [
+        "U-06"
+      ],
+      "baseline": "容量、依赖、缓冲、受保护任务与remaining重排已有实现。",
+      "delta": "消费新版剩余问题和执行记录，预览局部调整；保留已完成成果和解困历史。",
+      "deliverables": [
+        "剩余行动与日程预览",
+        "新旧任务和时间差异"
+      ],
+      "acceptance": [
+        "已完成、进行中、待验收和锁定任务及其依赖按现有规则保护。",
+        "显示未排入原因与分钟缺口，不为赶截止暗降验收标准。",
+        "用户确认后采用；调整后能反查原卡点、尝试和复核。"
+      ],
+      "evidence": [
+        "重排前后差异",
+        "旧成果与实际用时保留记录"
+      ],
+      "paths": [
+        "b_capacity.py",
+        "team_revision.py",
+        "action_planner.py"
+      ],
+      "mapping": "N7/B-04",
+      "issue": {
+        "id": "U-07",
+        "number": 19,
+        "url": "https://github.com/phucmanh146-dot/shangan-ya/issues/19"
+      },
+      "status": "todo"
+    },
+    {
+      "id": "U-08",
+      "title": "用真实半成品证明解困和交付效果",
+      "owner": "队长，A/B协作",
+      "lead": "队长",
+      "phase": "证明有效",
+      "priority": "P1",
+      "dependsOn": [
+        "U-07"
+      ],
+      "baseline": "已有评测协议与模拟输入，没有充分的真实用户效果证据。",
+      "delta": "同作品、同判据、同模型工具预算，对比通用聊天、当前流程与新增解困续做流程。",
+      "deliverables": [
+        "完整真实案例包",
+        "对照结果与全部失败记录"
+      ],
+      "acceptance": [
+        "至少先完成一条真人从卡点到合格V2及剩余调整的完整记录。",
+        "测试不同困难：方法不清、操作报错、材料缺失、中断遗忘；网络仅作其中一例。",
+        "报告卡点解决、合格交付、恢复耗时、无效重复、误放行和成本，不预填收益或获奖概率。"
+      ],
+      "evidence": [
+        "独立执行人与核对者记录",
+        "各组输入、产物、耗时和成本"
+      ],
+      "paths": [
+        "evidence/",
+        "docs/first-prize-delivery-v5.md"
+      ],
+      "mapping": "G2/G3/G4/K-04/K-08",
+      "issue": {
+        "id": "U-08",
+        "number": 20,
+        "url": "https://github.com/phucmanh146-dot/shangan-ya/issues/20"
+      },
+      "status": "todo"
+    }
+  ],
+  "comparisons": [
+    {
+      "dimension": "解决的核心问题",
+      "before": "围绕目标生成计划、安排时间与提醒。",
+      "after": "学生想做却卡住时，定位这个问题并通过实际尝试解决，再接回原任务。",
+      "verify": "留下卡点、处理过程和作品变化，不能只展示聊天回答。"
+    },
+    {
+      "dimension": "指导依据",
+      "before": "已有目标、作品、来源、本人理解与能力记录。",
+      "after": "在这些基础上绑定当前步骤、预期结果、实际现象和已经尝试的方法。",
+      "verify": "每条建议能回到同一作品版本与位置。"
+    },
+    {
+      "dimension": "行动卡",
+      "before": "具体字段与micro_steps已有，独立入口仍有通用三步回退。",
+      "after": "一次给可执行尝试，写清操作对象、动作、预期变化和检查办法。",
+      "verify": "另一成员无需猜操作即可开始；信息不足明确待补。"
+    },
+    {
+      "dimension": "困难处理",
+      "before": "有求助与反馈入口，尚缺完整真人解困记录。",
+      "after": "按实际卡点选择方法、资料、工具检查或必要练习，并核对结果。",
+      "verify": "不同困难产生不同处理；网络只是测试例子。"
+    },
+    {
+      "dimension": "失败后的下一步",
+      "before": "失败状态可保存。",
+      "after": "保留试过的方法及结果，依据新证据调整，避免重复无效建议。",
+      "verify": "一次失败后能说明为什么改变方法。"
+    },
+    {
+      "dimension": "中断后的恢复",
+      "before": "程序状态、版本和任务保护已有。",
+      "after": "人回来能看到做到哪、试过什么、接下来验证什么。",
+      "verify": "测恢复到首次有效操作的时间。"
+    },
+    {
+      "dimension": "怎样认定完成",
+      "before": "提交待验收、A复核与人工确认接口已有。",
+      "after": "区分卡点解决和整份作品达标，对实际V2按原标准逐项核对。",
+      "verify": "未达标不放行；错版本和无依据结论被拒收。"
+    },
+    {
+      "dimension": "任务和排程调整",
+      "before": "容量、依赖、缓冲和剩余重排已有。",
+      "after": "使用解困实际用时与新版剩余问题局部调整，保留旧成果。",
+      "verify": "前后差异能反查卡点与复核依据。"
+    },
+    {
+      "dimension": "创新怎样证明",
+      "before": "工程检查和模拟案例提供基础证据。",
+      "after": "用真实半成品和同条件对照检验解困后能否完成交付。",
+      "verify": "看合格产物、返工、耗时、误判和成本；不以功能数量代替效果。"
+    }
+  ],
+  "foundations": [
+    {
+      "title": "A资料抓取",
+      "state": "用户确认已完成",
+      "detail": "保留已有成果；接收目录、来源与服务入口。",
+      "kind": "confirmed"
+    },
+    {
+      "title": "容量与依赖排程",
+      "state": "工程基础已有",
+      "detail": "空档、固定占用、缓冲与分钟缺口继续复用。",
+      "kind": "engineering"
+    },
+    {
+      "title": "版本与任务保护",
+      "state": "工程基础已有",
+      "detail": "旧版本拒收，保留完成、进行中与待验收记录。",
+      "kind": "engineering"
+    },
+    {
+      "title": "真人成果闭环",
+      "state": "仍待验收",
+      "detail": "独立执行、真实V2、有效复核与剩余重排需完整证据。",
+      "kind": "pending"
+    }
+  ],
+  "cases": [
+    {
+      "name": "方法不清",
+      "scene": "想写分析段，但不知道怎样用现有数据支持结论。",
+      "response": "定位当前段落和判据，给一个最小尝试，检查改动是否解决问题。"
+    },
+    {
+      "name": "操作报错",
+      "scene": "正在完成任务，某一步报错，自己尝试后仍无法解决。",
+      "response": "核对错误与已试方法，给下一次可验证操作，失败后依据结果调整。"
+    },
+    {
+      "name": "资料或条件缺失",
+      "scene": "当前步骤缺文件、等待回复或工具暂不可用。",
+      "response": "判断哪些步骤受阻；先保留现场，选择仍能推进原目标的步骤或等待。"
+    },
+    {
+      "name": "中断后接不上",
+      "scene": "做了一半停下，回来忘记试过什么、接下来怎么办。",
+      "response": "恢复作品位置、尝试结果与下一验证动作，确认变化后继续。"
+    }
+  ],
+  "references": [
+    {
+      "title": "BlackBox",
+      "url": "https://github.com/alejandro-publius/blackbox-datahub",
+      "lesson": "依据证据处理问题，并检查真实产物；不把一句成功当验收。",
+      "scope": "数据事件处理案例，不能直接移用其效果数字。 "
+    },
+    {
+      "title": "INTERLOCK",
+      "url": "https://github.com/usv240/interlock",
+      "lesson": "判断变化影响哪些步骤，保留未受影响部分。",
+      "scope": "并发Agent状态机制，借鉴依赖与局部恢复思想。 "
+    },
+    {
+      "title": "GSD",
+      "url": "https://github.com/gsd-build/get-shit-done",
+      "lesson": "保留暂停现场、恢复上下文与持续调试记录。",
+      "scope": "开发工作流参考；解困效果仍需在学生作品上验证。"
+    }
+  ]
+}

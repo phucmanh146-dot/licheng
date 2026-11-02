@@ -1,0 +1,16 @@
+const {spawn}=require('node:child_process'),path=require('node:path'),assert=require('node:assert/strict');
+const {chromium}=require(process.env.CODEX_PRIMARY_RUNTIME_NODE_MODULES ? path.join(process.env.CODEX_PRIMARY_RUNTIME_NODE_MODULES,'playwright') : 'playwright');
+let server,browser;
+(async()=>{try{
+server=spawn('python',['learning_agent_server.py','--port','8935'],{cwd:__dirname,stdio:'ignore'});const base='http://127.0.0.1:8935';for(let i=0;i<50;i++){try{if((await fetch(base+'/api/agent/health')).ok)break;}catch{}await new Promise(r=>setTimeout(r,100));}
+browser=await chromium.launch({headless:true,executablePath:process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE,args:['--no-sandbox']});const page=await browser.newPage({viewport:{width:1360,height:1000}}),errors=[];page.on('pageerror',e=>errors.push(e.message));await page.goto(base+'/planner.html');
+async function click(name,endpoint){const response=page.waitForResponse(r=>r.url().endsWith('/planner/'+endpoint));await page.getByRole('button',{name,exact:true}).click();const r=await response;assert.equal(r.status(),200,await r.text());await page.waitForFunction(()=>!document.querySelector('#generate').disabled);}
+await page.getByRole('button',{name:'载入演示',exact:true}).click();await click('生成个人任务路线','generate');
+await click('锁定任务与时段','lock');await page.getByRole('button',{name:'解除任务锁定'}).waitFor();await click('解除任务锁定','lock');
+const available=page.locator('#availability article').first();await available.getByText('每周重复空闲 / 固定课表').click();await available.getByRole('button',{name:'添加每周空闲'}).click();await available.getByText('每周重复空闲 / 固定课表').click();assert.equal(await available.getByRole('button',{name:'删除重复安排'}).count(),1);
+await page.locator('#tasks input[type=checkbox]').check();await page.getByLabel('延期对比天数（不代表比赛允许延期）').fill('1');await click('计算具体备选方案','alternatives');assert.match(await page.locator('#comparison').textContent(),/延期 1 天/);assert.match(await page.locator('#comparison').textContent(),/仍缺 0 分钟/);
+await click('用已验收历史校准估时','calibrate');assert.match(await page.locator('#comparison').textContent(),/更新 0 项/);
+await click('细分制作、修改与检查','split');assert.equal(await page.locator('#tasks article').count(),4);assert.match(await page.locator('#tasks').textContent(),/阶段预算/);
+await page.getByText('A 的原始诊断包 / 高级编辑').click();const diagnosis=JSON.parse(await page.locator('#diagnosis').inputValue());diagnosis.diagnosis_version++;const gap=JSON.parse(JSON.stringify(diagnosis.gaps[0]));gap.gap_id='G2';gap.target_result='另一个交付';diagnosis.gaps.push(gap);await page.locator('#diagnosis').fill(JSON.stringify(diagnosis));await click('按新诊断增量更新','reconcile');assert.equal(await page.locator('#tasks article').count(),5);assert.match(await page.locator('#comparison').textContent(),/G1:deliver:preparation/);
+await page.screenshot({path:path.join(__dirname,'test-output/refinements-desktop.png'),fullPage:true});await page.setViewportSize({width:390,height:844});assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));assert.deepEqual(errors,[]);console.log('PASS: lock/unlock, weekly availability, concrete alternative, calibration guard, phase split, incremental preservation, mobile width, no JS errors');
+}finally{if(browser)await browser.close();if(server)server.kill();}})().catch(e=>{console.error(e);process.exitCode=1;});

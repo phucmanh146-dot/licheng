@@ -1,0 +1,72 @@
+{
+  "date": "2026-10-27",
+  "base_commit": "359ba1c57bae87a148a5a0d6ed46be94af3f012b",
+  "docx_sha256": "c739d2172d041fa758c164d166535ea4c2b0de2a628b17c55ef787d875333a68",
+  "C_pages": [
+    1,
+    2,
+    4,
+    5,
+    6,
+    12,
+    13,
+    16,
+    17,
+    18,
+    19,
+    20
+  ],
+  "regression": {
+    "command": "python -X utf8 -m unittest discover -q",
+    "local": {
+      "count": 248,
+      "exit_code": 0
+    },
+    "remote": {
+      "device": "江月的诗",
+      "count": 248,
+      "exit_code": 0,
+      "seconds": 26.61
+    }
+  },
+  "B_original": {
+    "role": "B",
+    "source_commit": "59a1eaff7aa3fa61135c021f108a4d6cb9216f35",
+    "command": [
+      "python",
+      "-X",
+      "utf8",
+      "-m",
+      "unittest",
+      "-q",
+      "test_action_planner",
+      "test_b_independent",
+      "test_planner_http",
+      "test_refinements"
+    ],
+    "exit_code": 0,
+    "zip_sha256": "28e346d5c7069165d7c62a7eb5477168b7f53e355d5381c288c30b084d4e0096",
+    "scope": "Original B branch engineering only; human artifacts/independent content review not verified"
+  },
+  "A_independent_delivery": "blocked_no_independent_code_in_current_tree",
+  "not_run": [
+    "LIVE model",
+    "human V2",
+    "independent human content review",
+    "user study",
+    "full 20-slide delivery",
+    "deployment"
+  ],
+  "automation": "creation_failed_Invalid_app_tool_request",
+  "source_sha256": {
+    "learning-agent/team_orchestrator.py": "4b8a5dd1dde40d2d9ac0c1a7896646063fa803b99422e8e8c40ed4ba248b521b",
+    "learning-agent/team_handoff.py": "c4d31d03e25f850aa3627a00fecf9d50e88d08fdf707e6d936ea57d1758f9fcd",
+    "learning-agent/team_ai.py": "a745cf167053902e78e92b7efcec314a2c696425c793935348f8d90fbdc3300c",
+    "learning-agent/team.html": "88bf3e115ef8cb1c69959f788be8e55b9cd8235aa46839289be2ca4ad38d0b3d",
+    "learning-agent/team.js": "38f02d79b7b97a9d0a88aedfed9445d436ff06461b51a9a16d3ea330676ab80b",
+    "learning-agent/test_general_loop.py": "c6f008d05a2b062948ed7686785e6e0c0db213be494fca4ebc970146d05e44bc",
+    "learning-agent/test_captain_review_gates.py": "426937472ab907a5f6d8e3b441a359202aef6d6f2b8412cc82a09fe045a63331",
+    "learning-agent/test_recovery.py": "bc5d9cf47c4925903b39c934eb86f8b3be8f1c17f0eb22fdf2829cfd6f76dfcc",
+    "learning-agent/test_independent_review.py": "6897bcce9778b86abd5e8542aaf925da16e01842b2d5eca9232f91169cd0c675"
+  }
+}
