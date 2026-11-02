@@ -69,6 +69,22 @@ class CrossEncoderTests(unittest.TestCase):
             hit = result["hits"][0]
             artifact_store.references(project, [{**hit, "quote": hit["text"]}])
 
+    def test_diagnosis_preview_passes_version_and_purpose_filters(self):
+        project = {"project_id": "p1", "version": 4}
+        hit = {"artifact_id":"v1","artifact_version":1,"sha256":"abc",
+               "locator":"page:1/line:1","text":"原文证据"}
+        with patch.object(team, "current", return_value=project), \
+             patch.object(artifact_retrieval, "select", return_value={"hits":[hit]}) as select, \
+             patch.object(artifact_store, "read", return_value={
+                 "artifact_id":"v1","artifact_version":1,"sha256":"abc","units":[]}), \
+             patch("team_ai.researcher", return_value={"status":"preview"}):
+            artifact_retrieval.diagnosis_preview({
+                "project_id":"p1","query":"只查V1输入材料",
+                "filters":{"purpose":"input","versions":{"v1":1}}})
+        select.assert_called_once_with(
+            project, "只查V1输入材料", 12, 18000,
+            {"purpose":"input","versions":{"v1":1}})
+
     def test_rag_workbench_assets_are_served(self):
         import threading
         from http.server import ThreadingHTTPServer
