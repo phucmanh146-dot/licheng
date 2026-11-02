@@ -20,6 +20,7 @@ import team_handoff as handoff
 import team_rescue
 import team_recovery
 import artifact_store
+import artifact_retrieval
 import team_inputs
 import team_revision
 import cc_progress
@@ -157,7 +158,7 @@ class Handler(LegacyHandler):
                 allowed += ('/team-recovery.js',)
                 allowed += ('/team-runtime.js',)
                 allowed += ('/team-intervention.js',)
-                allowed += ('/research-companion.js',)
+                allowed += ('/research-companion.js', '/contest-progress.html')
                 if self.path.split('?')[0] not in allowed:
                     return self.send_json({'error': '文件不可读取'}, 404)
             return super().do_GET()
@@ -223,6 +224,8 @@ class Handler(LegacyHandler):
                             'review-receive':handoff.receive_review,'review-run':handoff.invoke_review,
                             'context':team_inputs.save_context,'member':team_inputs.save_member,
                             'capability':team_inputs.record_capability,'artifact-import':artifact_store.import_file,
+                            'artifact-retrieve':artifact_retrieval.retrieve,
+                            'rag-diagnosis-preview':artifact_retrieval.diagnosis_preview,
                             'advance-review':team_revision.advance,
                             'rescue-start':team_rescue.start,'rescue-sync':team_rescue.sync,
                             'recovery-pause':team_recovery.pause,'recovery-condition':team_recovery.signal,

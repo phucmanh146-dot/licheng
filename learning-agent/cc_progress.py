@@ -7,6 +7,7 @@ project workflow; derived state is never presented as a live terminal heartbeat.
 from __future__ import annotations
 
 import sqlite3
+import os
 import time
 import uuid
 from pathlib import Path
@@ -20,8 +21,11 @@ STALE_SECONDS = 300
 
 
 def _conn():
-    conn = sqlite3.connect(DB)
-    conn.row_factory = sqlite3.Row
+    if os.getenv('SHANGAN_DATABASE_URL'):
+        conn = agent.connection()
+    else:
+        conn = sqlite3.connect(DB)
+        conn.row_factory = sqlite3.Row
     conn.execute("""CREATE TABLE IF NOT EXISTS cc_windows(
         project_id TEXT NOT NULL,
         window_id TEXT NOT NULL,

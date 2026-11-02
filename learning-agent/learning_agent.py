@@ -41,26 +41,34 @@ class ClosingConnection(sqlite3.Connection):
 
 
 def connection():
+    if os.getenv('SHANGAN_DATABASE_URL'):
+        from shared_database import connect
+        return connect()
     c = sqlite3.connect(DB, timeout=15, factory=ClosingConnection)
     c.row_factory = sqlite3.Row
     return c
 
 
-with connection() as c:
-    c.execute('PRAGMA journal_mode=WAL')
-    c.executescript('''
-        CREATE TABLE IF NOT EXISTS runs(id TEXT PRIMARY KEY,kind TEXT,status TEXT,input TEXT,result TEXT,error TEXT,created TEXT);
-        CREATE TABLE IF NOT EXISTS events(seq INTEGER PRIMARY KEY AUTOINCREMENT,run_id TEXT,kind TEXT,message TEXT,created TEXT);
-        CREATE TABLE IF NOT EXISTS routes(id TEXT PRIMARY KEY,version INTEGER,body TEXT,updated TEXT);
-        CREATE TABLE IF NOT EXISTS revisions(route_id TEXT,version INTEGER,body TEXT,reason TEXT,created TEXT,PRIMARY KEY(route_id,version));
-        CREATE TABLE IF NOT EXISTS agent_tool_calls(id TEXT PRIMARY KEY,run_id TEXT,body TEXT);
-    ''')
-    c.execute("UPDATE runs SET status='interrupted',error=? WHERE status IN ('queued','running')", ('服务重启中断了执行，可以重新发起；已保存的路线不受影响。',))
-    for row in c.execute('SELECT id,body FROM agent_tool_calls').fetchall():
-        value = json.loads(row['body'])
-        if value.get('status') == 'running':
-            value.update(status='interrupted', finished=now(), error_code='PROCESS_RESTARTED')
-            c.execute('UPDATE agent_tool_calls SET body=? WHERE id=?', (json.dumps(value,ensure_ascii=False),row['id']))
+def init_database():
+    with connection() as c:
+        c.execute('PRAGMA journal_mode=WAL')
+        c.executescript('''
+            CREATE TABLE IF NOT EXISTS runs(id TEXT PRIMARY KEY,kind TEXT,status TEXT,input TEXT,result TEXT,error TEXT,created TEXT);
+            CREATE TABLE IF NOT EXISTS events(seq INTEGER PRIMARY KEY AUTOINCREMENT,run_id TEXT,kind TEXT,message TEXT,created TEXT);
+            CREATE TABLE IF NOT EXISTS routes(id TEXT PRIMARY KEY,version INTEGER,body TEXT,updated TEXT);
+            CREATE TABLE IF NOT EXISTS revisions(route_id TEXT,version INTEGER,body TEXT,reason TEXT,created TEXT,PRIMARY KEY(route_id,version));
+            CREATE TABLE IF NOT EXISTS agent_tool_calls(id TEXT PRIMARY KEY,run_id TEXT,body TEXT);
+        ''')
+        c.execute("UPDATE runs SET status='interrupted',error=? WHERE status IN ('queued','running')", ('服务重启中断了执行，可以重新发起；已保存的路线不受影响。',))
+        for row in c.execute('SELECT id,body FROM agent_tool_calls').fetchall():
+            value = json.loads(row['body'])
+            if value.get('status') == 'running':
+                value.update(status='interrupted', finished=now(), error_code='PROCESS_RESTARTED')
+                c.execute('UPDATE agent_tool_calls SET body=? WHERE id=?', (json.dumps(value,ensure_ascii=False),row['id']))
+
+
+if not os.getenv("SHANGAN_SKIP_DB_INIT"):
+    init_database()
 
 
 def dump(value):
@@ -306,13 +314,32 @@ sourceIds 只能用已经检索或读取到的真实S编号；没有网络证据
 
 
 def json_reply(reply):
-    text = re.sub(r'^```(?:json)?\s*|\s*```$', '', reply.strip()).strip()
+    # Accept one complete JSON object with an optional short preamble/fence.
+    # The parsed object is still subjected to the full task-specific validator.
+    text = str(reply).strip()
+    if text.startswith('```'):
+        first, sep, remainder = text.partition('\n')
+        if not sep or not re.fullmatch(r'```(?:json)?', first.strip(), flags=re.IGNORECASE):
+            raise ValueError('Unsupported JSON code fence')
+        if not remainder.rstrip().endswith('```'):
+            raise ValueError('Unclosed JSON code fence')
+        text = remainder.strip()[:-3].strip()
+    elif text.endswith('```'):
+        # Some local gateways append a closing fence without an opening fence.
+        text = text[:-3].rstrip()
+    start = text.find('{')
+    if start < 0 or len(text[:start].strip()) > 120:
+        raise ValueError('Model did not return a JSON object')
+    decoder = json.JSONDecoder()
     try:
-        obj = json.loads(text)
+        obj, end = decoder.raw_decode(text[start:])
     except ValueError:
-        raise ValueError('模型没有返回合法 JSON')
+        raise ValueError('Model returned invalid JSON')
+    trailing = text[start + end:].strip()
+    if trailing:
+        raise ValueError('Unexpected text after JSON object')
     if not isinstance(obj, dict):
-        raise ValueError('模型结果必须为对象')
+        raise ValueError('Model result must be an object')
     return obj
 
 
@@ -422,6 +449,20 @@ def competition_name(data):
     return value.strip()
 
 
+def normalize_model_action(obj):
+    """Treat a complete, schema-validated task payload as final even if a model labels it `plan`."""
+    if not isinstance(obj, dict):
+        return obj
+    if obj.get('action') not in ('search', 'read', 'finish') and isinstance(obj.get('tasks'), list):
+        # The downstream validate_answer() still enforces task count, evidence IDs,
+        # action granularity, durations, deliverables and acceptance criteria.
+        normalized = dict(obj)
+        normalized['action'] = 'finish'
+        normalized['_action_normalized_from'] = str(obj.get('action', 'missing'))[:40]
+        return normalized
+    return obj
+
+
 def run_agent(run_id, data):
     name = competition_name(data)
     evidence = Evidence(run_id)
@@ -480,7 +521,10 @@ def run_agent(run_id, data):
         messages.append({'role': 'assistant', 'content': answer})
         try:
             obj = json_reply(answer)
+            obj = normalize_model_action(obj)
             action = obj.get('action')
+            if obj.get('_action_normalized_from'):
+                event(run_id, 'warning', '??????????? action ??????????????????')
             if action == 'finish':
                 result = validate_rescue(obj, evidence, frame_items) if mode == 'rescue' else validate_answer(obj, evidence)
                 planned = schedule(result['tasks'], data['settings'])

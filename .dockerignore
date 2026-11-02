@@ -1,0 +1,10 @@
+.git
+.env
+.env.*
+**/.learning-agent
+**/*.sqlite3
+**/__pycache__
+**/node_modules
+work
+outputs
+evidence

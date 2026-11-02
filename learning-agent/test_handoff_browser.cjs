@@ -75,7 +75,7 @@ runpy.run_path('learning_agent_server.py', run_name='__main__')`;
   await page.locator('#linked-rescue-results').getByRole('button',{name:'读取最新解答'}).click();
   await page.locator('#linked-rescue-results summary').waitFor();
   p=await state(id);assert.equal(p.rescue_requests[0].result.frame_count,1);assert.equal(p.plan.tasks[0].status,'in_progress');
-  assert.equal(p.rescue_requests[0].action_id,'step:1');assert.equal(p.live_verified,false);
+  assert.equal(p.rescue_requests[0].action_id,p.plan.tasks[0].micro_steps[0].step_id);assert.equal(p.live_verified,false);
   checks.push('image-help-binds-action-without-completing-task');
   // WebM exercises actual browser frame extraction, not model correctness.
   const video=path.join(temp,'fixture.webm');

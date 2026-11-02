@@ -12,3 +12,7 @@ demo-runs/
 /work/
 /outputs/
 **/*.sqlite3
+node_modules/
+
+.env.engineering
+**/.learning-agent/

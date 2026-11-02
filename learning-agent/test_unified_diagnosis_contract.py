@@ -55,3 +55,29 @@ class UnifiedContractTests(unittest.TestCase):
             with self.subTest(key=key),self.assertRaises(ValueError):
                 team_ai.validate_diagnosis_content({**valid,key:value})
 
+
+    def test_quote_catalog_accepts_bare_model_quote_ids(self):
+        docs = [{'artifact_id':'report','artifact_version':1,'units':[{'locator':'line:1','text':'A grounded source quote'}]}]
+        catalog = team_ai.quote_catalog(docs)
+        resolved = team_ai.resolve_quote_refs([catalog[0]['quote_id']], docs)
+        self.assertEqual(resolved[0]['quote'], 'A grounded source quote')
+        self.assertEqual(resolved[0]['quote_origin'], 'server_catalog_selected_by_model')
+
+
+    def test_extract_pattern_required_only_for_reference_sources(self):
+        gap = {'source_refs':['material:report:1'], 'extract_pattern':''}
+        self.assertEqual(team_ai.validate_extract_pattern(gap, {'material:report:1':{'kind':'user_material'}}), '')
+        ref_gap = {'source_refs':['S1'], 'extract_pattern':'transfer the comparison rubric, not source wording'}
+        self.assertTrue(team_ai.validate_extract_pattern(ref_gap, {'S1':{'kind':'reference'}}))
+        with self.assertRaises(ValueError):
+            team_ai.validate_extract_pattern({'source_refs':['S1'], 'extract_pattern':''}, {'S1':{'kind':'reference'}})
+
+
+    def test_micro_steps_bind_their_input_artifact_source(self):
+        gap = {'micro_steps':[{'input_version':{'artifact_id':'data','artifact_version':2},'source_refs':['material:report:1']}]}
+        refs = {'material:data:2':{'kind':'user_material'},'material:report:1':{'kind':'user_material'}}
+        team_ai.bind_micro_step_input_sources(gap, refs)
+        self.assertEqual(set(gap['micro_steps'][0]['source_refs']), {'material:data:2','material:report:1'})
+        with self.assertRaises(ValueError):
+            team_ai.bind_micro_step_input_sources({'micro_steps':[{'input_version':{'artifact_id':'missing','artifact_version':1}}]}, refs)
+
