@@ -7,12 +7,14 @@
 在本任务工作目录运行：
 
 ```text
-python work/visual-workflow/server.py --workspace <任务工作目录绝对路径> --port 9010
+python learning-agent/visual-workflow/server.py --workspace <任务工作目录绝对路径> --port 9010
 ```
 
 仓库里的文件位于 `learning-agent/visual-workflow/`。本机数据和材料适配器依赖当前验收工作目录；迁到其他电脑需配置对应工作目录及八项目文件索引，不宣称任意克隆即可连接私有材料。
 
 打开 `http://127.0.0.1:9010`。服务只监听本机。上下文、卡点和复核记录在任务目录 `work/workflow-state` 的SQLite内持久保存，上传小产物单独保存。不要把这些运行数据提交到GitHub。
+
+三天冲刺入口为 `/sprint`：八项交付关联原55项，可下载 `/api/sprint` 当前证据索引，点编号直达原任务。关联项通过不自动认证冲刺交付，55项历史状态保留。八项目每项一条差距/首步卡，优先两条真人闭环；不强制三天完成55项或新增外部研究。测试证据写入隔离临时目录，不依赖预建仓库outputs目录。
 
 ## 已实现
 

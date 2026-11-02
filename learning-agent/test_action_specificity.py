@@ -21,3 +21,7 @@ class ActionSpecificityTests(unittest.TestCase):
     def test_missing_resource_can_be_an_explicit_handoff_action(self):
         action='在缺证清单记录缺少的访谈附件名称和可以询问的人，不编造访谈内容'
         self.assertEqual(team_ai.validate_action_specificity({'action':action}),action)
+
+    def test_observed_analysis_record_suffix_does_not_make_action_operational(self):
+        with self.assertRaises(ValueError):
+            team_ai.validate_action_specificity({'action':'分析原文中提到的产品规格、成本、运费、损耗和结算账，并记录下来。'})

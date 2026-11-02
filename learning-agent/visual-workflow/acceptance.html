@@ -1,6 +1,7 @@
 <!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>55项实际验收台账 · 上岸鸭</title><link rel="stylesheet" href="style.css"></head><body><main style="margin:0 auto;max-width:1200px"><header class="topbar"><a href="/">← 工作台</a><b>原55项 · 实际提交与验收</b></header><p class="hint">历史“资料处理完成”和本轮验收分别记录。文件齐全仅能进入复核，不能自动证明内容正确。姓名不同不等于已认证人员独立。</p><div id="msg" class="notice" hidden></div><section class="panel"><div id="counts" class="stat-row"></div><label>选择原任务<select id="choose"></select></label><div id="task"></div></section></main><script>
 const $=s=>document.querySelector(s),e=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 let rows=[],states={},token,active=0,busy=false;
+const requestedTask=Number(new URLSearchParams(location.search).get('task'));if(Number.isInteger(requestedTask)&&requestedTask>=1&&requestedTask<=55)active=requestedTask-1;
 const labels={pending:'待交付',historical_scoped_complete:'历史限定资料完成',pending_review:'待独立复核',passed:'本条人工记录通过',returned:'退回补做',invalidated:'证据已失效'};
 function msg(s){$('#msg').hidden=!s;$('#msg').textContent=s;}
 async function load(){const d=await(await fetch('/api/data')).json();token=d.token;states=d.states;rows=(await(await fetch('/api/acceptance')).json()).rows;render();}

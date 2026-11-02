@@ -29,6 +29,11 @@ def validate_action_specificity(step):
                               and not any(word in action for word in writes)):
         raise ValueError('首步只有阅读/分析/泛泛提取，第三人无法直接交付。请写当前材料的具体对象、'
                          '填写/摘录/计算等操作及一行或一处产物；缺凭证时填写缺项和求助对象，不编造结果。')
+    # Observed real response: appending "并记录下来" bypassed the read-only guard.
+    # This narrow negative check does not certify the meaning of other actions.
+    if action.startswith(('分析','理解')) and re.search(r'记录(?:下来|结果|分析结果)', action) and not any(
+            word in action for word in writes if word not in ('记录','保存')):
+        raise ValueError('仅在分析后追加“记录下来”仍没有可执行对象与字段；请指明当前页的一行或一格、填写字段及缺证处理。')
     return action
 
 
@@ -206,6 +211,11 @@ def call_json(p, stage, payload, validator):
         '即使选择quote_id，current_locator仍必须从allowed_locations中选一个实际位置。'
         '每条action须包含具体对象及填写/复制/摘录/记录/计算等可观察操作，不能只有阅读、分析、理解或泛泛提取。'
         '专利任务可填写一条申请/授权日期；访谈任务可摘一条用途并记位置；账表任务可计算一行收入减成本；只取适合当前材料的动作。每个gap必须独立选择能支持它的quote_id；不得把同一个示例引用复制到所有gap，除非该原文确实同时支持各项判断。')
+    request_payload['first_step_delivery_rule'] = (
+        '首步只交当前作品的一行或一格。写出原件页或已给locator、具体对象、目标表/字段、'
+        '要填写的值或原句。原件没有的成本、凭证、时间必须填“待核”并列索取对象。'
+        '禁止用“分析……并记录下来”代替操作，禁止把亩产值直接填为净收益。'
+        '必须返回evidence_refs数组及每步target_locator字符串，不能返回单个引用对象。')
     content = team.agent.dump(request_payload)
     cfg = rescue.config_snapshot()
     run = {'run_id':uuid.uuid4().hex,'stage':stage,'project_version':p['version'],'boot_id':BOOT_ID,
