@@ -112,4 +112,12 @@ class IndependentReviewTests(unittest.TestCase):
             handoff.receive_manual_review({**self.ctx(), 'review': packet})
 
 
+    def test_production_api_routes_health_and_manual_review_through_auth_layer(self):
+        import shared_api
+        paths = {route.path for route in shared_api.app.routes}
+        self.assertIn('/api/v1/engineering/health', paths)
+        self.assertIs(shared_api.HANDLERS['review-receive'], handoff.receive_manual_review)
+
+
+
 if __name__ == '__main__': unittest.main()
