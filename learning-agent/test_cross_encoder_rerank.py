@@ -87,10 +87,18 @@ class CrossEncoderTests(unittest.TestCase):
 
     def test_rag_workbench_assets_are_served(self):
         import threading
+        from functools import partial
         from http.server import ThreadingHTTPServer
+        from pathlib import Path
         from urllib.request import urlopen
         from learning_agent_server import Handler
-        server = ThreadingHTTPServer(("127.0.0.1", 0), Handler)
+
+        class StaticAssetTestHandler(Handler):
+            protocol_version = "HTTP/1.0"
+
+        handler = partial(StaticAssetTestHandler, directory=str(Path(__file__).parent))
+        server = ThreadingHTTPServer(("127.0.0.1", 0), handler)
+        server.daemon_threads = True
         thread = threading.Thread(target=server.serve_forever, daemon=True)
         thread.start()
         try:
