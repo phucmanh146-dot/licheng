@@ -25,6 +25,7 @@ import team_inputs
 import team_revision
 import cc_progress
 import research_companion
+import assistant_chat
 
 ROOT = Path(__file__).resolve().parent
 try:
@@ -208,6 +209,8 @@ class Handler(LegacyHandler):
             if path == '/api/agent/planner/replan':
                 import action_planner
                 return self.send_json(action_planner.replan(data['diagnosis'], data['plan'], data['settings'], data['expected_plan_version']))
+            if path == '/api/agent/assistant-chat':
+                return self.send_json(assistant_chat.respond(data))
             if path.startswith('/api/agent/team/'):
                 operation = path.rsplit('/',1)[-1]
                 handlers = {'research-save':research_companion.save,
