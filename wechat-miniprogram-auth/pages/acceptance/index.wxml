@@ -1,0 +1,1 @@
+<view class="page"><view class="title">{{title}}</view><view class="desc">{{desc}}</view><view class="card"><view class="strong">只认可核验证据</view><view class="muted">课程、做题、项目分别按证据清单验收；自我勾选不直接等于通过。</view></view></view>
