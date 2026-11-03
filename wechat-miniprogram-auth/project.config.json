@@ -1,0 +1,9 @@
+{
+  "description": "上岸鸭 V10 微信小程序账号认证",
+  "appid": "touristappid",
+  "projectname": "shanganya-v10-auth",
+  "compileType": "miniprogram",
+  "libVersion": "3.8.8",
+  "setting": { "urlCheck": true, "es6": true, "enhance": true, "postcss": true, "minified": true },
+  "condition": {}
+}
