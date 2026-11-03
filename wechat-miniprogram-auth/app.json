@@ -5,6 +5,8 @@
     "pages/success/index",
     "pages/login/index",
     "pages/reset-password/index",
+    "pages/legacy-login/index",
+    "pages/bind-phone/index",
     "pages/home/index",
     "pages/account/index",
     "pages/tasks/index",
@@ -23,10 +25,22 @@
     "backgroundColor": "#FFFFFF",
     "borderStyle": "white",
     "list": [
-      {"pagePath":"pages/home/index","text":"首页"},
-      {"pagePath":"pages/tasks/index","text":"任务"},
-      {"pagePath":"pages/schedule/index","text":"排期"},
-      {"pagePath":"pages/acceptance/index","text":"验收"}
+      {
+        "pagePath": "pages/home/index",
+        "text": "首页"
+      },
+      {
+        "pagePath": "pages/tasks/index",
+        "text": "任务"
+      },
+      {
+        "pagePath": "pages/schedule/index",
+        "text": "排期"
+      },
+      {
+        "pagePath": "pages/acceptance/index",
+        "text": "验收"
+      }
     ]
   },
   "style": "v2",
