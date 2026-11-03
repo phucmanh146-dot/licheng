@@ -35,7 +35,7 @@ https://www.figma.com/design/0RxS3joAwcmYlS5QpYKgJB/上岸鸭-V10-精品小程�
 - POST /api/mini-auth/sms/send { phone, purpose: register|reset }
 - POST /api/mini-auth/sms/verify { phone, code, purpose } -> verificationToken
 - POST /api/mini-auth/register { phone, verificationToken, password } -> token + user
-- POST /api/mini-auth/login { phone, password } -> token + user
+- POST /api/mini-auth/login { phone, password } -> token + user\n- POST /api/mini-auth/legacy-login { name, password } -> token + user\n- POST /api/mini-auth/bind-phone { phone, verificationToken, password } (Bearer token required; preserves original user id/storage)
 - POST /api/mini-auth/password/reset { phone, verificationToken, password }
 - GET /api/mini-auth/me (Authorization: Bearer token)
 - POST /api/mini-auth/logout (Authorization: Bearer token)
@@ -46,5 +46,5 @@ https://www.figma.com/design/0RxS3joAwcmYlS5QpYKgJB/上岸鸭-V10-精品小程�
 - Session：随机 256-bit token，数据库只存 SHA-256 摘要，30 天过期。
 - 注册挑战：短信验证后产生一次性 10 分钟 challenge，创建账号必须持有 challenge。
 - 账号唯一：SQLite 唯一索引，数据库层防并发重复注册。
-- 旧用户名账号不自动绑定手机号；历史数据必须通过本人验证的迁移流程绑定，避免串号。
+- 旧用户名账号不自动创建新账号；可先用原用户名/密码登录，再验证手机号并绑定到原 users.id，原 storage 不变，避免丢失或串号。
 - 短信发送是否成功必须以服务商 SendStatusSet.Code=Ok 为准。
