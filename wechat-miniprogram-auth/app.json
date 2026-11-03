@@ -1,0 +1,34 @@
+{
+  "pages": [
+    "pages/register/index",
+    "pages/set-password/index",
+    "pages/success/index",
+    "pages/login/index",
+    "pages/reset-password/index",
+    "pages/home/index",
+    "pages/account/index",
+    "pages/tasks/index",
+    "pages/schedule/index",
+    "pages/acceptance/index"
+  ],
+  "window": {
+    "navigationBarTitleText": "上岸鸭",
+    "navigationBarBackgroundColor": "#F8FBF9",
+    "navigationBarTextStyle": "black",
+    "backgroundColor": "#F5F8F6"
+  },
+  "tabBar": {
+    "color": "#8B9C95",
+    "selectedColor": "#205F4B",
+    "backgroundColor": "#FFFFFF",
+    "borderStyle": "white",
+    "list": [
+      {"pagePath":"pages/home/index","text":"首页"},
+      {"pagePath":"pages/tasks/index","text":"任务"},
+      {"pagePath":"pages/schedule/index","text":"排期"},
+      {"pagePath":"pages/acceptance/index","text":"验收"}
+    ]
+  },
+  "style": "v2",
+  "sitemapLocation": "sitemap.json"
+}
