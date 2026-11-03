@@ -30,5 +30,5 @@ Page({
     }catch(e){wx.showToast({title:e.message,icon:'none',duration:2600})}
     finally{wx.hideLoading()}
   },
-  toLogin(){wx.navigateTo({url:'/pages/login/index'})}
+  toLogin(){wx.navigateTo({url:'/pages/login/index'})},toLegacy(){wx.navigateTo({url:'/pages/legacy-login/index'})}
 });
