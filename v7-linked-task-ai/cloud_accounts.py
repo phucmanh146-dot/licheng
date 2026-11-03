@@ -240,7 +240,9 @@ def _mini_password(value):
         raise ValueError('密码需要8至128个字符。')
     if not re.search(r'[A-Za-z]', value) or not re.search(r'\\d', value):
         raise ValueError('密码至少包含一个字母和一个数字。')
-    return password_hash(value)
+    salt = secrets.token_bytes(16)
+    hashed = hashlib.scrypt(value.encode(), salt=salt, n=16384, r=8, p=1, maxmem=67108864)
+    return salt.hex() + ':' + hashed.hex()
 
 def _mini_sms_send(phone, code):
     secret_id = os.environ.get('TENCENTCLOUD_SECRET_ID', '')
@@ -350,6 +352,7 @@ def handle(handler):
             code = str(data.get('code', ''))
             if purpose not in ('register', 'reset') or not re.fullmatch(r'\\d{6}', code):
                 raise ValueError('请输入6位短信验证码。')
+            wrong_code = False
             with db() as c:
                 row = c.execute('SELECT * FROM mini_sms_codes WHERE phone=? AND purpose=?', (phone, purpose)).fetchone()
                 exists = c.execute('SELECT id FROM users WHERE phone=?', (phone,)).fetchone()
@@ -359,15 +362,18 @@ def handle(handler):
                     raise ValueError('验证码错误次数过多，请重新获取。')
                 if not hmac.compare_digest(row['code_hash'], digest(phone + '|' + purpose + '|' + code)):
                     c.execute('UPDATE mini_sms_codes SET attempts=attempts+1 WHERE phone=? AND purpose=?', (phone, purpose))
-                    raise ValueError('短信验证码不正确。')
-                if purpose == 'register' and exists:
+                    wrong_code = True
+                elif purpose == 'register' and exists:
                     raise ValueError('该手机号已注册，请直接登录。')
-                if purpose == 'reset' and not exists:
+                elif purpose == 'reset' and not exists:
                     raise ValueError('该手机号尚未注册。')
-                c.execute('DELETE FROM mini_sms_codes WHERE phone=? AND purpose=?', (phone, purpose))
-                raw = secrets.token_hex(32)
-                c.execute('INSERT INTO mini_phone_challenges VALUES (?,?,?,?)',
-                          (digest(raw), phone, purpose, time.time() + 600))
+                else:
+                    c.execute('DELETE FROM mini_sms_codes WHERE phone=? AND purpose=?', (phone, purpose))
+                    raw = secrets.token_hex(32)
+                    c.execute('INSERT INTO mini_phone_challenges VALUES (?,?,?,?)',
+                              (digest(raw), phone, purpose, time.time() + 600))
+            if wrong_code:
+                raise ValueError('短信验证码不正确。')
             handler.message({'verified': True, 'verificationToken': raw, 'expiresIn': 600})
             return True
         if path == '/api/mini-auth/register':
@@ -421,7 +427,6 @@ def handle(handler):
                     raise ValueError('该手机号尚未注册。')
                 c.execute('DELETE FROM mini_phone_challenges WHERE token_hash=?', (digest(challenge),))
                 c.execute('DELETE FROM sessions WHERE uid=(SELECT id FROM users WHERE phone=?)', (phone,))
-            token = _mini_issue_session(handler, (lambda: None)()) if False else None
             handler.message({'ok': True, 'passwordReset': True})
             return True
         if path == '/api/mini-auth/me':
