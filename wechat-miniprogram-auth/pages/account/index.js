@@ -1,0 +1,1 @@
+const api=require('../../utils/api');Page({data:{phone:''},onShow(){const u=wx.getStorageSync('sy_user')||{};this.setData({phone:api.maskPhone(u.phone||'')})},reset(){wx.navigateTo({url:'/pages/reset-password/index'})},async logout(){try{await api.request('/api/mini-auth/logout','POST',{})}catch(e){}api.clearSession();wx.reLaunch({url:'/pages/login/index'})}});
