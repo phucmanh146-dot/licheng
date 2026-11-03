@@ -1,4 +1,4 @@
-const API_BASE = 'https://shanganya-full-public-20261017-production.up.railway.app';
+const API_BASE = 'https://shanganya-v8-workbench-production.up.railway.app';
 function request(path, method='POST', data={}) {
   const token = wx.getStorageSync('sy_access_token');
   return new Promise((resolve, reject) => {
