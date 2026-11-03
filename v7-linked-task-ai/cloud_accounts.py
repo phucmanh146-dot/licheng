@@ -413,6 +413,7 @@ def handle(handler):
         if path == '/api/mini-auth/login':
             data = body(handler)
             phone = _mini_phone(data.get('phone'))
+            throttle('mini-login:' + phone)
             password = data.get('password', '')
             with db() as c:
                 row = c.execute('SELECT * FROM users WHERE phone=?', (phone,)).fetchone()
@@ -425,6 +426,7 @@ def handle(handler):
         if path == '/api/mini-auth/legacy-login':
             data = body(handler)
             name = str(data.get('name', '')).strip()
+            throttle('mini-legacy-login:' + name)
             password = data.get('password', '')
             with db() as c:
                 row = c.execute('SELECT * FROM users WHERE name=?', (name,)).fetchone()
