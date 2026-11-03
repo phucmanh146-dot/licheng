@@ -9,7 +9,7 @@
   <view class="hint">验证码用于确认手机号归属，请勿向他人透露。</view>
   <view class="consent"><checkbox-group bindchange="onAgree"><checkbox value="yes" checked="{{agreed}}" color="#205f4b"/></checkbox-group><text>我已阅读并同意《用户服务协议》与《隐私政策》，并同意使用手机号创建账号。</text></view>
   <view class="primary" bindtap="continue">验证手机号并继续</view>
-  <view class="secondary" bindtap="toLogin">已有账号？密码登录</view>
+  <view class="secondary" bindtap="toLogin">已有账号？密码登录</view><view class="link" bindtap="toLegacy">旧版账号？绑定手机号并保留原数据</view>
   <view class="notice">正式短信验证：验证码由服务端调用短信服务商发送，5 分钟有效。未配置真实短信通道时，系统会明确提示，绝不使用固定模拟验证码。</view>
   <view class="footer">上岸鸭 · 让每一步执行都有回音</view>
 </view>
