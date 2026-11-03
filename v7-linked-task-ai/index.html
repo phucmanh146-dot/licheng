@@ -11,7 +11,7 @@
 <link rel="stylesheet" href="./inline-task-rest.css?v=20261026-stuck-rescue-v2">
 <style id="sy-task-centered-simplify-v1">
 /* Remove duplicate global entry points; keep their legacy data handlers intact. */
-#quickCaptureBtn{display:none!important;visibility:hidden!important;pointer-events:none!important}#aiP2Nav{display:none!important;visibility:hidden!important;pointer-events:none!important}
+#quickCaptureBtn{display:none!important;visibility:hidden!important;pointer-events:none!important}
 .inline-life-panel .itw-actions{display:flex;flex-wrap:wrap;gap:8px}
 .inline-life-panel .itw-actions button{flex:0 1 auto}
 .inline-life-panel .itw-actions #itw-open-ai{background:#285c48;color:#fff}
@@ -477,6 +477,11 @@
         <button class="app-nav-item" data-view="stats" type="button">
           <span class="app-nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10"/><path d="M12 20V4"/><path d="M20 20v-7"/><path d="M2 20h20"/></svg></span>
           <span>数据档案</span>
+        </button>
+        <p class="app-nav-group-label">AI 助手</p>
+        <button class="app-nav-item" data-view="ai-p2" type="button" id="aiP2Nav" aria-label="打开上岸鸭 AI 助手">
+          <span class="app-nav-icon" aria-hidden="true">✦</span>
+          <span>AI 助手</span>
         </button>
                 <p class="app-nav-group-label">账号</p>
         <button class="app-nav-item" data-view="profile" type="button">
