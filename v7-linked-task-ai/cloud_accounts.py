@@ -219,3 +219,287 @@ def handle(handler):
  except ValueError as exc:handler.message({'error':str(exc)},422)
  except Exception as exc:handler.message({'error':str(exc)[:250]},503)
  return True
+
+# --- Mini-program phone-first authentication (2026-11-03) ---
+# The browser's existing username flow is preserved. Mini-program clients use
+# a bearer session token and a verified-phone challenge before password setup.
+with db() as _c:
+    _cols = {row['name'] for row in _c.execute("PRAGMA table_info(users)")}
+    if 'phone' not in _cols:
+        _c.execute("ALTER TABLE users ADD COLUMN phone TEXT")
+    _c.execute("CREATE UNIQUE INDEX IF NOT EXISTS users_phone_unique ON users(phone) WHERE phone IS NOT NULL")
+    _c.executescript("""
+    CREATE TABLE IF NOT EXISTS mini_sms_codes(
+      phone TEXT NOT NULL, purpose TEXT NOT NULL, code_hash TEXT NOT NULL,
+      expires REAL NOT NULL, created REAL NOT NULL, attempts INTEGER NOT NULL DEFAULT 0,
+      PRIMARY KEY(phone,purpose)
+    );
+    CREATE TABLE IF NOT EXISTS mini_phone_challenges(
+      token_hash TEXT PRIMARY KEY, phone TEXT NOT NULL, purpose TEXT NOT NULL, expires REAL NOT NULL
+    );
+    """)
+
+def _mini_phone(value):
+    value = re.sub(r'[\s()-]', '', str(value or ''))
+    if re.fullmatch(r'1[3-9]\d{9}', value):
+        value = '+86' + value
+    if not re.fullmatch(r'\+[1-9]\d{7,14}', value):
+        raise ValueError('请输入有效手机号，包含国家区号。')
+    return value
+
+def _mini_password(value):
+    if not isinstance(value, str) or not 8 <= len(value) <= 128:
+        raise ValueError('密码需要8至128个字符。')
+    if not re.search(r'[A-Za-z]', value) or not re.search(r'\d', value):
+        raise ValueError('密码至少包含一个字母和一个数字。')
+    salt = secrets.token_bytes(16)
+    hashed = hashlib.scrypt(value.encode(), salt=salt, n=16384, r=8, p=1, maxmem=67108864)
+    return salt.hex() + ':' + hashed.hex()
+
+def _mini_sms_send(phone, code):
+    secret_id = os.environ.get('TENCENTCLOUD_SECRET_ID', '')
+    secret_key = os.environ.get('TENCENTCLOUD_SECRET_KEY', '')
+    app_id = os.environ.get('TENCENT_SMS_SDK_APP_ID', '')
+    sign_name = os.environ.get('TENCENT_SMS_SIGN_NAME', '')
+    template_id = os.environ.get('TENCENT_SMS_TEMPLATE_ID', '')
+    if not all([secret_id, secret_key, app_id, sign_name, template_id]):
+        raise RuntimeError('短信服务未配置：请在服务端配置腾讯云短信密钥、应用ID、签名和已审核模板。系统不会使用模拟验证码。')
+    import urllib.request, datetime
+    host = 'sms.tencentcloudapi.com'
+    timestamp = int(time.time())
+    date = datetime.datetime.utcfromtimestamp(timestamp).strftime('%Y-%m-%d')
+    payload = json.dumps({
+        'SmsSdkAppId': app_id, 'SignName': sign_name, 'TemplateId': template_id,
+        'TemplateParamSet': [code, '5'], 'PhoneNumberSet': [phone]
+    }, separators=(',', ':'))
+    hashed = hashlib.sha256(payload.encode()).hexdigest()
+    canonical = 'POST\\n/\\n\\ncontent-type:application/json; charset=utf-8\\nhost:' + host + '\\n\\ncontent-type;host\\n' + hashed
+    scope = date + '/sms/tc3_request'
+    string_to_sign = 'TC3-HMAC-SHA256\\n' + str(timestamp) + '\\n' + scope + '\\n' + hashlib.sha256(canonical.encode()).hexdigest()
+    def _sign(key, message):
+        return hmac.new(key, message.encode(), hashlib.sha256).digest()
+    secret_date = _sign(('TC3' + secret_key).encode(), date)
+    secret_service = _sign(secret_date, 'sms')
+    secret_signing = _sign(secret_service, 'tc3_request')
+    signature = hmac.new(secret_signing, string_to_sign.encode(), hashlib.sha256).hexdigest()
+    authorization = 'TC3-HMAC-SHA256 Credential=' + secret_id + '/' + scope + ', SignedHeaders=content-type;host, Signature=' + signature
+    request = urllib.request.Request(
+        'https://' + host, data=payload.encode(),
+        headers={
+            'Authorization': authorization, 'Content-Type': 'application/json; charset=utf-8',
+            'Host': host, 'X-TC-Action': 'SendSms', 'X-TC-Version': '2021-01-11',
+            'X-TC-Timestamp': str(timestamp),
+            'X-TC-Region': os.environ.get('TENCENT_SMS_REGION', 'ap-guangzhou')
+        }, method='POST'
+    )
+    try:
+        with urllib.request.urlopen(request, timeout=12) as response:
+            result = json.loads(response.read().decode())
+    except Exception as exc:
+        raise RuntimeError('短信服务商请求失败，请检查短信配置、签名和模板审核状态。') from exc
+    status = result.get('Response', {}).get('SendStatusSet', [{}])[0]
+    if status.get('Code') != 'Ok':
+        raise RuntimeError('短信发送失败：' + str(status.get('Message', '服务商未确认发送'))[:120])
+
+def _mini_issue_session(handler, uid):
+    token = secrets.token_hex(32)
+    with db() as c:
+        c.execute('DELETE FROM sessions WHERE expires<?', (time.time(),))
+        c.execute('INSERT INTO sessions VALUES (?,?,?)', (digest(token), uid, time.time() + 30 * 86400))
+    return token
+
+def _mini_current(handler):
+    auth = handler.headers.get('Authorization', '')
+    if auth.startswith('Bearer '):
+        token = auth[7:].strip()
+        if len(token) != 64 or not re.fullmatch(r'[0-9a-f]{64}', token):
+            return None
+        with db() as c:
+            row = c.execute('SELECT users.* FROM users JOIN sessions ON users.id=sessions.uid WHERE sessions.token=? AND sessions.expires>?', (digest(token), time.time())).fetchone()
+        return dict(row) if row else None
+    return _mini_current_original(handler)
+
+_mini_current_original = current
+current = _mini_current
+_mini_handle_original = handle
+
+def handle(handler):
+    path = urlsplit(handler.path).path
+    if not path.startswith('/api/mini-auth/'):
+        return _mini_handle_original(handler)
+    try:
+        if handler.headers.get('Origin') and urlsplit(handler.headers['Origin']).netloc != handler.headers.get('Host'):
+            handler.message({'error': '请求来源无效。'}, 403)
+            return True
+        if handler.command != 'POST' and path not in ('/api/mini-auth/me',):
+            handler.message({'error': '请使用POST。'}, 405)
+            return True
+        if path == '/api/mini-auth/sms/send':
+            data = body(handler)
+            phone = _mini_phone(data.get('phone'))
+            purpose = str(data.get('purpose', 'register'))
+            if purpose not in ('register', 'reset'):
+                raise ValueError('验证码用途无效。')
+            with db() as c:
+                exists = c.execute('SELECT id FROM users WHERE phone=?', (phone,)).fetchone()
+                previous = c.execute('SELECT created FROM mini_sms_codes WHERE phone=? AND purpose=?', (phone, purpose)).fetchone()
+            if purpose == 'register' and exists:
+                raise ValueError('该手机号已注册，请直接登录。')
+            if purpose == 'reset' and not exists:
+                raise ValueError('该手机号尚未注册。')
+            if previous and time.time() - previous['created'] < 60:
+                raise ValueError('验证码发送过于频繁，请60秒后再试。')
+            throttle('mini-sms:' + purpose + ':' + phone)
+            code = f'{secrets.randbelow(1000000):06d}'
+            _mini_sms_send(phone, code)
+            with db() as c:
+                c.execute('INSERT OR REPLACE INTO mini_sms_codes(phone,purpose,code_hash,expires,created,attempts) VALUES (?,?,?,?,?,0)',
+                          (phone, purpose, digest(phone + '|' + purpose + '|' + code), time.time() + 300, time.time()))
+            handler.message({'sent': True, 'expiresIn': 300, 'resendAfter': 60})
+            return True
+        if path == '/api/mini-auth/sms/verify':
+            data = body(handler)
+            phone = _mini_phone(data.get('phone'))
+            purpose = str(data.get('purpose', 'register'))
+            code = str(data.get('code', ''))
+            if purpose not in ('register', 'reset') or not re.fullmatch(r'\d{6}', code):
+                raise ValueError('请输入6位短信验证码。')
+            wrong_code = False
+            with db() as c:
+                row = c.execute('SELECT * FROM mini_sms_codes WHERE phone=? AND purpose=?', (phone, purpose)).fetchone()
+                exists = c.execute('SELECT id FROM users WHERE phone=?', (phone,)).fetchone()
+                if not row or row['expires'] < time.time():
+                    raise ValueError('验证码已过期，请重新获取。')
+                if row['attempts'] >= 5:
+                    raise ValueError('验证码错误次数过多，请重新获取。')
+                if not hmac.compare_digest(row['code_hash'], digest(phone + '|' + purpose + '|' + code)):
+                    c.execute('UPDATE mini_sms_codes SET attempts=attempts+1 WHERE phone=? AND purpose=?', (phone, purpose))
+                    wrong_code = True
+                elif purpose == 'register' and exists:
+                    raise ValueError('该手机号已注册，请直接登录。')
+                elif purpose == 'reset' and not exists:
+                    raise ValueError('该手机号尚未注册。')
+                else:
+                    c.execute('DELETE FROM mini_sms_codes WHERE phone=? AND purpose=?', (phone, purpose))
+                    raw = secrets.token_hex(32)
+                    c.execute('INSERT INTO mini_phone_challenges VALUES (?,?,?,?)',
+                              (digest(raw), phone, purpose, time.time() + 600))
+            if wrong_code:
+                raise ValueError('短信验证码不正确。')
+            handler.message({'verified': True, 'verificationToken': raw, 'expiresIn': 600})
+            return True
+        if path == '/api/mini-auth/register':
+            data = body(handler)
+            phone = _mini_phone(data.get('phone'))
+            challenge = str(data.get('verificationToken', ''))
+            if len(challenge) != 64:
+                raise ValueError('请先完成短信验证。')
+            hashed = _mini_password(data.get('password', ''))
+            with db() as c:
+                verified = c.execute('SELECT * FROM mini_phone_challenges WHERE token_hash=? AND phone=? AND purpose=? AND expires>?',
+                                     (digest(challenge), phone, 'register', time.time())).fetchone()
+                if not verified:
+                    raise ValueError('手机号验证已过期，请重新验证。')
+                if c.execute('SELECT 1 FROM users WHERE phone=?', (phone,)).fetchone():
+                    raise ValueError('该手机号已注册，请直接登录。')
+                uid = secrets.token_hex(16)
+                name = '手机号用户' + phone[-4:] + '-' + secrets.token_hex(3)
+                c.execute('INSERT INTO users(id,name,password,storage,phone) VALUES (?,?,?,?,?)',
+                          (uid, name, hashed, secrets.token_hex(32), phone))
+                c.execute('DELETE FROM mini_phone_challenges WHERE token_hash=?', (digest(challenge),))
+            token = _mini_issue_session(handler, uid)
+            handler.message({'authenticated': True, 'token': token, 'user': {'id': uid, 'phone': phone, 'name': name}})
+            return True
+        if path == '/api/mini-auth/login':
+            data = body(handler)
+            phone = _mini_phone(data.get('phone'))
+            password = data.get('password', '')
+            with db() as c:
+                row = c.execute('SELECT * FROM users WHERE phone=?', (phone,)).fetchone()
+            if not row or not password_matches(password, row['password']):
+                handler.message({'error': '手机号或密码不正确。'}, 401)
+                return True
+            token = _mini_issue_session(handler, row['id'])
+            handler.message({'authenticated': True, 'token': token, 'user': {'id': row['id'], 'phone': phone, 'name': row['name']}})
+            return True
+        if path == '/api/mini-auth/legacy-login':
+            data = body(handler)
+            name = str(data.get('name', '')).strip()
+            password = data.get('password', '')
+            with db() as c:
+                row = c.execute('SELECT * FROM users WHERE name=?', (name,)).fetchone()
+            if not row or not password_matches(password, row['password']):
+                handler.message({'error': '旧账号或密码不正确。'}, 401)
+                return True
+            token = _mini_issue_session(handler, row['id'])
+            handler.message({'authenticated': True, 'token': token, 'user': {'id': row['id'], 'phone': row['phone'], 'name': row['name'], 'needsPhoneBinding': not bool(row.get('phone'))}})
+            return True
+        if path == '/api/mini-auth/bind-phone':
+            data = body(handler)
+            user = current(handler)
+            if not user:
+                handler.message({'error': '请先登录原有工作台账号。'}, 401)
+                return True
+            phone = _mini_phone(data.get('phone'))
+            challenge = str(data.get('verificationToken', ''))
+            if len(challenge) != 64:
+                raise ValueError('请先完成短信验证。')
+            hashed = _mini_password(data.get('password', ''))
+            with db() as c:
+                verified = c.execute('SELECT * FROM mini_phone_challenges WHERE token_hash=? AND phone=? AND purpose=? AND expires>?',
+                                     (digest(challenge), phone, 'register', time.time())).fetchone()
+                if not verified:
+                    raise ValueError('手机号验证已过期，请重新验证。')
+                owner = c.execute('SELECT id FROM users WHERE phone=?', (phone,)).fetchone()
+                if owner and owner['id'] != user['id']:
+                    raise ValueError('该手机号已绑定其他账号，不能重复绑定。')
+                c.execute('UPDATE users SET phone=?, password=? WHERE id=?', (phone, hashed, user['id']))
+                c.execute('DELETE FROM mini_phone_challenges WHERE token_hash=?', (digest(challenge),))
+            handler.message({'ok': True, 'bound': True, 'user': {'id': user['id'], 'phone': phone, 'name': user['name']}})
+            return True
+        if path == '/api/mini-auth/password/reset':
+            data = body(handler)
+            phone = _mini_phone(data.get('phone'))
+            challenge = str(data.get('verificationToken', ''))
+            if len(challenge) != 64:
+                raise ValueError('请先完成短信验证。')
+            hashed = _mini_password(data.get('password', ''))
+            with db() as c:
+                verified = c.execute('SELECT * FROM mini_phone_challenges WHERE token_hash=? AND phone=? AND purpose=? AND expires>?',
+                                     (digest(challenge), phone, 'reset', time.time())).fetchone()
+                if not verified:
+                    raise ValueError('手机号验证已过期，请重新验证。')
+                changed = c.execute('UPDATE users SET password=? WHERE phone=?', (hashed, phone)).rowcount
+                if not changed:
+                    raise ValueError('该手机号尚未注册。')
+                c.execute('DELETE FROM mini_phone_challenges WHERE token_hash=?', (digest(challenge),))
+                c.execute('DELETE FROM sessions WHERE uid=(SELECT id FROM users WHERE phone=?)', (phone,))
+            handler.message({'ok': True, 'passwordReset': True})
+            return True
+        if path == '/api/mini-auth/me':
+            user = current(handler)
+            if not user:
+                handler.message({'error': '登录状态已过期，请重新登录。'}, 401)
+                return True
+            handler.message({'authenticated': True, 'user': {'id': user['id'], 'phone': user.get('phone'), 'name': user['name']}})
+            return True
+        if path == '/api/mini-auth/logout':
+            user = current(handler)
+            token = handler.headers.get('Authorization', '')
+            if token.startswith('Bearer '):
+                with db() as c:
+                    c.execute('DELETE FROM sessions WHERE token=?', (digest(token[7:].strip()),))
+            elif user:
+                with db() as c:
+                    c.execute('DELETE FROM sessions WHERE token=?', (digest(cookie_token(handler)),))
+            handler.message({'ok': True})
+            return True
+        handler.message({'error': '小程序账号接口不存在。'}, 404)
+        return True
+    except PermissionError as exc:
+        handler.message({'error': str(exc)}, 409)
+    except ValueError as exc:
+        handler.message({'error': str(exc)}, 422)
+    except Exception as exc:
+        handler.message({'error': str(exc)[:240]}, 503)
+    return True
