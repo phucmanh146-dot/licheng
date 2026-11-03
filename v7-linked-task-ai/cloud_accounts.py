@@ -434,7 +434,7 @@ def handle(handler):
                 handler.message({'error': '旧账号或密码不正确。'}, 401)
                 return True
             token = _mini_issue_session(handler, row['id'])
-            handler.message({'authenticated': True, 'token': token, 'user': {'id': row['id'], 'phone': row['phone'], 'name': row['name'], 'needsPhoneBinding': not bool(row.get('phone'))}})
+            handler.message({'authenticated': True, 'token': token, 'user': {'id': row['id'], 'phone': row['phone'], 'name': row['name'], 'needsPhoneBinding': not bool(row['phone'])}})
             return True
         if path == '/api/mini-auth/bind-phone':
             data = body(handler)
