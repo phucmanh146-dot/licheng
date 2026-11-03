@@ -228,17 +228,17 @@ with db() as _c:
     """)
 
 def _mini_phone(value):
-    value = re.sub(r'[\\s()-]', '', str(value or ''))
-    if re.fullmatch(r'1[3-9]\\d{9}', value):
+    value = re.sub(r'[\s()-]', '', str(value or ''))
+    if re.fullmatch(r'1[3-9]\d{9}', value):
         value = '+86' + value
-    if not re.fullmatch(r'\\+[1-9]\\d{7,14}', value):
+    if not re.fullmatch(r'\+[1-9]\d{7,14}', value):
         raise ValueError('请输入有效手机号，包含国家区号。')
     return value
 
 def _mini_password(value):
     if not isinstance(value, str) or not 8 <= len(value) <= 128:
         raise ValueError('密码需要8至128个字符。')
-    if not re.search(r'[A-Za-z]', value) or not re.search(r'\\d', value):
+    if not re.search(r'[A-Za-z]', value) or not re.search(r'\d', value):
         raise ValueError('密码至少包含一个字母和一个数字。')
     salt = secrets.token_bytes(16)
     hashed = hashlib.scrypt(value.encode(), salt=salt, n=16384, r=8, p=1, maxmem=67108864)
@@ -350,7 +350,7 @@ def handle(handler):
             phone = _mini_phone(data.get('phone'))
             purpose = str(data.get('purpose', 'register'))
             code = str(data.get('code', ''))
-            if purpose not in ('register', 'reset') or not re.fullmatch(r'\\d{6}', code):
+            if purpose not in ('register', 'reset') or not re.fullmatch(r'\d{6}', code):
                 raise ValueError('请输入6位短信验证码。')
             wrong_code = False
             with db() as c:
