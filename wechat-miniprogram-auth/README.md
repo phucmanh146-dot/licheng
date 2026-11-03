@@ -46,5 +46,5 @@ https://www.figma.com/design/0RxS3joAwcmYlS5QpYKgJB/上岸鸭-V10-精品小程�
 - Session：随机 256-bit token，数据库只存 SHA-256 摘要，30 天过期。
 - 注册挑战：短信验证后产生一次性 10 分钟 challenge，创建账号必须持有 challenge。
 - 账号唯一：SQLite 唯一索引，数据库层防并发重复注册。
-- 旧用户名账号不自动创建新账号；可先用原用户名/密码登录，再验证手机号并绑定到原 users.id，原 storage 不变，避免丢失或串号。
+- 旧用户名且已有密码的账号不自动创建新账号；可先用原用户名/密码登录，再短信绑定手机号并设置新密码，原 users.id 和 storage 不变。若旧账号由设备自动创建且 password 为空，目前尚未提供免密码迁移入口，需要先在原已登录工作台完成身份绑定；不能直接在小程序中迁移。
 - 短信发送是否成功必须以服务商 SendStatusSet.Code=Ok 为准。
