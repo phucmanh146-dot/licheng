@@ -410,6 +410,41 @@ def handle(handler):
             token = _mini_issue_session(handler, row['id'])
             handler.message({'authenticated': True, 'token': token, 'user': {'id': row['id'], 'phone': phone, 'name': row['name']}})
             return True
+        if path == '/api/mini-auth/legacy-login':
+            data = body(handler)
+            name = str(data.get('name', '')).strip()
+            password = data.get('password', '')
+            with db() as c:
+                row = c.execute('SELECT * FROM users WHERE name=?', (name,)).fetchone()
+            if not row or not password_matches(password, row['password']):
+                handler.message({'error': '旧账号或密码不正确。'}, 401)
+                return True
+            token = _mini_issue_session(handler, row['id'])
+            handler.message({'authenticated': True, 'token': token, 'user': {'id': row['id'], 'phone': row.get('phone'), 'name': row['name'], 'needsPhoneBinding': not bool(row.get('phone'))}})
+            return True
+        if path == '/api/mini-auth/bind-phone':
+            data = body(handler)
+            user = current(handler)
+            if not user:
+                handler.message({'error': '请先登录原有工作台账号。'}, 401)
+                return True
+            phone = _mini_phone(data.get('phone'))
+            challenge = str(data.get('verificationToken', ''))
+            if len(challenge) != 64:
+                raise ValueError('请先完成短信验证。')
+            hashed = _mini_password(data.get('password', ''))
+            with db() as c:
+                verified = c.execute('SELECT * FROM mini_phone_challenges WHERE token_hash=? AND phone=? AND purpose=? AND expires>?',
+                                     (digest(challenge), phone, 'register', time.time())).fetchone()
+                if not verified:
+                    raise ValueError('手机号验证已过期，请重新验证。')
+                owner = c.execute('SELECT id FROM users WHERE phone=?', (phone,)).fetchone()
+                if owner and owner['id'] != user['id']:
+                    raise ValueError('该手机号已绑定其他账号，不能重复绑定。')
+                c.execute('UPDATE users SET phone=?, password=? WHERE id=?', (phone, hashed, user['id']))
+                c.execute('DELETE FROM mini_phone_challenges WHERE token_hash=?', (digest(challenge),))
+            handler.message({'ok': True, 'bound': True, 'user': {'id': user['id'], 'phone': phone, 'name': user['name']}})
+            return True
         if path == '/api/mini-auth/password/reset':
             data = body(handler)
             phone = _mini_phone(data.get('phone'))
