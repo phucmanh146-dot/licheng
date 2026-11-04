@@ -31,6 +31,8 @@ on:
   pull_request:
     paths:
       - "learning-agent/autoloop_signals.py"
+      - "learning-agent/research_graph.py"
+      - "learning-agent/test_deadline_schedule_worker.py"
       - "learning-agent/universal_autoloop.py"
       - "learning-agent/test_universal_autoloop.py"
       - "learning-agent/deadline_policy.py"
