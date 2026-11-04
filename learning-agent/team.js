@@ -133,10 +133,44 @@ function dispatchView(){
  if(d.last_run.status==='failed')box.append(el('p',d.last_run.message+'（'+d.last_run.error_code+'）'));
  if(d.interrupted)box.append(el('p','上次运行因服务重启中断；可从已保存的阶段继续。'));
  for(const q of d.questions)box.append(el('p','待确认：'+(typeof q==='string'?q:JSON.stringify(q))));
- $('dispatch-run').disabled=!d.can_dispatch;$('dispatch-run').textContent=d.active?'正在运行，请稍后刷新':`继续总调度${['A','B'].includes(d.stage)?'：交给 '+d.stage:''}`;
+ const canStart=d.can_dispatch||(project.mode==='live'&&['A','B'].includes(d.stage));
+ $('dispatch-run').disabled=!canStart;
+ $('dispatch-run').textContent=d.active?'正在运行，请稍后刷新':(project.mode==='live'?'自动处理当前项目':'继续总调度'+(['A','B'].includes(d.stage)?'：交给 '+d.stage:''));
  $('brief-history').replaceChildren(...(project.brief_history||[]).map(x=>el('p','已补充：'+x.content)));
 }
-$('dispatch-run').onclick=()=>safe(async()=>{const id=project.project_id;$('dispatch-run').disabled=true;$('message').textContent='正在运行总调度，计划生成后需要你确认';try{await request('/dispatch',context());}finally{await load(id);}if(project.dispatch?.status==='succeeded')$('message').textContent='计划已生成，请核对后采用';else $('message').textContent=project.dispatch?.message||'请查看总调度状态';});
+async function submitEvent(path,data){const response=await fetch('/api/agent'+path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});const value=await response.json();if(!response.ok)throw new Error(value.error||'自动处理服务不可用');return value;}
+async function readEvent(runId){const response=await fetch('/api/agent/events?run_id='+encodeURIComponent(runId));const value=await response.json();if(!response.ok)throw new Error(value.error||'运行状态读取失败');return value;}
+$('dispatch-run').onclick=()=>safe(async()=>{
+ const id=project.project_id;$('dispatch-run').disabled=true;
+ try{
+  if(project.mode!=='live'){
+   $('message').textContent='Demo 模式仅验证交接，不代表真实自动运行';
+   await request('/dispatch',context());await load(id);
+   $('message').textContent=project.dispatch?.message||'Demo 总调度已运行';
+   return;
+  }
+  const query=[project.goal,...(project.brief_history||[]).slice(-5).map(x=>x.content)].filter(Boolean).join('\\n');
+  $('message').textContent='已接收任务，正在进入后台自动处理队列';
+  const accepted=await submitEvent('/events',{...context(),event_type:'user_signal',source:'team-workbench',query,payload:{trigger:'dispatch-button'}});
+  let finalState=null;
+  for(let i=0;i<120;i++){
+   await new Promise(resolve=>setTimeout(resolve,1500));
+   finalState=await readEvent(accepted.run_id);
+   if(['succeeded','awaiting_confirmation','failed','cancelled'].includes(finalState.status))break;
+   $('message').textContent='后台正在处理：'+(finalState.status||'queued')+' · 已自动保存进度';
+  }
+  await load(id);
+  if(finalState?.status==='succeeded'&&finalState.result?.auto_adopted){
+   $('message').textContent='后台处理完成：计划已通过校验并自动接入；真人执行和成果验收仍按证据记录';
+  }else if(finalState?.status==='awaiting_confirmation'){
+   $('message').textContent='后台已完成可自动部分，以下事项需要你拍板：'+(finalState.result?.approval_reasons||[]).join('；');
+  }else if(finalState?.status==='failed'){
+   $('message').textContent='后台运行未通过：'+(finalState.error||'请查看运行记录');
+  }else{
+   $('message').textContent='任务仍在后台运行，run_id：'+accepted.run_id;
+  }
+ }finally{$('dispatch-run').disabled=false;}
+});
 $('brief-form').onsubmit=e=>{e.preventDefault();safe(async()=>{await mutate('brief',{content:$('brief-content').value});$('brief-content').value='';});};
 $('cancel').onclick=()=>$('feedback-dialog').close();
 $('feedback-form').onsubmit=async e=>{e.preventDefault();try{const review=action.action==='approve'?{criterion_results:[...$('review-criteria').querySelectorAll('.criterion-row')].map(row=>({criterion:row.dataset.criterion,passed:row.querySelector('.criterion-pass').checked,evidence:row.querySelector('.criterion-evidence').value}))}:{};await mutate('feedback',{...action,...review,...(action.action==='submit'?{executor_ids:$('executor-ids').value.split(/[,，]/).map(x=>x.trim()).filter(Boolean)}:{}),note:$('note').value,artifact_id:$('artifact-id').value,artifact_version:Number($('artifact-version').value),actual_minutes:Number($('minutes').value),evidence:$('evidence').value,reviewer_id:$('reviewer').value});$('feedback-dialog').close();}catch(error){$('dialog-error').textContent=error.message;}};
