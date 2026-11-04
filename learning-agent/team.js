@@ -149,7 +149,7 @@ $('dispatch-run').onclick=()=>safe(async()=>{
    $('message').textContent=project.dispatch?.message||'Demo 总调度已运行';
    return;
   }
-  const query=[project.goal,...(project.brief_history||[]).slice(-5).map(x=>x.content)].filter(Boolean).join('\\n');
+  const query=[project.goal,...(project.brief_history||[]).slice(-5).map(x=>x.content)].filter(Boolean).join('\n');
   $('message').textContent='已接收任务，正在进入后台自动处理队列';
   const accepted=await submitEvent('/events',{...context(),event_type:'user_signal',source:'team-workbench',query,payload:{trigger:'dispatch-button'}});
   let finalState=null;
