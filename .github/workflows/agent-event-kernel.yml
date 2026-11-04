@@ -4,7 +4,7 @@ on:
     branches:
       - feature/agent-rag-rerank-20261102
     paths:
-      - "learning-agent/event_kernel.py"
+      - "learning-agent/autoloop_signals.py"\n      - "learning-agent/test_autoloop_signals.py"\n      - "learning-agent/event_kernel.py"
       - "learning-agent/platform_store.py"
       - "learning-agent/research_graph.py"
       - "learning-agent/team_orchestrator.py"
