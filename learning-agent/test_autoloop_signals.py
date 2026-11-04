@@ -1,5 +1,8 @@
 import unittest
 from unittest.mock import patch
+from datetime import datetime
+from zoneinfo import ZoneInfo
+from contextlib import contextmanager
 import autoloop_signals
 
 
@@ -53,6 +56,44 @@ class AutoloopSignalTests(unittest.TestCase):
                 self.project, "user-1", "apply", {"action": "apply"}
             )
         self.assertIsNone(result)
+        enqueue.assert_not_called()
+
+
+    def test_deadline_watcher_emits_one_t72_signal_without_llm_polling(self):
+        project = {
+            "project_id": "deadline-1", "version": 3, "mode": "live", "timezone": "Asia/Shanghai",
+            "goal": "交付项目", "project_context": {"deadline": "2026-11-03"},
+            "stored_artifacts": [{"artifact_id": "brief", "artifact_version": 1,
+                                  "purpose": "input", "sha256": "abc"}],
+        }
+        class Cursor:
+            def __init__(self, rows): self.rows = rows
+            def fetchall(self): return self.rows
+            def fetchone(self): return self.rows[0] if self.rows else None
+        class Connection:
+            def execute(self, sql, params=()):
+                if "SELECT body FROM team_projects" in sql: return Cursor([{"body": __import__("json").dumps(project)}])
+                if "SELECT user_id FROM platform_members" in sql: return Cursor([{"user_id": "owner-1"}])
+                raise AssertionError(sql)
+        @contextmanager
+        def connection():
+            yield Connection()
+        now = datetime(2026, 11, 1, 0, 0, tzinfo=ZoneInfo("Asia/Shanghai"))
+        with patch.object(autoloop_signals.team, "connection", connection), \\
+             patch.object(autoloop_signals.store, "enqueue", return_value="deadline-run") as enqueue:
+            emitted = autoloop_signals.enqueue_due_deadlines(now)
+        self.assertEqual(emitted[0]["window"], "72h")
+        self.assertEqual(enqueue.call_args.args[1], "owner-1")
+        self.assertEqual(enqueue.call_args.kwargs["metadata"]["event_type"], "deadline.approaching")
+        self.assertTrue(enqueue.call_args.kwargs["metadata"]["auto_advance"])
+
+    def test_deadline_watcher_ignores_projects_without_registered_inputs(self):
+        with patch.object(autoloop_signals.team, "connection") as connection, \\
+             patch.object(autoloop_signals.store, "enqueue") as enqueue:
+            connection.return_value.__enter__.return_value.execute.return_value.fetchall.return_value = []
+            self.assertEqual(autoloop_signals.enqueue_due_deadlines(
+                datetime(2026, 11, 1, tzinfo=ZoneInfo("Asia/Shanghai"))
+            ), [])
         enqueue.assert_not_called()
 
     def test_untrusted_text_is_bounded_and_never_becomes_control(self):
