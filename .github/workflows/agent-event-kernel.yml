@@ -1,0 +1,39 @@
+name: Agent Event Kernel
+on:
+  push:
+    branches:
+      - feature/agent-rag-rerank-20261102
+    paths:
+      - "learning-agent/event_kernel.py"
+      - "learning-agent/platform_store.py"
+      - "learning-agent/research_graph.py"
+      - "learning-agent/team_orchestrator.py"
+      - "learning-agent/learning_agent_server.py"
+      - "learning-agent/team.js"
+      - "learning-agent/test_event_kernel.py"
+      - ".github/workflows/agent-event-kernel.yml"
+  pull_request:
+    paths:
+      - "learning-agent/event_kernel.py"
+      - "learning-agent/platform_store.py"
+      - "learning-agent/research_graph.py"
+      - "learning-agent/team_orchestrator.py"
+      - "learning-agent/learning_agent_server.py"
+      - "learning-agent/team.js"
+      - "learning-agent/test_event_kernel.py"
+      - ".github/workflows/agent-event-kernel.yml"
+jobs:
+  event-kernel:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Python syntax
+        run: python -m compileall -q learning-agent
+      - name: Event ingress tests
+        working-directory: learning-agent
+        run: python -m unittest -v test_event_kernel
+      - name: Workbench JavaScript syntax
+        run: node --check learning-agent/team.js
