@@ -21,6 +21,7 @@ import team_recovery
 import team_revision
 import team_runtime
 import autoloop_signals
+import universal_autoloop
 
 ROOT = Path(__file__).resolve().parent
 
@@ -36,6 +37,7 @@ async def lifespan(app):
         if not connect_local_gateway():
             raise RuntimeError('HERMES_CONNECTION_FAILED')
     store.init()
+    universal_autoloop.init()
     team_ai.bind()
     yield
 
@@ -308,6 +310,23 @@ def accept(request: Request, run_id: str, data: dict):
     p.setdefault('accepted_agent_runs',[]).append(run_id)
     return team.commit(p,p['version'],'确认Agent诊断及计划预览；尚未采用计划')
 
+
+@app.post('/api/v1/autoloop/events', status_code=202)
+def autoloop_ingest(request: Request, data: dict):
+    user = identity(request)
+    return universal_autoloop.ingest(user['user_id'], data)
+
+
+@app.get('/api/v1/autoloop/threads/{conversation_id}')
+def autoloop_thread(request: Request, conversation_id: str):
+    user = identity(request)
+    return universal_autoloop.thread(user['user_id'], conversation_id)
+
+
+@app.post('/api/v1/autoloop/threads/{conversation_id}/bind')
+def autoloop_bind(request: Request, conversation_id: str, data: dict):
+    user = identity(request)
+    return universal_autoloop.bind_thread(user['user_id'], conversation_id, data.get('project_id'))
 
 @app.get('/')
 def index():

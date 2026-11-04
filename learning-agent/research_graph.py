@@ -16,6 +16,7 @@ import team_ai
 import team_handoff
 import team_orchestrator as team
 import autoloop_signals
+import universal_autoloop
 
 
 class ResearchState(TypedDict, total=False):
@@ -188,7 +189,9 @@ def worker(once=False):
         if not connect_local_gateway():
             raise RuntimeError('HERMES_CONNECTION_FAILED')
     store.init()
+    universal_autoloop.init()
     next_deadline_scan = 0.0
+    next_inbox_scan = 0.0
     while True:
         now = time.monotonic()
         if now >= next_deadline_scan:
@@ -197,6 +200,12 @@ def worker(once=False):
             except Exception:
                 logging.exception('Autoloop deadline scan failed; worker will continue')
             next_deadline_scan = now + 60.0
+        if now >= next_inbox_scan:
+            try:
+                universal_autoloop.dispatch_pending()
+            except Exception:
+                logging.exception("Autoloop inbox dispatch failed; worker will continue")
+            next_inbox_scan = now + 5.0
         run = store.claim()
         if run:
             execute(run)
