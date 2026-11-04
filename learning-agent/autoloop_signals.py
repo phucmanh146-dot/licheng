@@ -13,7 +13,7 @@ MAX_FIELD = 240
 def _small_text(value):
     if not isinstance(value, str):
         return ""
-    return re.sub(r"\\s+", " ", value).strip()[:MAX_FIELD]
+    return re.sub(r"\s+", " ", value).strip()[:MAX_FIELD]
 
 
 def classify(operation, data):
