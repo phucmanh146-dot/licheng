@@ -62,8 +62,8 @@ def _research(query,deep):
         sources.sort(key=lambda x:x['id'])
     else:
         sources=[fetch_one(i,r) for i,r in enumerate(results)]
-    facts='\\n\\n'.join(
-        '[%d] %s\\n来源：%s\\n摘要：%s\\n读取正文：%s'%
+    facts='\n\n'.join(
+        '[%d] %s\n来源：%s\n摘要：%s\n读取正文：%s'%
         (row['id'],row['title'],row['url'],row['snippet'],row['excerpt'] or '（未抓取正文；只有搜索摘要）')
         for row in sources)
     return sources,'',facts,provider
@@ -387,9 +387,9 @@ def ask(payload):
     if not deep:
         system+='这次用户选快速回答，优先简洁清楚、直达答案。'
     extra=[]
-    task_context=str(payload.get('taskContext') or '').strip()[:5000]
+    task_context=str(payload.get('taskContext') or '').strip()[:12000]
     if task_context:
-        extra.append('用户明确指定的关联任务/目标：\n'+task_context+'\n请把本轮上传的图片、文档、视频和链接与此任务建立明确关联；先列证据和缺口，再给出可执行步骤、交付物与验收标准。不要声称已修改任务状态、清单或截止日期。')
+        extra.append('Live account tasks and Agent state:\n'+task_context+'\n[CLOSED-LOOP RULES] Treat the live task list, task IDs, deadlines, fixed commitments, active Pomodoro, execution checkpoints, pending pool, buffer pool and trash pool as the known current-account context. Do not ask the user to repeat facts already present. Follow core-goal protection, immediate-sudden priority, D-3 15:00 review, D-2 final arrangement, 24-hour pending-task SLA, 24-hour trash recovery, no automatic buffer rollover, and the two independent interruption branches. Identify the event type and affected tasks first, then provide concrete next actions and evidence-based acceptance criteria. Any action not actually executed and confirmed by the workbench must be labelled proposed or pending; never claim that task data, schedules or deliverables have been changed. A user statement alone is not proof of completion.')
     if wechat_documents:
         extra.append('【微信原始数据 AI：用户本轮主动选择的真实消息】\n'+'\n'.join(wechat_documents)+('\n【提示：本批消息超过上下文安全上限，部分原文未纳入本次模型上下文；可缩小关键词后分批分析。】' if wechat_truncated else ''))
         wechat_prompt=str(payload.get('wechatPrompt') or '').strip()[:5000]
@@ -397,7 +397,7 @@ def ask(payload):
     if documents:extra.append('本次对话用户主动上传的真实资料：\n'+'\n\n'.join(documents)[:10000])
     if link_documents:extra.append('【本轮实际读取的外部链接正文】\n'+'\n\n'.join(link_documents)[:16000])
     if do_search:
-        extra.append('此次检索引擎：'+str(provider or '无')+'。检索说明：'+(search_error or '以下是实时检索到的来源；注明哪些只有摘要。')+'\\n'+research[:21000])
+        extra.append('此次检索引擎：'+str(provider or '无')+'。检索说明：'+(search_error or '以下是实时检索到的来源；注明哪些只有摘要。')+'\n'+research[:21000])
     if media_info:
         extra.append('此次图片或视频解析状态：'+repr(media_info))
         if transcribe:extra.append('视频转写状态：'+repr(transcript_status))
@@ -427,7 +427,7 @@ def ask(payload):
             # If neither vision-capable route works, try a text-only answer and disclose the limitation.
             try:
                 reply=complete([{'role':'system','content':system+'只根据能读取到的文字，不要称已看过图片或视频画面。'}]+messages+
-                    [{'role':'user','content':last+'\\n图像帧未能由当前模型可靠解码，本次只能根据已提取的文字回答。'}],primary)
+                    [{'role':'user','content':last+'\n图像帧未能由当前模型可靠解码，本次只能根据已提取的文字回答。'}],primary)
                 cfg=primary
                 model_role='general'
                 model_fallback=True

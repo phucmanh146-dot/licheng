@@ -66,6 +66,13 @@ class AutoloopRuntimeTests(unittest.TestCase):
             result = subprocess.check_output([sys.executable, "-c", code], cwd=str(Path(__file__).parent), env=env, text=True).strip()
             self.assertEqual(Path(result), Path(folder) / "autoloop.sqlite3")
 
+    def test_new_workflow_events_are_durable(self):
+        result = a.append_event({"accountId":"user_a","eventId":"pool-1",
+                                 "eventType":"task.pool.changed",
+                                 "payload":{"taskId":"t1","from":"scheduled","to":"buffer"}})
+        self.assertTrue(result["ok"])
+        self.assertEqual(a.get_state("user_a")["events"][0]["eventType"], "task.pool.changed")
+
     def test_unknown_event_type_rejected(self):
         with self.assertRaises(a.AutoloopError):
             a.append_event({"accountId":"user_a","eventId":"e2","eventType":"unknown.command","payload":{}})

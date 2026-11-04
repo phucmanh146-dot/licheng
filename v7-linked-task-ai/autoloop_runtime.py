@@ -13,7 +13,14 @@ ALLOWED_EVENTS = {
     "plan.snapshot", "material.detected", "schedule.imported",
     "interruption.created", "interruption.resumed", "interruption.resolved",
     "schedule.replanned", "task.paused", "task.resumed", "task.completed",
-    "checkpoint.saved", "agent.suspended", "agent.woken"
+    "checkpoint.saved", "agent.suspended", "agent.woken",
+    "task.pool.changed", "task.trashed", "trash.expired",
+    "ddl.review.opened", "ddl.review.distributed", "ddl.review.second_day",
+    "ddl.review.second_reflow", "task.pending.entered", "task.pending.sla_breached",
+    "task.pending.rescheduled", "buffer.capacity.exceeded", "buffer.window.expired",
+    "sudden.deferrable", "sudden.immediate",
+    "interruption.branch.important", "interruption.branch.resume-first",
+    "interruption.local_fallback", "pool.task.rescheduled"
 }
 
 class AutoloopError(ValueError):

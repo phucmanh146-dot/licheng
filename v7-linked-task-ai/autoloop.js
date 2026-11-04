@@ -86,7 +86,7 @@
     else {let n=document.getElementById('aloop-toast');if(!n){n=document.createElement('div');n.id='aloop-toast';n.className='aloop-toast';document.body.appendChild(n);}n.textContent=message;n.hidden=false;clearTimeout(n._timer);n._timer=setTimeout(()=>n.hidden=true,4500);}
   }
   function overlaps(a,b){return a.start<b.end && a.end>b.start;}
-  function priority(t){return (t.urgent?0:1)+(t.important?0:2);}
+  function priority(t){const n=String(t.name||t.title||'');const core=t.mustKeep===true||t.coreGoal===true||/TRAE.{0,8}(\u8bad\u7ec3\u8425|\u8bfe\u7a0b|\u539f\u578b)|\u7ba1\u7406\u4f1a\u8ba1|\u8003\u7814|Agent.{0,8}(\u5927\u8d5b|PPT|\u667a\u80fd\u4f53)/.test(n);if(core)return -20;if(t.schedulePriority==='resume-first')return -10;if(t.urgent)return -5;if(t.important)return 0;if(t.schedulePriority==='below-high')return 5;return 8;}
   function reflow(a,fromDate,nowMinutesOverride) {
     const start=fromDate||nowDate(), placed=new Set(), warnings=[];
     const currentMinute=Number.isFinite(nowMinutesOverride)?nowMinutesOverride:(new Date().getHours()*60+new Date().getMinutes());
@@ -95,7 +95,7 @@
       const day=addDays(start,offset), fixed=(a.tasks||[]).filter(t=>!t.done&&t.date===day&&Number.isFinite(t.startMinutes)&&(t.fixedBlock===true||t.taskType==='fixed'||t.category==='固定事务'))
         .map(t=>({id:t.id,start:t.startMinutes,end:Number(t.endMinutes||t.startMinutes+(Number(t.plannedMinutes||t.estMinutes)||15))})).sort((x,y)=>x.start-y.start);
       const ddlSoon=(t)=>!!t.dueDate&&t.dueDate>=start&&t.dueDate<=addDays(start,2);
-      const movable=(a.tasks||[]).filter(t=>!t.done&&!placed.has(t.id)&&!(t.fixedBlock===true||t.taskType==='fixed'||t.category==='固定事务')&&(t.date<=day||ddlSoon(t))&&(!t.dueDate||t.dueDate>=day))
+      const movable=(a.tasks||[]).filter(t=>!t.done&&(!t.workflowPool||t.workflowPool==='scheduled')&&!placed.has(t.id)&&!(t.fixedBlock===true||t.taskType==='fixed'||t.category==='固定事务')&&(t.date<=day||ddlSoon(t))&&(!t.dueDate||t.dueDate>=day)&&(!t.scheduleNotBefore||t.scheduleNotBefore<=day)&&(!t.latestScheduleDate||day<=t.latestScheduleDate))
         .sort((x,y)=>(x.dueDate||'9999-12-31').localeCompare(y.dueDate||'9999-12-31')||priority(x)-priority(y)||Number(x.order||0)-Number(y.order||0));
       const dailyCap=Math.max(30,Math.floor((Number(a.dailyHours&&a.dailyHours[day])||4)*60*.8));
       let used=fixed.reduce((sum,x)=>sum+Math.max(0,x.end-x.start),0), occupied=fixed.slice();
@@ -104,7 +104,7 @@
         const newlyAddedAfterCutoff=day===nowDate()&&currentMinute>=intakeCutoff&&Number(task.createdAt||0)>=cutoffAt;
         if(newlyAddedAfterCutoff&&task.dueDate!==day&&!task.urgent){
           task.date=addDays(day,1);task.startMinutes=null;task.scheduleStatus='needs-arrangement';
-          task.scheduleReason='15:00 ???????????????????';
+          task.scheduleReason='\u5f53\u5929 15:00 \u540e\u65b0\u589e\u975e\u7d27\u6025\u4efb\u52a1\uff0c\u5ef6\u81f3\u4e0b\u4e00\u5929\u6392\u671f';
           warnings.push(task.name+'?15:00 ???????');
           continue;
         }
@@ -256,6 +256,16 @@
     if(existing){existing.disabled=!!(status&&/正在读取/.test(status.textContent||''));return;}
     const b=document.createElement('button');b.type='button';b.className='aloop-import-btn';b.dataset.aloopImport='1';b.textContent='自动识别并接管排期';
     actions.insertBefore(b,actions.firstChild);
+    if(!actions.querySelector('[data-aloop-sudden]')){
+      const sudden=document.createElement('button');sudden.type='button';sudden.className='aloop-sudden-btn';sudden.dataset.aloopSudden='1';sudden.textContent='\u7a81\u53d1\u4efb\u52a1';
+      sudden.addEventListener('click',()=>{
+        const raw=(body.querySelector('#tiText')||{}).value||'';
+        if(!raw.trim()){toast('\u5148\u8f93\u5165\u7a81\u53d1\u4efb\u52a1\u7684\u539f\u6587\u6216\u901a\u77e5\u5185\u5bb9\uff0c\u518d\u5224\u65ad\u662f\u5426\u5fc5\u987b\u7acb\u5373\u5904\u7406\u3002');return;}
+        if(root.SYAutoloopRules)root.SYAutoloopRules.handleSudden(raw,'\u5feb\u901f\u6536\u96c6/\u7a81\u53d1\u4efb\u52a1');
+        else toast('\u6392\u671f\u89c4\u5219\u6a21\u5757\u8fd8\u672a\u5c31\u7eea\uff0c\u8bf7\u5237\u65b0\u5de5\u4f5c\u53f0\u540e\u91cd\u8bd5\u3002');
+      });
+      actions.insertBefore(sudden,b.nextSibling);
+    }
     const text=body.querySelector('#tiText');
     if(text){
       const hint=document.createElement('p');hint.className='aloop-detect-hint';hint.dataset.aloopHint='1';
@@ -321,6 +331,19 @@
       root.SY.saveAcctData(a);
       showBanner('有一项已保存的中断现场', (p.title||p.summary||'临时安排')+' 已保存。无需重新回忆进度，点一下即可接着原任务。');}
   }
+  async function getAgentContext() {
+    const a=root.SY&&root.SY.getAcctData?root.SY.getAcctData():{};
+    const live={accountId:account(),activeTaskId:(a.activeTimer&&a.activeTimer.taskId)||a.priorityFocusTaskId||null,
+      activeTimer:a.activeTimer||null,interruption:a._autoloopInterruption||null,
+      taskCount:(a.tasks||[]).filter(t=>!t.done).length};
+    try {
+      const r=await api('/api/autoloop/state?accountId='+encodeURIComponent(account()));
+      const data=r&&r.ok&&r.data?r.data:null;
+      if(data)return {live,durable:{checkpoint:data.checkpoint?{taskId:data.checkpoint.taskId,revision:data.checkpoint.revision,updatedAt:data.checkpoint.updatedAt,snapshot:data.checkpoint.snapshot}:null,
+        pendingInterruptions:(data.pendingInterruptions||[]).slice(-8),recentEvents:(data.events||[]).slice(-24).map(e=>({eventId:e.eventId,eventType:e.eventType,createdAt:e.createdAt,payload:e.payload}))}};
+    } catch (_) {}
+    return {live,durable:{status:'offline-or-unavailable',note:'????????????????????????????'}};
+  }
   function install() {
     if(!root.SY||typeof root.SY.getAcctData!=='function')return false;
     observeCapture();
@@ -333,6 +356,6 @@
     restoreState();
     return true;
   }
-  root.SYAutoloop={parseSchedule,importSchedule,interrupt,checkpoint,reflow,restore:restoreState};
+  root.SYAutoloop={parseSchedule,importSchedule,interrupt,checkpoint,reflow,restore:restoreState,_append:append,_checkpoint:checkpoint,_snapshot:snapshot,getAgentContext,addDays,nowDate};
   if(!install()){document.addEventListener('sy:ready',install);let n=0,t=setInterval(()=>{if(install()||++n>100)clearInterval(t);},100);}
 })(typeof window!=='undefined'?window:null);

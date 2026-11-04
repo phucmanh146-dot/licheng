@@ -58,4 +58,5 @@ window.SYAutoloop.reflow(latePlan,todayKey,18*60);
 if(lateTask.date!==day || !Number.isFinite(lateTask.startMinutes))throw new Error("after-15:00 new non-urgent task was not deferred to tomorrow");
 if(urgentTask.date!==todayKey || !Number.isFinite(urgentTask.startMinutes))throw new Error("urgent same-day DDL was incorrectly deferred");
 
+if(lateTask.date!==day2 && lateTask.date!==day) throw new Error("late intake was moved outside the supported schedule horizon");
 console.log(JSON.stringify({ok:true,parserRows:parsed.length,dateLine:dated[0].date,reflowMoved:result.moved,ddlTaskDate:ddl.date}));
