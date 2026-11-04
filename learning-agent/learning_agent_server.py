@@ -26,6 +26,7 @@ import team_revision
 import cc_progress
 import research_companion
 import event_kernel
+import platform_store
 
 ROOT = Path(__file__).resolve().parent
 try:
@@ -132,10 +133,15 @@ class Handler(LegacyHandler):
                 query = parse_qs(parsed.query)
                 return self.send_json(team_ai.read_trace(query.get('id',[''])[0],query.get('run_id',[''])[0]))
             if path == '/api/agent/events':
-                run_id = parse_qs(parsed.query).get('run_id', [''])[0]
-                if not run_id:
-                    raise ValueError('请提供 run_id 查询运行状态')
-                return self.send_json(event_kernel.status(run_id))
+                query = parse_qs(parsed.query)
+                run_id = query.get('run_id', [''])[0]
+                if run_id:
+                    return self.send_json(event_kernel.status(run_id))
+                project_id = query.get('project_id', [''])[0]
+                if not project_id:
+                    raise ValueError('请提供 project_id 或 run_id')
+                team.state(project_id)  # Verify the project exists before listing its receipts.
+                return self.send_json(platform_store.list_project_runs(project_id, limit=20))
             if path == '/api/agent/state':
                 return self.send_json(agent.state())
             if path == '/api/agent/run':
