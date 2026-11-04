@@ -116,6 +116,60 @@ def execute(run):
         result = {k:value[k] for k in ('diagnosis','plan','retrieval')}
         result['expected_version'] = value['input']['expected_version']
         result['preview_only'] = True
+        if value['input'].get('auto_advance') is True:
+            # Persist validated outputs against the latest project version. Only
+            # internal, reversible plan adoption is automated; unresolved evidence,
+            # unscheduled work or external dependencies remain behind the approval gate.
+            current = team.state(value['input']['project_id'])
+            current = team.diagnosis({
+                'project_id': current['project_id'],
+                'expected_version': current['version'],
+                'diagnosis': value['diagnosis'],
+            })
+            current = team.propose({
+                'project_id': current['project_id'],
+                'expected_version': current['version'],
+                'plan': value['plan'],
+                'reason': '事件触发的自动工作流：诊断与计划已通过结构校验',
+            })
+            blockers = []
+            if current['diagnosis'].get('unknowns'):
+                blockers.append('诊断仍有未知项')
+            if current['proposal']['plan'].get('unscheduled'):
+                blockers.append('仍有未排入计划的任务')
+            if any(t.get('status') == 'blocked' or t.get('external_dependencies')
+                   for t in current['proposal']['plan'].get('tasks', [])):
+                blockers.append('存在阻塞任务或外部依赖')
+            if blockers:
+                result.update({
+                    'preview_only': True,
+                    'auto_adopted': False,
+                    'approval_required': True,
+                    'approval_reasons': blockers,
+                    'proposal_id': current['proposal']['id'],
+                    'expected_version': current['version'],
+                })
+                store.event(run['id'], 'approval_gate', 'waiting', {'reasons': blockers})
+                store.finish(run['id'], run['lease_token'], 'awaiting_confirmation', result)
+                return
+            adopted = team.apply_automated({
+                'project_id': current['project_id'],
+                'expected_version': current['version'],
+                'proposal_id': current['proposal']['id'],
+            })
+            result.update({
+                'preview_only': False,
+                'auto_adopted': True,
+                'approval_required': False,
+                'adopted_plan_version': adopted['plan']['plan_version'],
+                'expected_version': adopted['version'],
+            })
+            store.event(run['id'], 'auto_adoption', 'completed', {
+                'plan_version': adopted['plan']['plan_version'],
+                'project_version': adopted['version'],
+            })
+            store.finish(run['id'], run['lease_token'], 'succeeded', result)
+            return
         store.finish(run['id'], run['lease_token'], 'awaiting_confirmation', result)
     except Exception as exc:
         code = getattr(exc, 'code', type(exc).__name__)
