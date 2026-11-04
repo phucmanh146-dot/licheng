@@ -144,6 +144,31 @@ def get_run(run_id, user_id=None):
     return result
 
 
+
+def list_project_runs(project_id, limit=20):
+    """List recent run receipts for the active project; never expose raw prompts or lease tokens."""
+    if not isinstance(project_id, str) or not project_id:
+        raise ValueError("项目ID无效")
+    if type(limit) is not int or not 1 <= limit <= 50:
+        raise ValueError("limit 必须在1至50之间")
+    with team.connection() as c:
+        rows = c.execute(
+            "SELECT id,status,result,error,created,updated,input FROM platform_runs "
+            "WHERE project_id=? ORDER BY updated DESC LIMIT ?",
+            (project_id, limit),
+        ).fetchall()
+    runs = []
+    for row in rows:
+        source = json.loads(row["input"] or "{}")
+        runs.append({
+            "id": row["id"], "status": row["status"],
+            "result": json.loads(row["result"] or "{}"),
+            "error": row["error"], "created": row["created"], "updated": row["updated"],
+            "event_type": source.get("event_type"),
+        })
+    return {"runs": runs}
+
+
 def claim():
     now = time.time()
     with agent.WRITE_LOCK, team.connection() as c:
