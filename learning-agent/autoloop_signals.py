@@ -10,6 +10,7 @@ from zoneinfo import ZoneInfo
 
 import platform_store as store
 import team_orchestrator as team
+from deadline_policy import deadline_review_due, rank_tasks
 
 MAX_FIELD = 240
 
@@ -134,9 +135,12 @@ def enqueue_due_deadlines(now=None):
             except (ValueError, KeyError):
                 continue
             hours_left = (due - current).total_seconds() / 3600
-            if hours_left < 0 or hours_left > 72:
+            # The mandatory D-3 review is at 15:00 local time, not a rolling 72h
+            # threshold. Allow a late watcher tick to recover the missed trigger.
+            review_due = deadline_review_due(deadline, current, zone.key)
+            if not review_due and (hours_left < 0 or hours_left > 72):
                 continue
-            window = "6h" if hours_left <= 6 else ("24h" if hours_left <= 24 else "72h")
+            window = "T-3-15" if review_due else ("6h" if hours_left <= 6 else ("24h" if hours_left <= 24 else "72h"))
             owner = connection.execute(
                 "SELECT user_id FROM platform_members WHERE project_id=? AND role=? LIMIT 1",
                 (project.get("project_id"), "owner")
@@ -145,11 +149,20 @@ def enqueue_due_deadlines(now=None):
                 continue
             project_id = project.get("project_id")
             key = f"autoloop:ddl:{project_id}:{deadline}:{window}"
+            plan_tasks = (project.get("plan") or {}).get("tasks", [])
+            quadrant_tasks = rank_tasks(plan_tasks)
             query = (
-                "项目进入截止倒计时。请读取已登记材料、历史决定、当前证据与未完成任务，"
-                "核对剩余工作和固定事务，只重排受影响部分，保留休息与缓冲；"
-                f"不要要求用户重新上传材料。项目目标：{_small_text(project.get('goal'))}；"
-                f"截止日期：{deadline}；当前剩余约 {max(0, int(hours_left))} 小时；提醒窗口：T-{window}。"
+                "项目进入截止倒排检查。读取已登记材料、历史决定、当前证据、全部未完成任务、"
+                "固定事务、现有时间块和剩余可用容量；不要求用户重新上传材料。"
+                "先用四象限排序：任务多且重要优先，任务少但重要其次，任务多但不重要必须争取次日固定时段，"
+                "任务少且不重要作为优先延期候选；重要性缺失时标记待确认，不得自行猜测。"
+                "计算真实剩余工时与任务间过渡缓冲。能排下就自动重排受影响部分并保护固定事务、睡眠和休息。"
+                "如果排不下，必须向用户发一张合并拍板卡，列出具体冲突、缺口分钟、推荐保留项和可延期候选，"
+                "询问用户是否同意将哪些低重要性任务从本轮计划中暂缓；暂缓不是删除，不得标完成。"
+                "用户拒绝舍弃时，继续按重要性、工作量和截止时间给出最大可行安排，并明确仍无法容纳的部分。"
+                "每个未安排任务从进入待安排状态起24小时内必须完成分诊和给出处理决定。"
+                f"项目目标：{_small_text(project.get('goal'))}；截止日期：{deadline}；"
+                f"当前剩余约 {max(0, int(hours_left))} 小时；提醒窗口：{window}。"
             )
             metadata = {
                 "event_type": "deadline.approaching",
@@ -157,6 +170,14 @@ def enqueue_due_deadlines(now=None):
                 "event_id": key,
                 "payload": {
                     "deadline": deadline, "window": window,
+                    "mandatory_decision_at": "15:00 local time on D-3" if review_due else None,
+                    "quadrant_tasks": quadrant_tasks,
+                    "capacity_policy": {
+                        "transition_buffer_minutes_per_task_change": 10,
+                        "unscheduled_triage_sla_hours": 24,
+                        "soft_defer_only": True,
+                        "never_delete_or_mark_complete": True,
+                    },
                     "project_version": project.get("version"),
                     "input_artifacts": [
                         {"artifact_id": a.get("artifact_id"), "artifact_version": a.get("artifact_version"),
