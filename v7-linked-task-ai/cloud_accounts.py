@@ -273,9 +273,11 @@ def _mini_sms_send(phone, code):
         'TemplateParamSet': [code, '5'], 'PhoneNumberSet': [phone]
     }, separators=(',', ':'))
     hashed = hashlib.sha256(payload.encode()).hexdigest()
-    canonical = 'POST\\n/\\n\\ncontent-type:application/json; charset=utf-8\\nhost:' + host + '\\n\\ncontent-type;host\\n' + hashed
+    canonical_headers = 'content-type:application/json; charset=utf-8\nhost:' + host + '\n'
+    signed_headers = 'content-type;host'
+    canonical = 'POST\n/\n\n' + canonical_headers + '\n' + signed_headers + '\n' + hashed
     scope = date + '/sms/tc3_request'
-    string_to_sign = 'TC3-HMAC-SHA256\\n' + str(timestamp) + '\\n' + scope + '\\n' + hashlib.sha256(canonical.encode()).hexdigest()
+    string_to_sign = 'TC3-HMAC-SHA256\n' + str(timestamp) + '\n' + scope + '\n' + hashlib.sha256(canonical.encode()).hexdigest()
     def _sign(key, message):
         return hmac.new(key, message.encode(), hashlib.sha256).digest()
     secret_date = _sign(('TC3' + secret_key).encode(), date)
