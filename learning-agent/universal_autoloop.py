@@ -12,6 +12,7 @@ from datetime import datetime, timezone
 
 import platform_store as store
 import team_orchestrator as team
+import team_recovery
 
 MAX_TEXT = 6000
 MAX_CONTEXT_EVENTS = 8
@@ -90,6 +91,63 @@ def _project_context(user_id, project_id, current_event_id):
                WHERE user_id=? AND project_id=? ORDER BY updated DESC LIMIT 3""",
             (user_id, project_id)).fetchall()
     history = []
+    # Restore the latest valid interruption checkpoint before older chat/run summaries.
+    try:
+        project = team.state(project_id)
+        checkpoints = project.get("recovery", {}).get("checkpoints", [])
+        for checkpoint in reversed(checkpoints):
+            if checkpoint.get("status") not in ("paused", "ready", "waiting"):
+                continue
+            if team_recovery.stale(project, checkpoint):
+                continue
+            packet = team_recovery.context_packet(
+                project, checkpoint["task_id"], checkpoint["action_id"])
+            step = packet.get("step") or {}
+            material = packet.get("retrieved_material") or {}
+            compact = {
+                "checkpoint_id": checkpoint.get("checkpoint_id"),
+                "status": checkpoint.get("status"),
+                "task_id": packet.get("task_id"),
+                "action_id": packet.get("action_id"),
+                "reason": str(checkpoint.get("reason") or "")[:120],
+                "note": str(checkpoint.get("note") or "")[:240],
+                "done_note": str(checkpoint.get("done_note") or "")[:180],
+                "next_action": str(checkpoint.get("next_action") or "")[:240],
+                "location": str(checkpoint.get("location") or "")[:120],
+                "condition": checkpoint.get("condition"),
+                "check_after": checkpoint.get("check_after"),
+                "input_version": step.get("input_version"),
+                "step": {key: str(step.get(key) or "")[:220] for key in (
+                    "step_id", "action", "reason", "expected_change",
+                    "target_locator", "output", "self_check", "failure_next")},
+                "previous_attempts": [{
+                    "action": str(item.get("action") or "")[:160],
+                    "observed": str(item.get("observed") or "")[:200],
+                    "reported_outcome": item.get("reported_outcome"),
+                    "actual_minutes": item.get("actual_minutes"),
+                } for item in packet.get("previous_attempts", [])[-3:]],
+                "retrieved_material": {
+                    "artifact_id": material.get("artifact_id"),
+                    "artifact_version": material.get("artifact_version"),
+                    "sha256": material.get("sha256"),
+                    "units": [{
+                        "locator": unit.get("locator"),
+                        "text": str(unit.get("text") or "")[:220],
+                    } for unit in material.get("units", [])[:3]],
+                } if material else None,
+                "earlier_attempt_count": packet.get("earlier_attempt_count", 0),
+                "historical_attempt_count": packet.get("historical_attempt_count", 0),
+            }
+            history.append({
+                "type": "active_recovery_checkpoint",
+                "status": checkpoint.get("status"),
+                "content": json.dumps(compact, ensure_ascii=False)[:MAX_CONTEXT_CHARS],
+            })
+            break
+    except (ValueError, KeyError, team.Conflict):
+        # Preserve the original event/run history if a checkpoint has gone stale
+        # or its referenced artifact can no longer be read.
+        pass
     for row in reversed(rows):
         history.append({"type": row["event_type"], "status": row["status"],
                         "content": row["content"][:MAX_CONTEXT_CHARS]})
@@ -180,6 +238,9 @@ def ingest(user_id, data):
         "这是上岸鸭跨对话 Autoloop 收到的一条新用户消息。先读取项目已登记材料、"
         "既有决策、失败记录、任务状态与证据；把本条消息视为对现有工作流的增量事件，"
         "不要要求用户重复提供已保存信息，不要从头重做已完成步骤。"
+        "如果上下文包含 active_recovery_checkpoint 且状态为 paused/ready，必须沿原 task_id/action_id、"
+        "input_version、已尝试记录和 next_action 继续，不得重新诊断整个项目或要求重新上传材料；"
+        "如果状态为 waiting，先检查返回条件，条件未确认前不得擅自恢复。"
         "先判断它与现有任务的关系，只推进受影响部分；可安全、可回滚且已授权的动作自动执行。"
         "遇到权限不足、关键歧义、对外发送/发布/合并/部署、删除/覆盖、付费或不可逆动作时，"
         "保存检查点并等待明确审批。工具结果必须核验，不能仅凭模型自述标记完成。\n"
