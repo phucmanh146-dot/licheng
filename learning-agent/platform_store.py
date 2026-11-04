@@ -95,12 +95,12 @@ def member(project_id, user_id, role):
         c.execute('INSERT INTO platform_members VALUES(?,?,?) ON CONFLICT(project_id,user_id) DO UPDATE SET role=excluded.role', (project_id,user_id,role))
 
 
-def enqueue(project, user_id, key, query):
+def enqueue(project, user_id, key, query, metadata=None):
     if not isinstance(key, str) or not 8 <= len(key) <= 160:
         raise ValueError('Idempotency-Key需为8至160字符')
     if not isinstance(query, str) or not 1 <= len(query.strip()) <= 2000:
         raise ValueError('请填写1至2000字符的诊断问题')
-    value = {'project_id':project['project_id'], 'expected_version':project['version'], 'query':query.strip()}
+    value = {'project_id':project['project_id'], 'expected_version':project['version'], 'query':query.strip(), **(metadata or {})}
     body = agent.dump(value)
     digest = hashlib.sha256(body.encode()).hexdigest()
     now = time.time(); run_id = uuid.uuid4().hex
