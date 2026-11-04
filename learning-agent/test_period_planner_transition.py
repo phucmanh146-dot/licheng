@@ -47,6 +47,21 @@ class PeriodPlannerTransitionTests(unittest.TestCase):
         self.assertEqual(plan["schedule_summary"]["transition_buffer_reserved"], 10)
         self.assertEqual(len(plan["transition_buffers"]), 1)
 
+
+    def test_unscheduled_tasks_keep_first_seen_time_and_24h_triage_deadline(self):
+        task = self.base_task("overloaded", True, 60)
+        settings = self.settings(["overloaded"], daily_limit=15, transition_buffer_minutes=0,
+            windows=[
+                {"date":"2026-11-04","start":"09:00","end":"09:15"},
+                {"date":"2026-11-05","start":"09:00","end":"09:15"},
+            ])
+        plan = period_planner.compute(project_with([task]), settings,
+            datetime(2026,11,4,8,0,tzinfo=ZoneInfo("Asia/Shanghai")))
+        missing = next(x for x in plan["unscheduled"] if isinstance(x,dict))
+        self.assertEqual(missing["task_id"], "overloaded")
+        self.assertEqual(missing["unscheduled_since"], "2026-11-04T08:00+08:00")
+        self.assertEqual(missing["triage_due_at"], "2026-11-05T08:00+08:00")
+
     def test_many_unimportant_task_gets_next_day_fixed_slot(self):
         task = self.base_task("batch", False, 90, ["a","b","c","d"])
         plan = period_planner.compute(project_with([task]), self.settings(["batch"]),
