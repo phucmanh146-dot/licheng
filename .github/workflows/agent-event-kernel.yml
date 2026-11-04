@@ -12,6 +12,7 @@ on:
       - "learning-agent/test_deadline_policy.py"
       - "learning-agent/test_period_planner_transition.py"
       - "learning-agent/research_graph.py"
+      - "learning-agent/deadline_schedule.py"
       - "learning-agent/test_deadline_schedule_worker.py"
       - "learning-agent/test_autoloop_signals.py"
       - "learning-agent/event_kernel.py"
@@ -76,6 +77,7 @@ jobs:
               "learning-agent/test_deadline_policy.py",
               "learning-agent/test_period_planner_transition.py",
               "learning-agent/research_graph.py",
+              "learning-agent/deadline_schedule.py",
               "learning-agent/test_deadline_schedule_worker.py",
               "learning-agent/research_graph.py",
               "learning-agent/shared_api.py",
