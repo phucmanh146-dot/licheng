@@ -7,7 +7,8 @@ from datetime import date, datetime, time, timedelta
 from zoneinfo import ZoneInfo
 
 QUADRANT_ORDER = {"many_important": 0, "few_important": 1,
-                  "many_unimportant": 2, "few_unimportant": 3}
+                  "importance_unconfirmed": 2,
+                  "many_unimportant": 3, "few_unimportant": 4}
 IMPORTANT = {"critical", "high", "important", "重要", "高"}
 UNIMPORTANT = {"low", "normal", "minor", "not_important", "不重要", "低"}
 
@@ -60,7 +61,8 @@ def _important(task):
         return True
     if task.get("is_important") is False:
         return False
-    value = str(task.get("importance") or task.get("priority_level") or "").strip().lower()
+    value = str(task.get("importance") or task.get("priority_level") or
+                (task.get("priority") if isinstance(task.get("priority"), str) else "") or "").strip().lower()
     if value in IMPORTANT:
         return True
     if value in UNIMPORTANT:
@@ -139,7 +141,9 @@ def capacity_decision(tasks, available_minutes, transition_buffer_minutes=10):
         "needs_user_decision": required > available_minutes,
         "decision_type": "soft_defer_tasks" if required > available_minutes else None,
         "drop_candidates": [row for row in ranked if row["drop_candidate"]],
-        "protected_tasks": [row for row in ranked if row["quadrant"] in ("many_important", "few_important")],
+        "protected_tasks": [row for row in ranked if row["quadrant"] in
+                            ("many_important", "few_important", "importance_unconfirmed")],
+        "importance_unconfirmed": [row for row in ranked if row["quadrant"] == "importance_unconfirmed"],
         "rule": "先排任务多且重要，再排任务少但重要；任务多但不重要安排次日固定时段；任务少且不重要作为优先舍弃候选。所有舍弃均为本轮延期，不删除原任务。",
     }
 
