@@ -48,7 +48,41 @@ function proposalView(){
 
 async function request(path,data){const response=await fetch('/api/agent/team'+path,data?{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)}:{});const value=await response.json();if(!response.ok)throw new Error(value.error||'服务不可用');return value;}
 function context(){return {project_id:project.project_id,expected_version:project.version};}
-async function load(id){project=await request('?id='+encodeURIComponent(id));localStorage.setItem('team-project',id);render();}
+
+async function refreshAutoloopAlerts(){
+ const host=$('autoloop-alerts'), list=$('autoloop-alert-list');
+ if(!host||!list||!project?.project_id||project.mode!=='live'){if(host)host.hidden=true;return;}
+ try{
+  const response=await fetch('/api/agent/events?project_id='+encodeURIComponent(project.project_id));
+  const value=await response.json();
+  if(!response.ok)throw new Error(value.error||'后台提醒读取失败');
+  const cutoff=Date.now()/1000-7*24*60*60;
+  const pending=(value.runs||[]).filter(run=>run.status==='awaiting_confirmation'&&run.updated>=cutoff&&
+    (run.result?.approval_required||run.result?.needs_availability_update));
+  list.replaceChildren();
+  host.hidden=pending.length===0;
+  for(const run of pending){
+   const result=run.result||{}, summary=result.plan?.schedule_summary||{};
+   const card=el('article','');card.className='task';
+   const title=run.event_type==='deadline.approaching'?'DDL前三天15:00排期拍板':'待安排任务分诊';
+   card.append(el('h3',title),el('p','运行编号：'+run.id+' · '+new Date(run.updated*1000).toLocaleString('zh-CN')));
+   for(const reason of result.approval_reasons||[])card.append(el('p','需要处理：'+reason));
+   if(summary.needed_minutes!==undefined){
+    card.append(el('p',`待安排 ${summary.needed_minutes} 分钟 / 可用 ${summary.available_minutes} 分钟 / 未排入 ${summary.unallocated_minutes} 分钟`));
+    for(const item of summary.unallocated||[])card.append(el('p',`${item.task_id}：还差 ${item.minutes} 分钟 · ${item.reason}`));
+    for(const item of summary.transition_buffer_unallocated||[])card.append(el('p',`过渡缓冲不足：${item.after_task_id} 后还缺 ${item.minutes} 分钟`));
+   }
+   if(result.needs_availability_update)card.append(el('p','当前没有可安全复用的未来空档。请补充真实可用时间；系统不会猜测你有空。'));
+   card.append(el('p','任务不会因本次排不下而删除或标记完成。你可以暂缓本轮低重要性任务，也可以保留全部任务并重新确认空档。'));
+   const open=el('button','打开周期安排与拍板');open.type='button';open.onclick=()=>{$('period-panel').hidden=false;$('period-panel').scrollIntoView({behavior:'smooth',block:'start'});};
+   card.append(open);list.append(card);
+  }
+ }catch(error){
+  // A transient alert read failure must not break the main workbench.
+  if(host&&project?.mode==='live'){host.hidden=true;}
+ }
+}
+async function load(id){project=await request('?id='+encodeURIComponent(id));localStorage.setItem('team-project',id);render();await refreshAutoloopAlerts();}
 async function refresh(){const state=await request('');$('projects').replaceChildren(...state.projects.map(p=>{const option=el('option',p.goal);option.value=p.project_id;return option;}));const id=project?.project_id||new URLSearchParams(location.search).get('project_id')||localStorage.getItem('team-project');const found=state.projects.find(p=>p.project_id===id)||state.projects[0];if(found){$('projects').value=found.project_id;await load(found.project_id);} $('message').textContent='已读取后端最新状态';}
 async function mutate(path,data){const selected=project.project_id;const p=await request('/'+path,{...context(),...data});if(project.project_id!==selected){$('message').textContent='已保存到原项目；当前项目选择保留';return;}if(path==='undo-plan')periodProject=null;await load(p.project_id);$('message').textContent='已保存 · 版本 '+project.version;}
 async function safe(fn){try{await fn();}catch(e){$('message').textContent=e.message;}}
@@ -100,7 +134,8 @@ function openFeedback(task,kind,label){
  if(kind==='approve'){box.append(el('p','对照已提交成果逐条核对，填写实际看到的证据。此处记录人工验收，不是模型自动复核。'));for(const [i,criterion] of task.acceptance_criteria.entries()){const row=el('div','');row.className='criterion-row';row.dataset.criterion=criterion;const label=el('label','');const check=document.createElement('input');check.type='checkbox';check.className='criterion-pass';check.setAttribute('aria-label','通过：'+criterion);label.append(check,document.createTextNode(criterion));const evidence=document.createElement('textarea');evidence.className='criterion-evidence';evidence.rows=2;evidence.id='criterion-evidence-'+i;const evidenceLabel=el('label','核对证据');evidenceLabel.htmlFor=evidence.id;row.append(label,evidenceLabel,evidence);box.append(row);}}
  $('dialog-error').textContent='';$('feedback-dialog').showModal();
 }
-$('create').onsubmit=e=>{e.preventDefault();safe(async()=>{project=await request('/create',{goal:$('goal').value,mode:$('mode').value});await refresh();});};
+$('create').onsubmit=e=>{e.preventDefault();safe(async()=>{project=await request('/create',{goal:$('goal').value,mode:$('mode').value});await refresh();
+setInterval(()=>{if(project?.mode==='live')refreshAutoloopAlerts();},30000);});};
 $('projects').onchange=()=>safe(()=>load($('projects').value));$('refresh').onclick=()=>safe(refresh);
 $('recover-intent-btn').onclick=()=>safe(async()=>{
  const intent=$('recover-intent').value.trim();if(intent.length<3)throw new Error('请描述至少3个字的旧任务意图');
