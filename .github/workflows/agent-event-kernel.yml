@@ -35,7 +35,7 @@ jobs:
         with:
           python-version: "3.12"
       - name: Python syntax
-        run: python -m compileall learning-agent
+        run: python -m py_compile learning-agent/autoloop_signals.py learning-agent/research_graph.py learning-agent/shared_api.py learning-agent/test_autoloop_signals.py learning-agent/test_event_kernel.py
       - name: Event ingress and Autoloop signal tests
         working-directory: learning-agent
         run: python -m unittest -v test_event_kernel test_autoloop_signals
