@@ -207,7 +207,24 @@ def compute(project, data, now=None):
                 if short:
                     buffer_unallocated.append({"date":day_key.isoformat(),"after_task_id":key,
                                                "minutes":short,"reason":"后续空档不足，无法完整保留任务过渡缓冲"})
-    missing=[{'task_id':k,'minutes':n,'reason':blocked.get(k,'截止前空档或连续时长不足；未自动推迟截止日期')} for k,n in needs.items() if n>0]
+    previous_unscheduled = {
+        item.get("task_id"): item for item in old.get("unscheduled", [])
+        if isinstance(item, dict) and item.get("task_id")
+    }
+    missing=[]
+    for k,n in needs.items():
+        if n<=0:
+            continue
+        previous=previous_unscheduled.get(k) or {}
+        since=previous.get("unscheduled_since") or now.isoformat(timespec="minutes")
+        try:
+            triage_due=(datetime.fromisoformat(since)+timedelta(hours=24)).isoformat(timespec="minutes")
+        except ValueError:
+            since=now.isoformat(timespec="minutes")
+            triage_due=(now+timedelta(hours=24)).isoformat(timespec="minutes")
+        missing.append({"task_id":k,"minutes":n,
+            "reason":blocked.get(k,"截止前空档或连续时长不足；未自动推迟截止日期"),
+            "unscheduled_since":since,"triage_due_at":triage_due})
     plan=deepcopy(old);plan['plan_version']+=1
     plan['time_blocks']=sorted(kept+new,key=lambda x:x['start'])
     plan['transition_buffers']=transition_buffers
