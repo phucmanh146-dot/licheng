@@ -3,9 +3,13 @@
 This is the light Autoloop control plane: business mutations emit stable events;
 the existing queue/worker owns execution. No second agent process or task database.
 """
+import json
 import re
+from datetime import datetime, time as clock_time
+from zoneinfo import ZoneInfo
 
 import platform_store as store
+import team_orchestrator as team
 
 MAX_FIELD = 240
 
@@ -97,3 +101,69 @@ def enqueue_after_operation(project, user_id, operation, data):
     }
     run_id = store.enqueue(project, user_id, key, query, metadata=metadata)
     return {"event_type": event_type, "event_id": key, "run_id": run_id, "status": "queued"}
+
+
+
+def enqueue_due_deadlines(now=None):
+    """Lightweight deadline watcher; scans metadata only and never calls an LLM.
+
+    Date-only project deadlines are interpreted as the end of that local day.
+    One stable event is emitted per project/deadline/window (72h, 24h, 6h).
+    """
+    emitted = []
+    with team.connection() as connection:
+        rows = connection.execute("SELECT body FROM team_projects").fetchall()
+        projects = [json.loads(row["body"]) for row in rows]
+        for project in projects:
+            if project.get("mode") != "live":
+                continue
+            context = project.get("project_context") or {}
+            deadline = context.get("deadline")
+            if not isinstance(deadline, str) or not deadline:
+                continue
+            inputs = [a for a in project.get("stored_artifacts", []) if a.get("purpose") == "input"]
+            if not inputs:
+                continue
+            try:
+                zone = ZoneInfo(project.get("timezone") or "Asia/Shanghai")
+                due_date = datetime.strptime(deadline, "%Y-%m-%d").date()
+                due = datetime.combine(due_date, clock_time.max, tzinfo=zone)
+                current = now.astimezone(zone) if now and now.tzinfo else (now.replace(tzinfo=zone) if now else datetime.now(zone))
+            except (ValueError, KeyError):
+                continue
+            hours_left = (due - current).total_seconds() / 3600
+            if hours_left < 0 or hours_left > 72:
+                continue
+            window = "6h" if hours_left <= 6 else ("24h" if hours_left <= 24 else "72h")
+            owner = connection.execute(
+                "SELECT user_id FROM platform_members WHERE project_id=? AND role=? LIMIT 1",
+                (project.get("project_id"), "owner")
+            ).fetchone()
+            if not owner:
+                continue
+            project_id = project.get("project_id")
+            key = f"autoloop:ddl:{project_id}:{deadline}:{window}"
+            query = (
+                "项目进入截止倒计时。请读取已登记材料、历史决定、当前证据与未完成任务，"
+                "核对剩余工作和固定事务，只重排受影响部分，保留休息与缓冲；"
+                f"不要要求用户重新上传材料。项目目标：{_small_text(project.get('goal'))}；"
+                f"截止日期：{deadline}；当前剩余约 {max(0, int(hours_left))} 小时；提醒窗口：T-{window}。"
+            )
+            metadata = {
+                "event_type": "deadline.approaching",
+                "source": "deadline_watcher",
+                "event_id": key,
+                "payload": {
+                    "deadline": deadline, "window": window,
+                    "project_version": project.get("version"),
+                    "input_artifacts": [
+                        {"artifact_id": a.get("artifact_id"), "artifact_version": a.get("artifact_version"),
+                         "sha256": a.get("sha256")} for a in inputs
+                    ],
+                    "untrusted_user_data": True,
+                },
+                "auto_advance": True,
+            }
+            run_id = store.enqueue(project, owner["user_id"], key, query, metadata=metadata)
+            emitted.append({"project_id": project_id, "window": window, "run_id": run_id})
+    return emitted
