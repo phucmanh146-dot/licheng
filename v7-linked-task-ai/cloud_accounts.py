@@ -330,7 +330,11 @@ def handle(handler):
     if not path.startswith('/api/mini-auth/'):
         return _mini_handle_original(handler)
     try:
-        if handler.headers.get('Origin') and urlsplit(handler.headers['Origin']).netloc != handler.headers.get('Host'):
+        origin = handler.headers.get('Origin', '')
+        origin_host = urlsplit(origin).hostname.lower() if origin else ''
+        host = (handler.headers.get('Host') or '').split(':', 1)[0].lower()
+        is_wechat_miniapp = origin_host == 'servicewechat.com' or (origin_host and origin_host.endswith('.servicewechat.com'))
+        if origin and origin_host != host and not is_wechat_miniapp:
             handler.message({'error': '请求来源无效。'}, 403)
             return True
         if handler.command != 'POST' and path not in ('/api/mini-auth/me',):
