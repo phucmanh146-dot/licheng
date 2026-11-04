@@ -70,6 +70,6 @@ jobs:
           PY
       - name: Event ingress and Autoloop signal tests
         working-directory: learning-agent
-        run: python -m unittest -v test_event_kernel test_autoloop_signals
+        run: python -m unittest -v test_event_kernel test_autoloop_signals test_research_personalization test_ai_efficiency
       - name: Workbench JavaScript syntax
         run: node --check learning-agent/team.js
