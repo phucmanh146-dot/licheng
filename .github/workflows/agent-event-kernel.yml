@@ -29,6 +29,8 @@ on:
   pull_request:
     paths:
       - "learning-agent/autoloop_signals.py"
+      - "learning-agent/universal_autoloop.py"
+      - "learning-agent/test_universal_autoloop.py"
       - "learning-agent/deadline_policy.py"
       - "learning-agent/period_planner.py"
       - "learning-agent/test_deadline_policy.py"
