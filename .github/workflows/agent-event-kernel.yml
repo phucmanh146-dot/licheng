@@ -13,6 +13,12 @@ on:
       - "learning-agent/learning_agent_server.py"
       - "learning-agent/team.js"
       - "learning-agent/test_event_kernel.py"
+      - "learning-agent/research_personalization.py"
+      - "learning-agent/test_research_personalization.py"
+      - "learning-agent/personal_guidance.py"
+      - "learning-agent/ai_efficiency.py"
+      - "learning-agent/test_ai_efficiency.py"
+      - "learning-agent/team_ai.py"
       - ".github/workflows/agent-event-kernel.yml"
   pull_request:
     paths:
@@ -45,6 +51,12 @@ jobs:
               "learning-agent/shared_api.py",
               "learning-agent/test_autoloop_signals.py",
               "learning-agent/test_event_kernel.py",
+              "learning-agent/research_personalization.py",
+              "learning-agent/test_research_personalization.py",
+              "learning-agent/personal_guidance.py",
+              "learning-agent/ai_efficiency.py",
+              "learning-agent/test_ai_efficiency.py",
+              "learning-agent/team_ai.py",
           ]
           for name in files:
               ast.parse(Path(name).read_text(encoding="utf-8"), filename=name)
