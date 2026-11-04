@@ -11,6 +11,8 @@ on:
       - "learning-agent/period_planner.py"
       - "learning-agent/test_deadline_policy.py"
       - "learning-agent/test_period_planner_transition.py"
+      - "learning-agent/research_graph.py"
+      - "learning-agent/test_deadline_schedule_worker.py"
       - "learning-agent/test_autoloop_signals.py"
       - "learning-agent/event_kernel.py"
       - "learning-agent/platform_store.py"
@@ -72,6 +74,8 @@ jobs:
               "learning-agent/test_deadline_policy.py",
               "learning-agent/test_period_planner_transition.py",
               "learning-agent/research_graph.py",
+              "learning-agent/test_deadline_schedule_worker.py",
+              "learning-agent/research_graph.py",
               "learning-agent/shared_api.py",
               "learning-agent/test_autoloop_signals.py",
               "learning-agent/test_event_kernel.py",
@@ -88,6 +92,6 @@ jobs:
           PY
       - name: Event ingress and Autoloop signal tests
         working-directory: learning-agent
-        run: python -m unittest -v test_event_kernel test_autoloop_signals test_universal_autoloop test_deadline_policy test_period_planner_transition test_research_personalization test_ai_efficiency
+        run: python -m unittest -v test_event_kernel test_autoloop_signals test_universal_autoloop test_deadline_policy test_period_planner_transition test_deadline_schedule_worker test_research_personalization test_ai_efficiency
       - name: Workbench JavaScript syntax
         run: node --check learning-agent/team.js
