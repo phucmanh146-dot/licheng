@@ -87,9 +87,9 @@
 ## 五、仓库与未合并状态
 
 审查时：
-- 目标开发分支相对 `main`：62 commits ahead、4 commits behind，状态为 diverged。
-- GitHub 当前发现 1 个 open PR：#96，内容是手机号＋密码登录交互 Demo，与本次科研/Autoloop改造无关。
-- 本次科研/Autoloop 开发分支尚未创建针对 `main` 的 PR。
+- 目标开发分支相对 `main`：72 commits ahead、7 commits behind，状态为 diverged（在 PR #97 创建时核对）。
+- 原 open PR #96（手机号＋密码登录交互 Demo）已通过 regression 检查并 squash 合并，merge commit：`5f98aae12e4f6c40a46299faa1448dc8f9c30a69`。该 PR 与科研/Autoloop改造无关。
+- 已为本次开发分支创建 Draft PR #97：https://github.com/phucmanh146-dot/shangan-ya/pull/97。GitHub 当前标记 `mergeable=false`，不可直接合并。
 - 用户 Windows 本机 `D:\\shangan-ya-rag-rerank-20261102` 工作区存在未提交的 `planner.js`、浏览器测试修改、科研文档和 evidence 文件。本次没有覆盖、清理或擅自提交这些本地改动。
 - 本机 checkout 的 HEAD 为旧的 `3db3406`，与本次 GitHub 分支后续提交不一致；本机 Python 环境的 FastAPI/Pydantic 二进制依赖异常，且缺少本地新文件。因此本机定向测试不能作为当前 GitHub HEAD 的验收结果。
 
