@@ -93,6 +93,44 @@ class UniversalAutoloopTests(unittest.TestCase):
         self.assertIn("缺少验收截图", prior[-1]["content"])
         self.assertIn(run_id, prior[-1]["content"])
 
+
+    def test_active_recovery_checkpoint_is_reused_across_conversations_without_reupload(self):
+        checkpoint = {
+            "checkpoint_id": "checkpoint-1", "task_id": "task-1", "action_id": "step-2",
+            "status": "paused", "reason": "interrupted", "note": "临时事情打断",
+            "done_note": "已完成前两步", "next_action": "继续核对第二页表格",
+            "location": "report.pdf page 2", "condition": {"kind": "manual", "description": "回来后继续"},
+            "check_after": None, "input_version": {"artifact_id": "brief", "artifact_version": 2},
+        }
+        project = {**self.project, "recovery": {"checkpoints": [checkpoint]}}
+        packet = {
+            "task_id": "task-1", "action_id": "step-2", "step": {
+                "step_id": "step-2", "action": "核对第二页表格",
+                "reason": "保留上次动作", "expected_change": "补齐表格",
+                "target_locator": "page:2", "output": "更新报告",
+                "self_check": "回看原文", "failure_next": "记录差异",
+                "input_version": {"artifact_id": "brief", "artifact_version": 2},
+            },
+            "previous_attempts": [{"action": "核对第一页", "observed": "已完成",
+                                   "reported_outcome": "succeeded", "actual_minutes": 12}],
+            "retrieved_material": {"artifact_id": "brief", "artifact_version": 2,
+                                   "sha256": "sha-2", "units": [
+                                       {"locator": "page:2", "text": "原文片段"}]},
+            "earlier_attempt_count": 0, "historical_attempt_count": 0,
+        }
+        with (
+            patch.object(universal_autoloop.team, "state", return_value=project),
+            patch.object(universal_autoloop.team_recovery, "stale", return_value=False),
+            patch.object(universal_autoloop.team_recovery, "context_packet", return_value=packet),
+        ):
+            history = universal_autoloop._project_context(
+                self.user_id, self.project["project_id"], "new-event")
+        active = next(item for item in history if item["type"] == "active_recovery_checkpoint")
+        self.assertIn("继续核对第二页表格", active["content"])
+        self.assertIn("brief", active["content"])
+        self.assertIn("sha-2", active["content"])
+        self.assertIn("step-2", active["content"])
+
     def test_missing_project_is_saved_without_guessing(self):
         second = team.create({"goal":"另一个独立项目","mode":"live"})
         store.member(second["project_id"], self.user_id, "owner")
