@@ -136,6 +136,51 @@ class AutoloopSignalTests(unittest.TestCase):
         zone = ZoneInfo("Asia/Shanghai")
         self.assertFalse(deadline_review_due("2026-11-07", datetime(2026, 11, 4, 14, 59, tzinfo=zone)))
 
+
+    def test_unscheduled_tasks_are_dispatched_immediately_with_24h_sla(self):
+        project = {
+            "project_id": "unscheduled-1", "version": 5, "mode": "live", "timezone": "Asia/Shanghai",
+            "goal": "处理未安排任务", "project_context": {},
+            "plan": {"unscheduled": [{
+                "task_id": "T-unplanned", "minutes": 90, "reason": "容量不足",
+                "unscheduled_since": "2026-11-03T15:00+08:00",
+                "triage_due_at": "2026-11-04T15:00+08:00",
+            }]},
+            "stored_artifacts": [],
+        }
+        class Cursor:
+            def __init__(self, rows): self.rows = rows
+            def fetchall(self): return self.rows
+            def fetchone(self): return self.rows[0] if self.rows else None
+        class Connection:
+            def execute(self, sql, params=()):
+                if "SELECT body FROM team_projects" in sql:
+                    return Cursor([{"body": __import__("json").dumps(project)}])
+                if "SELECT user_id FROM platform_members" in sql:
+                    return Cursor([{"user_id": "owner-1"}])
+                raise AssertionError(sql)
+        @contextmanager
+        def connection():
+            yield Connection()
+        now = datetime(2026, 11, 4, 10, 0, tzinfo=ZoneInfo("Asia/Shanghai"))
+        with (
+            patch.object(autoloop_signals.team, "connection", connection),
+            patch.object(autoloop_signals.store, "enqueue", return_value="triage-run") as enqueue,
+        ):
+            emitted = autoloop_signals.enqueue_due_deadlines(now)
+        self.assertEqual(emitted[0]["kind"], "unscheduled")
+        metadata = enqueue.call_args.kwargs["metadata"]
+        self.assertEqual(metadata["event_type"], "task.unscheduled_triage")
+        self.assertFalse(metadata["payload"]["sla_breached"])
+        self.assertTrue(metadata["payload"]["soft_defer_only"])
+        self.assertEqual(metadata["payload"]["triage_due_at"], "2026-11-04T15:00+08:00")
+
+    def test_unscheduled_tasks_escalate_after_24h(self):
+        from deadline_policy import unscheduled_triage_due
+        zone = ZoneInfo("Asia/Shanghai")
+        self.assertTrue(unscheduled_triage_due("2026-11-03T09:00+08:00",
+                                               datetime(2026,11,4,9,0,tzinfo=zone)))
+
     def test_deadline_watcher_ignores_projects_without_registered_inputs(self):
         with (
             patch.object(autoloop_signals.team, "connection") as connection,
