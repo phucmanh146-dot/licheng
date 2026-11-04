@@ -1,6 +1,6 @@
 import unittest
 from unittest.mock import patch
-import research_graph
+import deadline_schedule
 
 
 class DeadlineScheduleWorkerTests(unittest.TestCase):
@@ -34,11 +34,11 @@ class DeadlineScheduleWorkerTests(unittest.TestCase):
     def test_no_saved_availability_stops_for_user_instead_of_inventing_free_time(self):
         project = self.project(saved=False)
         with (
-            patch.object(research_graph.team,"state",return_value=project),
-            patch.object(research_graph.store,"event") as event,
+            patch.object(deadline_schedule.team,"state",return_value=project),
+            patch.object(deadline_schedule.store,"event") as event,
             patch.object(research_graph.store,"finish") as finish,
         ):
-            result = research_graph.execute_schedule_event(
+            result = deadline_schedule.execute(
                 self.run_record(),{"project_id":"project-1","event_type":"deadline.approaching"})
         self.assertTrue(result["approval_required"])
         self.assertTrue(result["needs_availability_update"])
@@ -52,7 +52,7 @@ class DeadlineScheduleWorkerTests(unittest.TestCase):
         adopted = {**project,"version":9,"plan":planned}
         with (
             patch.object(research_graph.team,"state",return_value=project),
-            patch.object(research_graph.period_planner,"compute",return_value=planned) as compute,
+            patch.object(deadline_schedule.period_planner,"compute",return_value=planned) as compute,
             patch.object(research_graph.team,"propose",return_value=proposal),
             patch.object(research_graph.team,"apply_automated",return_value=adopted) as apply,
             patch.object(research_graph.store,"event") as event,
