@@ -51,7 +51,7 @@ def submit(data):
     source = str(data.get("source") or "workbench")[:80]
     supplied_id = data.get("event_id") or data.get("idempotency_key")
     if supplied_id is not None:
-        supplied_id = _required_text({"id": supplied_id}, "id", 160)
+        supplied_id = _required_text({"id": supplied_id}, "id", 156)
         dedupe = "evt:" + supplied_id
     else:
         fingerprint = json.dumps(
