@@ -123,7 +123,10 @@ def enqueue_due_deadlines(now=None):
             context = project.get("project_context") or {}
             deadline = context.get("deadline")
             inputs = [a for a in project.get("stored_artifacts", []) if a.get("purpose") == "input"]
-            zone = ZoneInfo(project.get("timezone") or "Asia/Shanghai")
+            try:
+                zone = ZoneInfo(project.get("timezone") or "Asia/Shanghai")
+            except (TypeError, ValueError):
+                continue
             current = now.astimezone(zone) if now and now.tzinfo else (now.replace(tzinfo=zone) if now else datetime.now(zone))
             owner = connection.execute(
                 "SELECT user_id FROM platform_members WHERE project_id=? AND role=? LIMIT 1",
