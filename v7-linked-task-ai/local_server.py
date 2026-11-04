@@ -14,6 +14,7 @@ import pm_wechat_desktop as wxdesk
 import wechat_toolbar_bridge as wxtool
 import p2_chat_backend as p2
 import agent_runtime as agent
+import autoloop_runtime as autoloop
 import knowledge_agent_skills as kskills
 import source_workflow as sourceflow
 from public_link_reader import research as source_research
@@ -137,6 +138,11 @@ class Handler(SimpleHTTPRequestHandler):
             from urllib.parse import parse_qs
             q=parse_qs(urlparse(self.path).query)
             return self.send_json(agent.list_tasks(account_id=q.get('accountId',['default'])[0]))
+        if path == '/api/autoloop/state':
+            from urllib.parse import parse_qs
+            q=parse_qs(urlparse(self.path).query)
+            try: return self.send_json(autoloop.get_state(q.get('accountId',['default'])[0], q.get('after',['0'])[0]))
+            except Exception as ex: return self.send_json({'error':str(ex)[:300],'code':'AUTOLOOP_STATE_ERROR'},500)
         if path == '/api/agent/skill-catalog': return self.send_json(kskills.skills())
         if path == '/api/agent/tools': return self.send_json(agent.tool_catalog())
         if path == '/api/agent/recover':
@@ -170,7 +176,7 @@ class Handler(SimpleHTTPRequestHandler):
             return self.send_json({'error':'需要 JSON 请求'},415)
         try:
             size = int(self.headers.get('Content-Length','0'))
-            max_size = 350000 if self.path == '/api/focus-observe' else (7200000 if self.path == '/api/extract-file' else (1200000 if self.path == '/api/p2/ask' else 150000))
+            max_size = 350000 if self.path == '/api/focus-observe' else (7200000 if self.path == '/api/extract-file' else (1200000 if self.path == '/api/p2/ask' else (1_200_000 if self.path.startswith('/api/autoloop/') else 150000)))
             if self.path == '/api/source/prepare': max_size = 4_000_000
             if self.path == '/api/memo/parse': max_size = 500_000
             if self.path == '/api/vault-save': max_size = 12_000_000
@@ -205,6 +211,10 @@ class Handler(SimpleHTTPRequestHandler):
             if self.path=='/api/source/summarize': return self.send_json(sourceflow.summarize(data))
             if self.path=='/api/pm/url': return self.send_json(pm.import_url(data.get('url','')))
             if self.path=='/api/p2/ask': return self.send_json(p2.ask(data))
+            if self.path=='/api/autoloop/event': return self.send_json(autoloop.append_event(data))
+            if self.path=='/api/autoloop/checkpoint': return self.send_json(autoloop.save_checkpoint(data))
+            if self.path=='/api/autoloop/interrupt': return self.send_json(autoloop.interrupt(data))
+            if self.path=='/api/autoloop/resume': return self.send_json(autoloop.resume(data))
             if self.path=='/api/agent/recover-intent': return self.send_json(agent.recover_intent(data))
             if self.path=='/api/agent/task/create': return self.send_json({'ok':True,'task':agent.create_task(data)})
             if self.path=='/api/agent/task/switch': return self.send_json(agent.switch_task(data))
@@ -265,6 +275,7 @@ class Handler(SimpleHTTPRequestHandler):
             if self.path=='/api/ai-test': return self.send_json(test_connection())
             return self.send_json({'error':'接口不存在'},404)
         except RescueError as ex: return self.send_json({'error':str(ex),'code':ex.code,**ex.extra},ex.status)
+        except autoloop.AutoloopError as ex: return self.send_json({'error':str(ex),'code':'AUTOLOOP_INVALID'},422)
         except Exception: return self.send_json({'error':'服务暂时未完成请求，请检查输入后重试。','code':'SERVER_ERROR'},502)
 
 class LocalServer(ThreadingHTTPServer):
