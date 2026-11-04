@@ -107,6 +107,12 @@ class SharedPlatformTests(unittest.TestCase):
                 json={'query':'有效分母','expected_version':p['version']})
             self.assertEqual(submitted.status_code,202,submitted.text)
             rid = submitted.json()['run_id']
+            # Input import also emits an Autoloop signal. Isolate this test's
+            # explicit run so store.claim() cannot consume the earlier side event.
+            with team.connection() as c:
+                c.execute(
+                    "UPDATE platform_runs SET status='cancelled' WHERE project_id=? AND user_id=? AND status='queued' AND id<>?",
+                    (p['project_id'], self.uid, rid))
             import os
             if os.getenv('SHANGAN_LIVE_CLOSED_LOOP') == '1':
                 from hermes_gateway import connect_local_gateway
