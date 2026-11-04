@@ -4,6 +4,7 @@ Every completed node is checkpointed with a fenced lease. Model outputs remain
 candidates: publishing the preview and adopting a plan are explicit user actions.
 """
 import copy
+import logging
 import threading
 import time
 from typing import TypedDict
@@ -191,7 +192,10 @@ def worker(once=False):
     while True:
         now = time.monotonic()
         if now >= next_deadline_scan:
-            autoloop_signals.enqueue_due_deadlines()
+            try:
+                autoloop_signals.enqueue_due_deadlines()
+            except Exception:
+                logging.exception('Autoloop deadline scan failed; worker will continue')
             next_deadline_scan = now + 60.0
         run = store.claim()
         if run:
