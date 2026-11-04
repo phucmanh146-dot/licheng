@@ -89,6 +89,53 @@ class AutoloopSignalTests(unittest.TestCase):
         self.assertEqual(enqueue.call_args.kwargs["metadata"]["event_type"], "deadline.approaching")
         self.assertTrue(enqueue.call_args.kwargs["metadata"]["auto_advance"])
 
+
+    def test_deadline_watcher_emits_mandatory_d3_1500_capacity_decision(self):
+        project = {
+            "project_id": "deadline-3day", "version": 4, "mode": "live", "timezone": "Asia/Shanghai",
+            "goal": "按期交付", "project_context": {"deadline": "2026-11-07"},
+            "stored_artifacts": [{"artifact_id": "brief", "artifact_version": 1,
+                                  "purpose": "input", "sha256": "abc"}],
+            "plan": {"tasks": [
+                {"task_id": "important-heavy", "title": "重要长任务", "is_important": True,
+                 "estimate_minutes_range": [180, 240], "status": "scheduled"},
+                {"task_id": "optional-heavy", "title": "可延期长任务", "is_important": False,
+                 "estimate_minutes_range": [180, 240], "status": "scheduled"},
+            ]},
+        }
+        class Cursor:
+            def __init__(self, rows): self.rows = rows
+            def fetchall(self): return self.rows
+            def fetchone(self): return self.rows[0] if self.rows else None
+        class Connection:
+            def execute(self, sql, params=()):
+                if "SELECT body FROM team_projects" in sql:
+                    return Cursor([{"body": __import__("json").dumps(project)}])
+                if "SELECT user_id FROM platform_members" in sql:
+                    return Cursor([{"user_id": "owner-1"}])
+                raise AssertionError(sql)
+        @contextmanager
+        def connection():
+            yield Connection()
+        now = datetime(2026, 11, 4, 15, 0, tzinfo=ZoneInfo("Asia/Shanghai"))
+        with (
+            patch.object(autoloop_signals.team, "connection", connection),
+            patch.object(autoloop_signals.store, "enqueue", return_value="d3-run") as enqueue,
+        ):
+            emitted = autoloop_signals.enqueue_due_deadlines(now)
+        self.assertEqual(emitted[0]["window"], "T-3-15")
+        metadata = enqueue.call_args.kwargs["metadata"]
+        self.assertEqual(metadata["payload"]["mandatory_decision_at"], "15:00 local time on D-3")
+        self.assertEqual(metadata["payload"]["capacity_policy"]["unscheduled_triage_sla_hours"], 24)
+        self.assertTrue(metadata["auto_advance"])
+        self.assertEqual(metadata["payload"]["quadrant_tasks"][0]["task_id"], "important-heavy")
+        self.assertEqual(metadata["payload"]["quadrant_tasks"][1]["task_id"], "optional-heavy")
+
+    def test_deadline_watcher_does_not_trigger_d3_review_before_1500(self):
+        from deadline_policy import deadline_review_due
+        zone = ZoneInfo("Asia/Shanghai")
+        self.assertFalse(deadline_review_due("2026-11-07", datetime(2026, 11, 4, 14, 59, tzinfo=zone)))
+
     def test_deadline_watcher_ignores_projects_without_registered_inputs(self):
         with (
             patch.object(autoloop_signals.team, "connection") as connection,
