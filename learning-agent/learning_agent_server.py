@@ -25,6 +25,7 @@ import team_inputs
 import team_revision
 import cc_progress
 import research_companion
+import event_kernel
 
 ROOT = Path(__file__).resolve().parent
 try:
@@ -130,6 +131,11 @@ class Handler(LegacyHandler):
                 import team_ai
                 query = parse_qs(parsed.query)
                 return self.send_json(team_ai.read_trace(query.get('id',[''])[0],query.get('run_id',[''])[0]))
+            if path == '/api/agent/events':
+                run_id = parse_qs(parsed.query).get('run_id', [''])[0]
+                if not run_id:
+                    raise ValueError('请提供 run_id 查询运行状态')
+                return self.send_json(event_kernel.status(run_id))
             if path == '/api/agent/state':
                 return self.send_json(agent.state())
             if path == '/api/agent/run':
@@ -186,6 +192,8 @@ class Handler(LegacyHandler):
             data = json.loads(self.rfile.read(size))
             if not isinstance(data, dict):
                 raise ValueError('请求必须为 JSON 对象')
+            if path == '/api/agent/events':
+                return self.send_json(event_kernel.submit(data), 202)
             if path.startswith('/api/agent/planner/') and path.rsplit('/',1)[-1] in ('split','lock','calibrate','reconcile','alternatives'):
                 import b_refinements as b
                 op=path.rsplit('/',1)[-1]
