@@ -42,9 +42,9 @@
 ## 本轮验证
 
 GitHub Actions：
-- Run：`41829490934`
-- Commit：`bce11070610a5830422794088719ef3d90a0d2b6`
-- 结果：Python compileall、event_kernel + autoloop_signals 单元测试、team.js 语法检查均通过。
+- Run：`41830431660`
+- Commit：`1791503d39a191c07e6453b29f4206799f0e404c`
+- 结果：指定运行时文件 AST 语法检查、event_kernel + autoloop_signals 单元测试、team.js 语法检查均通过。
 
 ## 仍未完成、不能冒称上线的部分
 
