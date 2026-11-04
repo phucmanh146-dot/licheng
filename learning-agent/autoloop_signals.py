@@ -10,7 +10,7 @@ from zoneinfo import ZoneInfo
 
 import platform_store as store
 import team_orchestrator as team
-from deadline_policy import deadline_review_due, rank_tasks
+from deadline_policy import deadline_review_due, rank_tasks, unscheduled_triage_due
 
 MAX_FIELD = 240
 
@@ -122,13 +122,60 @@ def enqueue_due_deadlines(now=None):
                 continue
             context = project.get("project_context") or {}
             deadline = context.get("deadline")
-            if not isinstance(deadline, str) or not deadline:
-                continue
             inputs = [a for a in project.get("stored_artifacts", []) if a.get("purpose") == "input"]
-            if not inputs:
+            zone = ZoneInfo(project.get("timezone") or "Asia/Shanghai")
+            current = now.astimezone(zone) if now and now.tzinfo else (now.replace(tzinfo=zone) if now else datetime.now(zone))
+            owner = connection.execute(
+                "SELECT user_id FROM platform_members WHERE project_id=? AND role=? LIMIT 1",
+                (project.get("project_id"), "owner")
+            ).fetchone()
+            if not owner:
+                continue
+            project_id = project.get("project_id")
+            # Newly unscheduled work is dispatched immediately (within the 24h SLA),
+            # rather than waiting until the SLA has already expired.
+            plan = project.get("plan") or {}
+            for item in plan.get("unscheduled", []):
+                if not isinstance(item, dict) or not item.get("task_id") or not item.get("unscheduled_since"):
+                    continue
+                try:
+                    created = datetime.fromisoformat(item["unscheduled_since"])
+                    if created.tzinfo is None:
+                        continue
+                    if current < created.astimezone(zone):
+                        continue
+                    overdue = unscheduled_triage_due(item["unscheduled_since"], current)
+                except (TypeError, ValueError):
+                    continue
+                stage = "sla_breached" if overdue else "initial"
+                key = f"autoloop:unscheduled:{project_id}:{item['task_id']}:{item['unscheduled_since']}:{stage}"
+                query = (
+                    "有任务进入待安排队列。请在24小时SLA内处理：读取现有任务、DDL、固定事务、"
+                    "精力、历史耗时和缓冲，重新计算可用容量；优先级按任务多且重要、任务少但重要、"
+                    "任务多但不重要（次日固定时段）、任务少且不重要排序。若仍排不开，发一张合并拍板卡，"
+                    "请用户选择本轮暂缓项；暂缓不删除任务、不改DDL、不标记完成。"
+                    "复用已登记材料和原任务现场，不要求重新上传或从头描述。"
+                    f"任务：{_small_text(item.get('task_id'))}；剩余分钟：{item.get('minutes', '未知')}；"
+                    f"分诊截止：{item.get('triage_due_at', '创建后24小时')}；SLA超时：{overdue}。"
+                )
+                metadata = {
+                    "event_type": "task.unscheduled_triage",
+                    "source": "unscheduled_watcher",
+                    "event_id": key,
+                    "payload": {
+                        "task_id": item["task_id"], "unscheduled_since": item["unscheduled_since"],
+                        "triage_due_at": item.get("triage_due_at"), "sla_breached": overdue,
+                        "minutes": item.get("minutes"), "project_version": project.get("version"),
+                        "soft_defer_only": True, "never_delete_or_mark_complete": True,
+                    },
+                    "auto_advance": True,
+                }
+                run_id = store.enqueue(project, owner["user_id"], key, query, metadata=metadata)
+                emitted.append({"project_id": project_id, "task_id": item["task_id"],
+                                "kind": "unscheduled", "run_id": run_id, "sla_breached": overdue})
+            if not isinstance(deadline, str) or not deadline or not inputs:
                 continue
             try:
-                zone = ZoneInfo(project.get("timezone") or "Asia/Shanghai")
                 due_date = datetime.strptime(deadline, "%Y-%m-%d").date()
                 due = datetime.combine(due_date, clock_time.max, tzinfo=zone)
                 current = now.astimezone(zone) if now and now.tzinfo else (now.replace(tzinfo=zone) if now else datetime.now(zone))
@@ -141,13 +188,6 @@ def enqueue_due_deadlines(now=None):
             if not review_due and (hours_left < 0 or hours_left > 72):
                 continue
             window = "T-3-15" if review_due else ("6h" if hours_left <= 6 else ("24h" if hours_left <= 24 else "72h"))
-            owner = connection.execute(
-                "SELECT user_id FROM platform_members WHERE project_id=? AND role=? LIMIT 1",
-                (project.get("project_id"), "owner")
-            ).fetchone()
-            if not owner:
-                continue
-            project_id = project.get("project_id")
             key = f"autoloop:ddl:{project_id}:{deadline}:{window}"
             plan_tasks = (project.get("plan") or {}).get("tasks", [])
             quadrant_tasks = rank_tasks(plan_tasks)
