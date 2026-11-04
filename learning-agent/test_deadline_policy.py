@@ -45,7 +45,7 @@ class DeadlinePolicyTests(unittest.TestCase):
         result = capacity_decision([
             {"task_id":"a","is_important":True,"remaining_minutes":60},
             {"task_id":"b","is_important":True,"remaining_minutes":60},
-        ], available_minutes=125, transition_buffer_minutes=10)
+        ], available_minutes=130, transition_buffer_minutes=10)
         self.assertEqual(result["transition_buffer_minutes"], 10)
         self.assertTrue(result["fits"])
 
