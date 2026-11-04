@@ -31,7 +31,7 @@ def deadline_review_due(deadline, now=None, timezone_name="Asia/Shanghai"):
     trigger = datetime.combine(due_date - timedelta(days=3), time(15, 0),
                                tzinfo=ZoneInfo(timezone_name or "Asia/Shanghai"))
     due_end = datetime.combine(due_date, time.max, tzinfo=trigger.tzinfo)
-    return trigger <= current <= due_end
+    return trigger <= current < min(trigger + timedelta(hours=24), due_end + timedelta(microseconds=1))
 
 
 def _remaining_minutes(task):
