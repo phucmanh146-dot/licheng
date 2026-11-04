@@ -1,4 +1,4 @@
-﻿(function(){
+(function(){
 'use strict';
 const $=(s)=>document.querySelector(s),$$=(s)=>[...document.querySelectorAll(s)];
 const STORAGE='shanganya_p2_chat_history_v1';
@@ -8,7 +8,55 @@ function uid(){return 'p2-'+Date.now().toString(36)+'-'+Math.random().toString(3
 function current(){return threads.find(t=>t.id===activeId);}
 function persist(){try{localStorage.setItem(STORAGE,JSON.stringify({threads:threads.slice(0,50),activeId}));}catch(e){status('本地浏览器无法保存对话：请检查磁盘剩余空间。',true);}}
 function draw(){P2View.renderThreads(threads,activeId,selectChat,deleteChat,renameChat);P2View.renderMessages(current());drawAttachments();syncComposer();}
-function syncComposer(){const thread=current(),pending=!!(thread&&pendingThreads.has(thread.id)),btn=$('#p2-send');if(btn){btn.disabled=pending||uploading>0;btn.textContent=pending?'⏳':'↑';}if(pending)status('AI 正在处理这条对话。你可以切换到其他对话或先做下一项；结果会保留在这里。');}
+function accountIdForAgent(){let sy=window.SY;try{if(!sy&&window.parent&&window.parent!==window)sy=window.parent.SY;}catch(_){}return String(sy&&sy.currentAccountKey||'default');}
+async function runAgentNow(){
+ const textarea=$('#p2-text'),question=textarea.value.trim(),active=current();
+ if(active&&pendingThreads.has(active.id))return status('\u5f53\u524d\u5bf9\u8bdd\u7684 Agent \u6b63\u5728\u6267\u884c\uff0c\u8bf7\u7b49\u5f85\u6216\u5207\u6362\u5230\u5176\u4ed6\u5bf9\u8bdd\u3002',true);
+ if(!question)return status('\u5148\u63cf\u8ff0\u8981\u4ea4\u7ed9 Agent \u6267\u884c\u7684\u76ee\u6807\u6216\u95ee\u9898\u3002',true);
+ if(uploading)return status('\u9644\u4ef6\u4ecd\u5728\u4e0a\u4f20\uff0c\u5b8c\u6210\u540e\u518d\u542f\u52a8 Agent\u3002',true);
+ const agentContext=await liveAgentContext(),thread=current()||newChat(),requestId=uid(),accountId=accountIdForAgent();
+ const agentFileIds=files.filter(x=>x&&x.id&&!x.loading).map(x=>x.id).slice(0,8);let agentUrls;try{agentUrls=questionLinks(question);}catch(e){return status(e.message,true);}const selectedWorkbenchTaskId=$('#p2-task-context')?.value||'';
+ let agentTaskId=thread.agentTaskId||'',recoveryNote='';
+ if(!agentTaskId){
+  try{
+   const prior=await jsonApi('/api/agent/tasks?accountId='+encodeURIComponent(accountId),undefined,15000);
+   if((prior.tasks||[]).length){
+    const recovered=await jsonApi('/api/agent/recover-intent',{intent:question,accountId,sessionId:thread.id},60000);
+    if(recovered.task&&recovered.task.id){agentTaskId=recovered.task.id;thread.agentTaskId=agentTaskId;recoveryNote='Recovered previous Agent task: '+(recovered.task.title||agentTaskId);}
+   }
+  }catch(_){}
+ }
+ const user={role:'user',content:question+'\n\n[\u5df2\u4ea4\u7ed9\u6267\u884c Agent]',files:files.filter(x=>x&&x.id&&!x.loading).map(x=>x.name)};
+ pendingThreads.add(thread.id);thread.pendingRequestId=requestId;thread.messages.push(user);
+ const pendingMessage={role:'assistant',content:'Agent \u6b63\u5728\u6062\u590d\u5386\u53f2\u4e0a\u4e0b\u6587\u3001\u8bfb\u53d6\u672c\u8f6e\u9644\u4ef6\u4e0e\u8d44\u6599\u3001\u6267\u884c\u5141\u8bb8\u7684\u5de5\u5177\u5e76\u4fdd\u5b58\u68c0\u67e5\u70b9\u3002\u4f60\u53ef\u4ee5\u5207\u6362\u5176\u4ed6\u5bf9\u8bdd\uff0c\u7ed3\u679c\u4f1a\u4fdd\u7559\u5728\u5f53\u524d\u4efb\u52a1\u3002',pending:true,requestId};
+ thread.messages.push(pendingMessage);if(thread.title==='New chat')thread.title=question.slice(0,28);
+ persist();syncComposer();draw();status('Agent \u5df2\u542f\u52a8\uff1a\u6b63\u5728\u8bfb\u53d6\u4e0a\u4e0b\u6587\u3001\u5904\u7406\u8d44\u6599\u5e76\u4fdd\u5b58\u6267\u884c\u73b0\u573a\u3002');
+ try{
+  const payload={question,taskId:agentTaskId,createTask:!agentTaskId,taskTitle:question.slice(0,80),sessionId:thread.id,accountId,fileIds:agentFileIds,urls:agentUrls,workbenchContext:{liveAgentContext:agentContext,selectedWorkbenchTaskId,attachedFiles:files.filter(x=>x&&x.id).map(x=>({id:x.id,name:x.name,type:x.type})).slice(0,8)}};
+  const r=await jsonApi('/api/agent/run',payload,180000);
+  if(r.taskId)thread.agentTaskId=r.taskId;
+  const toolSummary=(r.toolCalls||[]).map(x=>(x.ok?'[OK] ':'[FAILED] ')+x.tool+(x.error?': '+x.error:'')).join('\n');
+  const content=[recoveryNote,r.answer||'Agent \u672a\u8fd4\u56de\u6700\u7ec8\u7ed3\u679c\u3002',r.nextStep?'\u4e0b\u4e00\u6b65\uff1a'+r.nextStep:'',r.blocker?'\u963b\u585e\uff1a'+r.blocker:'',toolSummary?'\u5b9e\u9645\u6267\u884c\u7684\u5de5\u5177\uff1a'+toolSummary:'\u672c\u8f6e\u4e0d\u9700\u8c03\u7528\u5916\u90e8\u5de5\u5177','Agent \u4efb\u52a1 ID\uff1a'+(r.taskId||'\u672a\u521b\u5efa')].filter(Boolean).join('\n\n');
+  const pos=thread.messages.indexOf(pendingMessage),answer={role:'assistant',content,agentRun:true,taskId:r.taskId,toolCalls:r.toolCalls||[],blocker:r.blocker||'',nextStep:r.nextStep||'',workbenchActions:Array.isArray(r.workbenchActions)?r.workbenchActions:[]};
+  if(pos>=0)thread.messages.splice(pos,1,answer);else thread.messages.push(answer);
+  thread.pendingRequestId=null;persist();if(activeId===thread.id){textarea.value='';draw();status(r.blocker?'Agent \u5df2\u8bb0\u5f55\u963b\u585e\u70b9\uff0c\u5904\u7406\u540e\u53ef\u4ece\u68c0\u67e5\u70b9\u7ee7\u7eed\u3002':'Agent \u672c\u8f6e\u6267\u884c\u7ed3\u675f\uff0c\u7ed3\u679c\u548c\u68c0\u67e5\u70b9\u5df2\u4fdd\u5b58\u3002');}else{draw();status('Agent \u5df2\u5b8c\u6210\u672c\u8f6e\uff0c\u7ed3\u679c\u5df2\u4fdd\u5b58\u5230\u5bf9\u5e94\u5bf9\u8bdd\u3002');}
+ }catch(e){
+  const pos=thread.messages.indexOf(pendingMessage);if(pos>=0)thread.messages.splice(pos,1,{role:'assistant',content:'Agent \u6267\u884c\u5931\u8d25\uff1a'+e.message+'\n\n\u539f\u59cb\u8bf7\u6c42\u5df2\u4fdd\u7559\uff0c\u6392\u9664\u963b\u585e\u540e\u53ef\u7ee7\u7eed\u91cd\u8bd5\u3002',error:true,agentRun:true});
+  thread.pendingRequestId=null;persist();if(activeId===thread.id){draw();status('Agent \u6267\u884c\u5931\u8d25\uff1a'+e.message,true);}else{draw();status('\u5176\u4ed6\u5bf9\u8bdd\u4e2d\u7684 Agent \u6267\u884c\u5931\u8d25\uff1a'+e.message,true);}
+ }finally{pendingThreads.delete(thread.id);if(thread.pendingRequestId===requestId)thread.pendingRequestId=null;persist();syncComposer();}
+}
+
+window.P2AgentActionHandler=async function(action){
+ let sy=window.SY;try{if(!sy&&window.parent&&window.parent!==window)sy=window.parent.SY;}catch(_){}
+ let rules=window.SYAutoloopRules;try{if(!rules&&window.parent&&window.parent!==window)rules=window.parent.SYAutoloopRules;}catch(_){}
+ if(!sy||!rules||!rules.applyAgentAction)throw new Error('????? Agent ????????');
+ const risky=['replan','create_task','move_to_buffer','mark_awaiting_evidence'].includes(action.type);
+ if(risky&&!window.confirm('?????? Agent ????\\n\\n'+(action.title||action.nextStep||action.reason||action.type)))throw new Error('???????');
+ const result=rules.applyAgentAction(action);
+ try{if(sy.renderListView)sy.renderListView();if(sy.renderDailyView)sy.renderDailyView();}catch(_){}
+ return result;
+};
+function syncComposer(){const thread=current(),pending=!!(thread&&pendingThreads.has(thread.id)),btn=$('#p2-send'),agent=$('#p2-agent-run');if(btn){btn.disabled=pending||uploading>0;btn.textContent=pending?'\u23f3':'\u2191';}if(agent){agent.disabled=pending||uploading>0;agent.textContent=pending?'Agent \u6267\u884c\u4e2d\u2026':'Agent \u6267\u884c';}if(pending)status('Agent \u6b63\u5728\u5904\u7406\u8fd9\u6761\u5bf9\u8bdd\u3002\u4f60\u53ef\u4ee5\u5207\u6362\u5230\u5176\u4ed6\u5bf9\u8bdd\u6216\u5148\u505a\u4e0b\u4e00\u9879\uff1b\u7ed3\u679c\u4f1a\u4fdd\u7559\u5728\u8fd9\u91cc\u3002');}
 function drawAttachments(){P2View.renderAttachments(files,urls,removeFile,removeUrl);}
 function removeFile(file){if(file.preview)URL.revokeObjectURL(file.preview);files=files.filter(x=>x!==file);drawAttachments();}
 function removeUrl(url){urls=urls.filter(x=>x!==url);drawAttachments();}
@@ -32,7 +80,7 @@ try{const r=await jsonApi('/api/p2/ask',payload,180000);const pos=thread.message
 function showDialog(id){const d=$(id);if(d&&!d.open)d.showModal();}
 function addUrl(){const input=$('#p2-link-input'),raw=input.value.trim();try{const normalized=window.SYSourceIO?.normalizeLinks(raw)?.[0]||raw;const u=new URL(normalized);if(!['http:','https:'].includes(u.protocol)||u.username||u.password)throw Error('地址不合法');if(urls.includes(u.href))return $('#p2-link-status').textContent='这条链接已经加入';if(urls.length>=20)return $('#p2-link-status').textContent='一次最多20个网页链接；更多链接请分批提交';urls.push(u.href);drawAttachments();input.value='';$('#p2-link-dialog').close();status('链接已加入，发送时会实际读取网页正文。');}catch(e){$('#p2-link-status').textContent='请输入完整有效的 https:// 网址';}}
 $('#p2-new').onclick=newChat;$('#p2-open-side').onclick=()=>$('#p2-side').classList.toggle('open');$('#p2-close-side').onclick=()=>$('#p2-side').classList.remove('open');
-$('#p2-form').onsubmit=e=>{e.preventDefault();send();};$('#p2-files').onchange=e=>{uploadBatch(e.target.files);e.target.value='';};$('#p2-add-url').onclick=()=>showDialog('#p2-link-dialog');$('#p2-confirm-link').onclick=addUrl;
+$('#p2-form').onsubmit=e=>{e.preventDefault();send();};const agentRunButton=$('#p2-agent-run');if(agentRunButton)agentRunButton.onclick=runAgentNow;$('#p2-files').onchange=e=>{uploadBatch(e.target.files);e.target.value='';};$('#p2-add-url').onclick=()=>showDialog('#p2-link-dialog');$('#p2-confirm-link').onclick=addUrl;
 function askObsidianLink(){
  return new Promise(resolve=>{
   const d=document.createElement('dialog');d.className='p2-dialog';d.setAttribute('aria-labelledby','p2-obsidian-link-title');

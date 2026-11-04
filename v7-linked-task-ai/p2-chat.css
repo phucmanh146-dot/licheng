@@ -123,3 +123,16 @@
 .p2-disclaimer{max-width:900px;margin:8px auto 0;line-height:1.6}
 @media(max-width:720px){.p2-prompts{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px!important}.p2-prompts button{min-height:60px!important;padding:10px!important;font-size:12px!important}}
 @media(max-width:420px){.p2-prompts{grid-template-columns:1fr}.p2-prompts button{min-height:48px!important}}
+
+.p2-agent-proposals{margin-top:15px;padding:13px;border:1px solid #d6e5d9;border-radius:14px;background:#f7fbf8;display:flex;flex-direction:column;gap:9px}
+.p2-agent-proposals-title{font-size:12px;color:#315f43}
+.p2-agent-proposal{padding:10px 11px;border:1px solid #e0e9e2;border-radius:10px;background:#fff;display:flex;flex-direction:column;gap:5px}
+.p2-agent-proposal p{margin:0;font-size:13px;color:#294c37}
+.p2-agent-proposal small{font-size:11px;color:#718276}
+.p2-agent-proposal-actions{display:flex;gap:7px;margin-top:4px}
+.p2-agent-proposal-actions button{border:1px solid #d3e1d6;border-radius:8px;padding:7px 11px;font-size:12px;cursor:pointer}
+.p2-agent-accept{background:#315f43;color:white;border-color:#315f43!important}
+.p2-agent-reject{background:#fff;color:#52675a}
+.p2-agent-applied{color:#315f43;font-size:13px}
+.p2-agent-dismissed{color:#78877c;font-size:12px}
+.p2-agent-action-error{color:#a34838!important}

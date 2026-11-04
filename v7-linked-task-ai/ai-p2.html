@@ -1,4 +1,4 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="zh-CN">
 <head>
 <meta charset="utf-8">
@@ -6,7 +6,7 @@
 <meta name="color-scheme" content="light">
 <meta name="referrer" content="no-referrer">
 <title>上岸鸭 · 进阶 AI 工具</title>
-<link rel="stylesheet" href="./p2-chat.css?v=20261023-gpt-workspace-v3">
+<link rel="stylesheet" href="./p2-chat.css?v=20261105-agent-proposals">
 <link rel="stylesheet" href="./p2-wechat-ai.css?v=20261023-wechat-ai">
 <link rel="stylesheet" href="./p2-video-presenter.css?v=20261023-multimodal-video">
 <link rel="stylesheet" href="./p2-embedded-child.css?v=20261024-clean-v4">
@@ -34,6 +34,7 @@
 .p2-prompts-secondary{margin-top:10px}
 .p2-top-title{font-size:15px}
 @media(max-width:740px){.p2-prompts{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.p2-agent-run{width:auto;min-width:88px;padding:0 13px;border:1px solid #9db5a5;border-radius:12px;background:#edf4ef;color:#244a35;font-size:12px;font-weight:700;white-space:nowrap}.p2-agent-run:disabled{opacity:.55;cursor:not-allowed}
 </style>
 </head>
 <body>
@@ -102,6 +103,7 @@
             <label class="p2-switch" title="调用真实搜索引擎并引用来源"><input type="checkbox" id="p2-search" checked><span>⌕ 联网搜索</span></label>
             <label class="p2-switch" title="画面解析会抽取视频帧交给视觉模型；勾选此项才额外尝试语音转写，可能产生费用"><input type="checkbox" id="p2-transcribe"><span>同时转写语音</span></label>
           </div>
+          <button id="p2-agent-run" class="p2-agent-run" type="button" aria-label="Agent &#25191;&#34892;" title="&#21551;&#21160;&#38381;&#29615;&#25191;&#34892;&#65306;&#24674;&#22797;&#19978;&#19979;&#25991;&#12289;&#35835;&#21462;&#38468;&#20214;&#12289;&#35843;&#29992;&#24037;&#20855;&#24182;&#20445;&#23384;&#26816;&#26597;&#28857;">Agent &#25191;&#34892;</button>
           <button id="p2-send" class="p2-send" type="submit" aria-label="发送问题">↑</button>
         </div>
       </form>
@@ -239,9 +241,9 @@
 <script src="./p2-video-presenter.js?v=20261023-multimodal-video" defer></script>
 <script src="./p2-answer-mindmap.js?v=20261023-v8" defer></script>
 <script src="./p2-heygen-video.js?v=20261023-v8" defer></script>
-<script src="./p2-view.js?v=20261023-multimodal-video" defer></script>
+<script src="./p2-view.js?v=20261105-agent-proposals" defer></script>
 <script src="./source-bridge.js" defer></script>
-<script src="./p2-chat.js?v=20261027-obsidian-dialog-v2" defer></script>
+<script src="./p2-chat.js?v=20261105-agent-proposals" defer></script>
 <script src="./p2-linked-task-ai.js?v=20261028-task-context-v2" defer></script>
 <script src="./p2-wechat-ai.js?v=20261023-wechat-ai" defer></script>
 <script src="./p2-config.js?v=20261028-live-model-picker-v2" defer></script>

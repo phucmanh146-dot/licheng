@@ -102,10 +102,10 @@
       for(const task of movable){
         const cutoffAt=new Date(day+'T15:00:00').getTime();
         const newlyAddedAfterCutoff=day===nowDate()&&currentMinute>=intakeCutoff&&Number(task.createdAt||0)>=cutoffAt;
-        if(newlyAddedAfterCutoff&&task.dueDate!==day&&!task.urgent){
+        if(newlyAddedAfterCutoff&&!(task.dueDate&&task.dueDate>=day&&task.dueDate<=addDays(day,2))&&!task.urgent){
           task.date=addDays(day,1);task.startMinutes=null;task.scheduleStatus='needs-arrangement';
           task.scheduleReason='\u5f53\u5929 15:00 \u540e\u65b0\u589e\u975e\u7d27\u6025\u4efb\u52a1\uff0c\u5ef6\u81f3\u4e0b\u4e00\u5929\u6392\u671f';
-          warnings.push(task.name+'?15:00 ???????');
+          warnings.push(task.name+'after 15:00 intake deferred to the next available day');
           continue;
         }
         const duration=Math.max(5,Math.min(480,Number(task.plannedMinutes||task.estMinutes)||25));
@@ -342,7 +342,7 @@
       if(data)return {live,durable:{checkpoint:data.checkpoint?{taskId:data.checkpoint.taskId,revision:data.checkpoint.revision,updatedAt:data.checkpoint.updatedAt,snapshot:data.checkpoint.snapshot}:null,
         pendingInterruptions:(data.pendingInterruptions||[]).slice(-8),recentEvents:(data.events||[]).slice(-24).map(e=>({eventId:e.eventId,eventType:e.eventType,createdAt:e.createdAt,payload:e.payload}))}};
     } catch (_) {}
-    return {live,durable:{status:'offline-or-unavailable',note:'????????????????????????????'}};
+    return {live,durable:{status:'offline-or-unavailable',note:'The durable Agent context endpoint is currently unavailable.'}};
   }
   function install() {
     if(!root.SY||typeof root.SY.getAcctData!=='function')return false;

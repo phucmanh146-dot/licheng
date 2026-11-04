@@ -23,4 +23,43 @@ const buffer={id:'buffer-ddl',name:'\u7f13\u51b2\u4e2d\u7684\u4e34\u671f\u4efb\u
 account.tasks=[buffer];const batch=t.batchFor(account,day);assert(batch.tasks.some(x=>x.id==='buffer-ddl'),'buffered DDL task must enter D-3 review');
 const busy={id:'busy',name:'\u5df2\u6392\u4efb\u52a1',date:day,startMinutes:minute+60,endMinutes:minute+120,plannedMinutes:60};
 account.tasks=[busy];const cap=t.capacity(account,day);assert(cap<=Math.floor(4*60*.8)-60,'capacity must subtract all preplanned work');
-console.log(JSON.stringify({ok:true,tests:8,day}));
+assert(t.fixed({category:'\u56fa\u5b9a\u4e8b\u52a1'})===true,'fixed transaction category must be recognized');
+assert(t.fixed({category:'\u5b66\u4e60'})===false,'ordinary learning tasks must not be treated as fixed');
+const q4={id:'q4',name:'?????',date:day,dueDate:day,plannedMinutes:15,important:false};
+const q2={id:'q2',name:'??????',date:day,dueDate:day,plannedMinutes:90,important:false};
+const q1={id:'q1',name:'?????',date:day,dueDate:day,plannedMinutes:120,important:true};
+account.tasks=[q4,q2,q1];
+const quadrants=t.batchFor(account,day).groups;
+assert(quadrants['short-unimportant'].some(x=>x.id==='q4'),'short low task must be a discard candidate, not silently lost');
+assert(quadrants['long-unimportant'].some(x=>x.id==='q2'),'long low task must be scheduled on D-2 before Q4');
+assert(quadrants['long-important'].some(x=>x.id==='q1'),'long important task must be protected');
+assert(t.classifyInterruption({tasks:[running],activeTimer:{taskId:'running',runningSince:null}},today).kind==='pomodoro','a paused but already-started timer must retain its checkpoint branch');
+const oldReflow=window.SYAutoloop.reflow,calls=[];
+window.SYAutoloop.reflow=(a,start)=>{calls.push(start);let cursor=480,moved=0;a.tasks.filter(x=>!x.done&&x.workflowPool==='scheduled'&&x.date===start&&!x.fixedBlock).forEach(x=>{x.startMinutes=cursor;x.endMinutes=cursor+x.plannedMinutes;x.scheduleStatus='scheduled';cursor+=x.plannedMinutes+10;moved++;});return {moved,warnings:[]};};
+const lateQ1={id:'late-q1',name:'????',date:day,deadline:day,plannedMinutes:60,important:true,workflowPool:'scheduled'};
+const lateQ2={id:'late-q2',name:'????',date:day,deadline:day,plannedMinutes:90,important:false,workflowPool:'scheduled'};
+const lateQ4={id:'late-q4',name:'????',date:day,deadline:day,plannedMinutes:15,important:false,workflowPool:'scheduled'};
+account.tasks=[lateQ1,lateQ2,lateQ4];
+const lateResult=t.distribute(account,{ddl:day,d3:day,d2:day,groups:{'long-important':[lateQ1],'unknown-important':[],'short-important':[],'long-unimportant':[lateQ2],'short-unimportant':[lateQ4]}});
+window.SYAutoloop.reflow=oldReflow;
+assert(lateResult.lateScan===true,'D-2 late recovery must be detected');
+assert(calls.length===1&&calls[0]===day,'late D-2 recovery must not attempt to schedule into the past or open a duplicate day pass');
+assert(lateQ1.date===day&&lateQ2.date===day&&lateQ4.date===day,'all kept quadrants must be placed on D-2 during late recovery');
+assert(lateQ4.discardCandidate===true,'Q4 remains visibly marked as a human discard candidate until the user decides');
+
+const rules=window.SYAutoloopRules;
+const created=rules.applyAgentAction({type:'create_task',title:'Agent approved task',dueDate:day,plannedMinutes:35,important:true,reason:'Test'});
+assert(created.ok&&account.tasks.some(x=>x.id===created.taskId),'approved Agent create_task proposal must create a task in the current account');
+const createdTask=account.tasks.find(x=>x.id===created.taskId);
+const next=rules.applyAgentAction({type:'set_next_step',taskId:createdTask.id,nextStep:'Read the source document'});
+assert(next.ok&&createdTask.nextStep==='Read the source document','approved Agent next-step proposal must persist to task');
+const evidence=rules.applyAgentAction({type:'mark_awaiting_evidence',taskId:createdTask.id});
+assert(evidence.ok&&createdTask.scheduleStatus==='awaiting-evidence'&&!createdTask.done,'Agent may request evidence review but must not self-certify completion');
+let protectedMove=false;
+try{rules.applyAgentAction({type:'move_to_buffer',taskId:createdTask.id,reason:'Test'});}catch(e){protectedMove=true;}
+assert(protectedMove,'core-goal tasks must not be moved to buffer by an Agent proposal');
+const ordinary={id:'ordinary-proposal',name:'Ordinary task',date:day,plannedMinutes:20,important:false,workflowPool:'scheduled'};
+account.tasks.push(ordinary);
+assert(rules.applyAgentAction({type:'move_to_buffer',taskId:ordinary.id,reason:'Approved'}).ok&&ordinary.workflowPool==='buffer','approved non-core task may move to buffer');
+
+console.log(JSON.stringify({ok:true,tests:24,day}));

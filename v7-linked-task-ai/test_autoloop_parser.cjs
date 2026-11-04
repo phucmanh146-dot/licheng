@@ -53,10 +53,12 @@ if(result.warnings.length)throw new Error("unexpected reflow warnings: "+result.
 const todayKey = expected;
 const lateTask = {id:"late-new",name:"late new task",date:todayKey,startMinutes:null,plannedMinutes:40,createdAt:new Date(todayKey+"T16:00:00").getTime(),dueDate:day,taskType:"learning"};
 const urgentTask = {id:"late-urgent",name:"urgent today",date:todayKey,startMinutes:null,plannedMinutes:25,createdAt:new Date(todayKey+"T16:00:00").getTime(),dueDate:todayKey,urgent:true,taskType:"learning"};
-const latePlan = {tasks:[lateTask,urgentTask],dailyHours:{[todayKey]:8,[day]:8}};
+const farTask = {id:"late-far",name:"late far task",date:todayKey,startMinutes:null,plannedMinutes:40,createdAt:new Date(todayKey+"T16:00:00").getTime(),taskType:"learning"};
+const latePlan = {tasks:[lateTask,urgentTask,farTask],dailyHours:{[todayKey]:8,[day]:8}};
 window.SYAutoloop.reflow(latePlan,todayKey,18*60);
-if(lateTask.date!==day || !Number.isFinite(lateTask.startMinutes))throw new Error("after-15:00 new non-urgent task was not deferred to tomorrow");
+if(lateTask.date!==todayKey || !Number.isFinite(lateTask.startMinutes))throw new Error("after-15:00 task with a DDL inside three days must stay protected and be scheduled before the DDL");
 if(urgentTask.date!==todayKey || !Number.isFinite(urgentTask.startMinutes))throw new Error("urgent same-day DDL was incorrectly deferred");
+if(farTask.date!==day || !Number.isFinite(farTask.startMinutes))throw new Error("after-15:00 task outside the three-day DDL window was not deferred to tomorrow");
 
-if(lateTask.date!==day2 && lateTask.date!==day) throw new Error("late intake was moved outside the supported schedule horizon");
+if(lateTask.date!==todayKey) throw new Error("near-DDL late intake should remain on the current day when needed to meet its deadline");
 console.log(JSON.stringify({ok:true,parserRows:parsed.length,dateLine:dated[0].date,reflowMoved:result.moved,ddlTaskDate:ddl.date}));

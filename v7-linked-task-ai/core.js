@@ -496,6 +496,8 @@
   }, 900);
   function roundUpMinutes(mins, step){ step = step || 5; return Math.ceil(mins / step) * step; }
   function uid(){ return 't_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8); }
+  // Tasks in the pending, buffer and trash pools must never leak into the normal daily schedule.
+  function isInNormalSchedule(t){ return !!t && (!t.workflowPool || t.workflowPool === 'scheduled'); }
   function escapeHtml(s){
     return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){
       return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c];
@@ -1395,7 +1397,7 @@
       }
     }
 
-    var todayTasks = acct.tasks.filter(function(t){ return t.date === todayK; });
+    var todayTasks = acct.tasks.filter(function(t){ return t.date === todayK && isInNormalSchedule(t); });
     var taskList = document.getElementById('lcTaskList');
     if(taskList) taskList.innerHTML = DOMPurify.sanitize(lcCoreTasksHtml(todayTasks));
 
@@ -3406,7 +3408,7 @@
     var gapMin = Math.max(0, Number(acct.taskGapMinutes) || 0);
     var earliestStart = isToday ? Math.max(TIMELINE_START_MIN, roundUpMinutes(minutesSinceMidnight(new Date()), 5)) : 480;
 
-    var dayTasks = acct.tasks.filter(function(t){ return t.date === dateKey; });
+    var dayTasks = acct.tasks.filter(function(t){ return t.date === dateKey && isInNormalSchedule(t); });
     // 要排的队列：没做完，并且（还没有时间 或者 这条时间本来就是"AI排的"、允许重排）
     var queue = dayTasks.filter(function(t){
       if(t.done || t.id === opts.excludeId) return false;
@@ -3576,7 +3578,7 @@
   function renderDayStripHtml(){
     var acct = getAcctData();
     function hasTasks(k){
-      for(var i = 0; i < acct.tasks.length; i++){ if(acct.tasks[i].date === k) return true; }
+      for(var i = 0; i < acct.tasks.length; i++){ if(acct.tasks[i].date === k && isInNormalSchedule(acct.tasks[i])) return true; }
       return false;
     }
     if(!dayStripExpanded){
@@ -3652,7 +3654,7 @@
       '</div>';
     html += renderDayStripHtml();
 
-    var dayTasks = acct.tasks.filter(function(t){ return t.date === dayViewDate; });
+    var dayTasks = acct.tasks.filter(function(t){ return t.date === dayViewDate && isInNormalSchedule(t); });
     var dayDoneCount = dayTasks.filter(function(t){ return t.done; }).length;
     var dayPendingCount = dayTasks.length - dayDoneCount;
     var dayProgressPct = dayTasks.length ? Math.round(dayDoneCount / dayTasks.length * 100) : 0;
@@ -4141,7 +4143,7 @@
   // 按当前账号的类别顺序(acct.categories)分组未完成任务；任务身上万一存的是已经被改名/删除、
   // 不在当前类别列表里的旧类别名，追加在最后，不会漏任务。列表视图和"打印小票"弹层都用这个分组结果。
   function groupUndoneTasksByCategory(acct){
-    var undone = acct.tasks.filter(function(t){ return !t.done; });
+    var undone = acct.tasks.filter(function(t){ return !t.done && isInNormalSchedule(t); });
     var byCat = {};
     undone.forEach(function(t){ (byCat[t.category] = byCat[t.category] || []).push(t); });
     var catOrder = acct.categories.map(function(c){ return c.name; });
@@ -4186,7 +4188,7 @@
 
   // ---- 四象限：重要/紧急靠任务 ⋮ 菜单里手动标记，没标记过的任务先放"待分类"，不替用户瞎猜 ----
   function groupUndoneTasksByQuadrant(acct){
-    var undone = acct.tasks.filter(function(t){ return !t.done; });
+    var undone = acct.tasks.filter(function(t){ return !t.done && isInNormalSchedule(t); });
     var groups = { unclassified: [], ui: [], un: [], nu: [], nn: [] };
     undone.forEach(function(t){
       if(typeof t.important !== 'boolean' && typeof t.urgent !== 'boolean'){ groups.unclassified.push(t); return; }
@@ -5482,7 +5484,7 @@
     var body = document.getElementById('deadlinesBody');
     if(!body) return;
     var acct = getAcctData();
-    var withDue = acct.tasks.filter(function(t){ return !!t.dueDate; });
+    var withDue = acct.tasks.filter(function(t){ return !!t.dueDate && t.workflowPool !== 'trash'; });
     var html = '<div class="app-main-topbar" style="margin-bottom:18px;">' +
         '<div><p class="app-greeting-eyebrow">作业、报名这类有硬截止日期的事，单独列出来防止漏掉</p><h1 style="font-size:1.3rem;">⏰ 截止清单</h1></div>' +
       '</div>';
@@ -5911,7 +5913,7 @@
   }
   function timeblockPortraitData(acct){
     var todayK = todayKey();
-    var todayTasks = acct.tasks.filter(function(t){ return t.date === todayK; });
+    var todayTasks = acct.tasks.filter(function(t){ return t.date === todayK && isInNormalSchedule(t); });
     var scheduled = todayTasks.filter(function(t){ return typeof t.startMinutes === 'number' && t.plannedMinutes; });
     var segs = scheduled.map(function(t){
       var tier = timeblockTierOf(t.plannedMinutes);
@@ -6489,7 +6491,7 @@
       stopCamWatch(); // 没有计时中的任务了，摄像头守望也没有意义，一并关掉
       document.body.classList.remove('is-voyage-mode');
       var today = todayKey();
-      var candidates = acct.tasks.filter(function(t){ return !t.done && t.date === today; })
+      var candidates = acct.tasks.filter(function(t){ return !t.done && t.date === today && isInNormalSchedule(t); })
         .sort(function(a, b){
           var am = typeof a.startMinutes === 'number' ? a.startMinutes : 99999;
           var bm = typeof b.startMinutes === 'number' ? b.startMinutes : 99999;
@@ -8464,7 +8466,7 @@
     if(!box) return;
     var acct = getAcctData();
     var dateKey = dayViewDate || todayKey();
-    var dayTasks = acct.tasks.filter(function(t){ return t.date === dateKey; }).sort(function(a, b){
+    var dayTasks = acct.tasks.filter(function(t){ return t.date === dateKey && isInNormalSchedule(t); }).sort(function(a, b){
       var am = typeof a.startMinutes === 'number' ? a.startMinutes : 9999;
       var bm = typeof b.startMinutes === 'number' ? b.startMinutes : 9999;
       return am - bm;
