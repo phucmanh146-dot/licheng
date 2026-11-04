@@ -62,7 +62,7 @@ class AutoloopSignalTests(unittest.TestCase):
     def test_deadline_watcher_emits_one_t72_signal_without_llm_polling(self):
         project = {
             "project_id": "deadline-1", "version": 3, "mode": "live", "timezone": "Asia/Shanghai",
-            "goal": "交付项目", "project_context": {"deadline": "2026-11-03"},
+            "goal": "交付项目", "project_context": {"deadline": "2026-11-04"},
             "stored_artifacts": [{"artifact_id": "brief", "artifact_version": 1,
                                   "purpose": "input", "sha256": "abc"}],
         }
@@ -78,7 +78,7 @@ class AutoloopSignalTests(unittest.TestCase):
         @contextmanager
         def connection():
             yield Connection()
-        now = datetime(2026, 11, 1, 0, 0, tzinfo=ZoneInfo("Asia/Shanghai"))
+        now = datetime(2026, 11, 2, 16, 0, tzinfo=ZoneInfo("Asia/Shanghai"))
         with (
             patch.object(autoloop_signals.team, "connection", connection),
             patch.object(autoloop_signals.store, "enqueue", return_value="deadline-run") as enqueue,
