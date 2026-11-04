@@ -55,6 +55,16 @@ class DeadlinePolicyTests(unittest.TestCase):
         self.assertFalse(unscheduled_triage_due(created.isoformat(), datetime(2026,11,5,9,59,tzinfo=zone)))
         self.assertTrue(unscheduled_triage_due(created.isoformat(), datetime(2026,11,5,10,0,tzinfo=zone)))
 
+
+    def test_unknown_importance_is_protected_not_a_drop_candidate(self):
+        result = capacity_decision([
+            {"task_id":"unknown-heavy","remaining_minutes":240},
+            {"task_id":"confirmed-low","is_important":False,"remaining_minutes":30},
+        ], available_minutes=100, transition_buffer_minutes=10)
+        self.assertEqual([x["task_id"] for x in result["importance_unconfirmed"]], ["unknown-heavy"])
+        self.assertIn("unknown-heavy", [x["task_id"] for x in result["protected_tasks"]])
+        self.assertNotIn("unknown-heavy", [x["task_id"] for x in result["drop_candidates"]])
+
     def test_many_unimportant_tasks_get_next_day_fixed_reservation(self):
         tasks = [{"task_id":"batch","is_important":False,"steps":[1,2,3,4,5],"remaining_minutes":90}]
         self.assertEqual(next_day_reservations(tasks,"2026-11-05"),
