@@ -4,7 +4,9 @@ on:
     branches:
       - feature/agent-rag-rerank-20261102
     paths:
-      - "learning-agent/autoloop_signals.py"\n      - "learning-agent/test_autoloop_signals.py"\n      - "learning-agent/event_kernel.py"
+      - "learning-agent/autoloop_signals.py"
+      - "learning-agent/test_autoloop_signals.py"
+      - "learning-agent/event_kernel.py"
       - "learning-agent/platform_store.py"
       - "learning-agent/research_graph.py"
       - "learning-agent/team_orchestrator.py"
@@ -14,6 +16,8 @@ on:
       - ".github/workflows/agent-event-kernel.yml"
   pull_request:
     paths:
+      - "learning-agent/autoloop_signals.py"
+      - "learning-agent/test_autoloop_signals.py"
       - "learning-agent/event_kernel.py"
       - "learning-agent/platform_store.py"
       - "learning-agent/research_graph.py"
@@ -32,8 +36,8 @@ jobs:
           python-version: "3.12"
       - name: Python syntax
         run: python -m compileall -q learning-agent
-      - name: Event ingress tests
+      - name: Event ingress and Autoloop signal tests
         working-directory: learning-agent
-        run: python -m unittest -v test_event_kernel
+        run: python -m unittest -v test_event_kernel test_autoloop_signals
       - name: Workbench JavaScript syntax
         run: node --check learning-agent/team.js
