@@ -71,11 +71,13 @@ research_graph.worker 每60秒扫描
 - `team_recovery.pause()` 会保存checkpoint、返回条件、原阻塞、材料版本和当前微动作。
 - `team_recovery.resume()` 会恢复原task/action并保留原材料引用，不会重新上传材料，也不会把恢复误记为完成。
 - `team_runtime.snapshot()` 可读取当前执行现场并生成恢复上下文包。
+- `universal_autoloop._project_context()` 已接入有效checkpoint：跨对话新消息会自动带上原task/action、下一动作、材料版本/SHA、已尝试记录和定位片段；提示Agent从原断点继续，不重新上传、不重跑整项目诊断。
 - `autoloop_signals.classify()` 已识别 `recovery-pause` / `recovery-resume` 事件。
 
 仍需补齐：
 - 当前恢复入口仍依赖明确的暂停/恢复信号；普通电脑应用突然关闭、网络断开、用户离开等情况尚未全部自动识别。
-- `team_runtime.snapshot()` 明确是只读视图，不会自行恢复任务。
+- 新对话已能恢复checkpoint上下文，但 `team_recovery.resume()` 仍是显式恢复操作；尚未实现所有外部中断条件满足后自动调用同一run续接。
+- `team_runtime.snapshot()` 仍是只读视图，不会自行改变任务状态。
 - 需要把checkpoint与Worker run/session_id建立稳定映射，并补“进程崩溃→租约过期→自动恢复同一run”的真实部署测试。
 - 如果只是短暂切换任务，应该保存现场并切换到其他任务，不应把原任务标成失败或重建计划。
 
@@ -109,7 +111,7 @@ cd D:\shangan-ya-autoloop-verify-20261104\learning-agent
 python -m unittest -v test_deadline_policy test_period_planner_transition test_autoloop_signals
 ```
 
-结果：**21 tests passed**。覆盖D-3 15:00、四象限、Q2次日固定预约、任务间缓冲、24小时待安排分诊、SLA超时升级、事件幂等和现有DDL提醒。
+结果：**29 tests passed**。覆盖D-3 15:00、四象限、Q2次日固定预约、任务间缓冲、24小时待安排分诊、SLA超时升级、事件幂等、现有DDL提醒，以及跨对话恢复checkpoint且不重复上传。
 
 这不是完整仓库全量回归，也不是生产部署验收。当前本机原工作区存在未提交文件，本轮没有覆盖或切换它；验证使用独立克隆目录。
 
