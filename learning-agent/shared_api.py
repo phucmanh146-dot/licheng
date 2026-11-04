@@ -20,6 +20,7 @@ import team_orchestrator as team
 import team_recovery
 import team_revision
 import team_runtime
+import autoloop_signals
 
 ROOT = Path(__file__).resolve().parent
 
@@ -241,6 +242,11 @@ def operation(request: Request, pid: str, operation: str, data: dict):
         value['review'] = review
     result = HANDLERS[operation](value)
     store.event('project:'+pid, operation, 'completed', {'actor':user['user_id'], 'version':result.get('version')})
+    # Authenticated domain signals wake the existing LangGraph worker. The
+    # worker reuses registered artifact versions and deduplicates by project version.
+    autoloop = autoloop_signals.enqueue_after_operation(result, user['user_id'], operation, value)
+    if autoloop:
+        result['autoloop'] = autoloop
     return result
 
 
