@@ -14,6 +14,7 @@ import platform_store as store
 import team_ai
 import team_handoff
 import team_orchestrator as team
+import autoloop_signals
 
 
 class ResearchState(TypedDict, total=False):
@@ -186,7 +187,12 @@ def worker(once=False):
         if not connect_local_gateway():
             raise RuntimeError('HERMES_CONNECTION_FAILED')
     store.init()
+    next_deadline_scan = 0.0
     while True:
+        now = time.monotonic()
+        if now >= next_deadline_scan:
+            autoloop_signals.enqueue_due_deadlines()
+            next_deadline_scan = now + 60.0
         run = store.claim()
         if run:
             execute(run)
