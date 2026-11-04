@@ -36,7 +36,7 @@ class DeadlineScheduleWorkerTests(unittest.TestCase):
         with (
             patch.object(deadline_schedule.team,"state",return_value=project),
             patch.object(deadline_schedule.store,"event") as event,
-            patch.object(research_graph.store,"finish") as finish,
+            patch.object(deadline_schedule.store,"finish") as finish,
         ):
             result = deadline_schedule.execute(
                 self.run_record(),{"project_id":"project-1","event_type":"deadline.approaching"})
@@ -51,14 +51,14 @@ class DeadlineScheduleWorkerTests(unittest.TestCase):
         proposal = {**project,"version":8,"proposal":{"id":"proposal-1","plan":planned}}
         adopted = {**project,"version":9,"plan":planned}
         with (
-            patch.object(research_graph.team,"state",return_value=project),
+            patch.object(deadline_schedule.team,"state",return_value=project),
             patch.object(deadline_schedule.period_planner,"compute",return_value=planned) as compute,
-            patch.object(research_graph.team,"propose",return_value=proposal),
-            patch.object(research_graph.team,"apply_automated",return_value=adopted) as apply,
-            patch.object(research_graph.store,"event") as event,
-            patch.object(research_graph.store,"finish") as finish,
+            patch.object(deadline_schedule.team,"propose",return_value=proposal),
+            patch.object(deadline_schedule.team,"apply_automated",return_value=adopted) as apply,
+            patch.object(deadline_schedule.store,"event") as event,
+            patch.object(deadline_schedule.store,"finish") as finish,
         ):
-            result = research_graph.execute_schedule_event(
+            result = deadline_schedule.execute(
                 self.run_record(),{"project_id":"project-1","event_type":"deadline.approaching"})
         self.assertTrue(result["auto_adopted"])
         self.assertEqual(apply.call_count,1)
@@ -72,14 +72,14 @@ class DeadlineScheduleWorkerTests(unittest.TestCase):
         }}
         proposal = {**project,"version":8,"proposal":{"id":"proposal-2","plan":planned}}
         with (
-            patch.object(research_graph.team,"state",return_value=project),
-            patch.object(research_graph.period_planner,"compute",return_value=planned),
-            patch.object(research_graph.team,"propose",return_value=proposal),
-            patch.object(research_graph.team,"apply_automated") as apply,
-            patch.object(research_graph.store,"event"),
-            patch.object(research_graph.store,"finish") as finish,
+            patch.object(deadline_schedule.team,"state",return_value=project),
+            patch.object(deadline_schedule.period_planner,"compute",return_value=planned),
+            patch.object(deadline_schedule.team,"propose",return_value=proposal),
+            patch.object(deadline_schedule.team,"apply_automated") as apply,
+            patch.object(deadline_schedule.store,"event"),
+            patch.object(deadline_schedule.store,"finish") as finish,
         ):
-            result = research_graph.execute_schedule_event(
+            result = deadline_schedule.execute(
                 self.run_record(),{"project_id":"project-1","event_type":"task.unscheduled_triage"})
         self.assertFalse(result["auto_adopted"])
         self.assertTrue(result["approval_required"])
