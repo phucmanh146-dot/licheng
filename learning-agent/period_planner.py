@@ -238,6 +238,7 @@ def compute(project, data, now=None):
         'transition_buffer_unallocated':buffer_unallocated,
         'unallocated_minutes':sum(x['minutes'] for x in missing),'unallocated':missing,
         'quadrant_order':[row["task_id"] for row in quadrant_rows],
+        'quadrants':quadrant_rows,
         'next_day_fixed_reservations':[b for b in new if b.get("reservation_type")=="next_day_fixed"],
         'fits':not missing and not buffer_unallocated,
         'assumptions':notes+['未填写剩余时间的未开始任务按估时上限计算；排入不代表完成。','每日缓冲与任务间过渡缓冲均作为不可挪用空档；没有自动压缩休息或修改截止日期。'],
