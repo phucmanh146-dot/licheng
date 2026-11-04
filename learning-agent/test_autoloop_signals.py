@@ -79,8 +79,10 @@ class AutoloopSignalTests(unittest.TestCase):
         def connection():
             yield Connection()
         now = datetime(2026, 11, 1, 0, 0, tzinfo=ZoneInfo("Asia/Shanghai"))
-        with patch.object(autoloop_signals.team, "connection", connection), \\
-             patch.object(autoloop_signals.store, "enqueue", return_value="deadline-run") as enqueue:
+        with (
+            patch.object(autoloop_signals.team, "connection", connection),
+            patch.object(autoloop_signals.store, "enqueue", return_value="deadline-run") as enqueue,
+        ):
             emitted = autoloop_signals.enqueue_due_deadlines(now)
         self.assertEqual(emitted[0]["window"], "72h")
         self.assertEqual(enqueue.call_args.args[1], "owner-1")
@@ -88,8 +90,10 @@ class AutoloopSignalTests(unittest.TestCase):
         self.assertTrue(enqueue.call_args.kwargs["metadata"]["auto_advance"])
 
     def test_deadline_watcher_ignores_projects_without_registered_inputs(self):
-        with patch.object(autoloop_signals.team, "connection") as connection, \\
-             patch.object(autoloop_signals.store, "enqueue") as enqueue:
+        with (
+            patch.object(autoloop_signals.team, "connection") as connection,
+            patch.object(autoloop_signals.store, "enqueue") as enqueue,
+        ):
             connection.return_value.__enter__.return_value.execute.return_value.fetchall.return_value = []
             self.assertEqual(autoloop_signals.enqueue_due_deadlines(
                 datetime(2026, 11, 1, tzinfo=ZoneInfo("Asia/Shanghai"))
