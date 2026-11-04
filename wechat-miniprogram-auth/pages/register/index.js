@@ -1,4 +1,5 @@
 const api = require('../../utils/api');
+const {normalizeCnMobile, isValidCnMobile} = require('../../utils/phone');
 Page({
   data:{phone:'',code:'',agreed:false,countdown:0,sending:false},
   timer:null,
