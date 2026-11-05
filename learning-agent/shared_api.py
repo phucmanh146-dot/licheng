@@ -22,6 +22,7 @@ import team_recovery
 import team_revision
 import team_runtime
 import cloud_hub
+import cloud_hub
 
 ROOT = Path(__file__).resolve().parent
 
@@ -401,7 +402,8 @@ async def boundary(request, call_next):
     if request.method == 'POST':
         origin = request.headers.get('origin')
         same = str(request.base_url).rstrip('/')
-        if origin and origin not in origins+[same]:
+        extension_origin = bool(origin and re.fullmatch(r'chrome-extension://[a-p]{32}', origin))
+        if origin and origin not in origins+[same] and not extension_origin:
             return JSONResponse({'error':'来源未授权'}, status_code=403)
         content = bytearray()
         async for chunk in request.stream():
