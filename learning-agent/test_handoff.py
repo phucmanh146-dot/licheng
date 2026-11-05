@@ -77,6 +77,48 @@ class HandoffTests(unittest.TestCase):
             handoff.generate(self.ctx())
         self.assertEqual(team.state(self.p['project_id'])['version'], self.p['version'])
 
+    def test_verified_gap_without_exact_current_anchor_is_blocked_before_B(self):
+        d = diagnosis_fixture()
+        d['gaps'][0]['verification_status'] = 'verified'
+        del d['gaps'][0]['current_locator']
+        report = handoff.check_diagnosis(d)
+        self.assertFalse(report['ready_for_B'])
+        self.assertTrue(any('current_locator' in error for error in report['errors']))
+
+        d = diagnosis_fixture()
+        d['gaps'][0]['verification_status'] = 'verified'
+        del d['gaps'][0]['current_artifact']
+        report = handoff.check_diagnosis(d)
+        self.assertFalse(report['ready_for_B'])
+        self.assertTrue(any('current_artifact' in error for error in report['errors']))
+
+    def test_unknown_or_blocked_gap_cannot_smuggle_production_micro_steps(self):
+        for status in ('unknown', 'blocked'):
+            d = diagnosis_fixture()
+            d['gaps'][0]['verification_status'] = status
+            report = handoff.check_diagnosis(d)
+            self.assertFalse(report['ready_for_B'])
+            self.assertTrue(any('UNKNOWN/BLOCKED' in error for error in report['errors']))
+
+    def test_verified_reference_gap_requires_reference_locator(self):
+        d = diagnosis_fixture()
+        d['gaps'][0]['verification_status'] = 'verified'
+        d['sources'].append({'source_id':'reference-1','kind':'reference','title':'参考案例'})
+        d['gaps'][0]['source_refs'].append('reference-1')
+        report = handoff.check_diagnosis(d)
+        self.assertFalse(report['ready_for_B'])
+        self.assertTrue(any('reference_locator' in error for error in report['errors']))
+        d['gaps'][0]['reference_locator'] = 'page:3/paragraph:2'
+        self.assertTrue(handoff.check_diagnosis(d)['ready_for_B'])
+
+    def test_demo_fixture_is_not_misclassified_as_verified_evidence(self):
+        d = diagnosis_fixture()
+        d['gaps'][0]['verification_status'] = 'demo_fixture'
+        del d['gaps'][0]['current_locator']
+        report = handoff.check_diagnosis(d)
+        self.assertTrue(report['ready_for_B'])
+        self.assertTrue(any('不得转成可执行任务' in warning for warning in report['warnings']))
+
     def test_B_code_generates_preview_and_enforces_learning_dependencies(self):
         d = diagnosis_fixture(skills=['接口记录'])
         self.p = team.diagnosis({**self.ctx(), 'diagnosis': d})
