@@ -10,7 +10,7 @@
 - verified / evidence_linked_pending_confirmation Gap 必须具备 current_artifact（artifact_id + artifact_version）、current_locator、current_evidence、target_result。
 - 引用 reference 类型来源时必须提供 reference_locator。
 - unknown / blocked Gap 不得夹带 micro_steps 进入 B；必须补证据并重新诊断。
-- demo_fixture 保持夹具状态，不得被冒充为真实核验通过。
+- demo_fixture 明确作为模拟夹具并被拒绝进入真实 B 生产规划，不得被冒充为真实材料诊断。
 
 ## Code changes
 - learning-agent/team_handoff.py
