@@ -115,7 +115,7 @@ def _event(source, event_id, conversation_id, task_id, event_type, status, paylo
         if existing:
             return {"duplicate":True,"event_id":existing["id"],"status":existing["status"],"task_id":existing["task_id"]}
         c.execute(
-            "INSERT INTO cloud_hub_events VALUES(?,?,?,?,?,?,?,?,?,?)",
+            "INSERT INTO cloud_hub_events VALUES(?,?,?,?,?,?,?,?,?)",
             (row_id,source,event_id,conversation_id,task_id,event_type,status,_dump(payload),now))
     return {"duplicate":False,"event_id":row_id,"status":status,"task_id":task_id}
 
@@ -166,14 +166,16 @@ def submit_task(data, source="chatgpt"):
             raise ValueError("验收条件仅支持 contains_text、url_contains、title_contains、screenshot_present")
         _text(str(item.get("value","")),"acceptance_criteria.value",500,optional=True)
     decision_key = _text(data.get("decision_key") or "","decision_key",220,True)
+    standing_approval = False
     if decision_key:
         with team.connection() as c:
             prior = c.execute("SELECT * FROM cloud_hub_decisions WHERE decision_key=?",(decision_key,)).fetchone()
         if prior and prior["decision_type"] == "rejected":
             return {"status":"rejected_by_policy","decision":dict(prior),"note":"命中用户已拒绝的决定，不重复提议"}
+        standing_approval = bool(prior and prior["decision_type"] == "approved")
     task_id = uuid.uuid4().hex
     now = time.time()
-    risky = action in SENSITIVE
+    risky = action in SENSITIVE and not standing_approval
     status = "awaiting_approval" if risky else "queued"
     context = _decision_context()
     task_text = content
@@ -300,6 +302,8 @@ def capture_evidence(data):
     with agent.WRITE_LOCK, team.connection() as c:
         c.execute("INSERT INTO cloud_hub_evidence VALUES(?,?,?,?,?,?,?,?,?,?)",
                   (identifier,task_id,conversation,source,page_url,title,content,shot,digest,now))
+    _event(source, "evidence:"+identifier, conversation, task_id, "browser_capture", "captured",
+           {"page_url":page_url,"page_title":title,"sha256":digest})
     verification = _verify(task_id) if task_id else None
     return {"evidence_id":identifier,"task_id":task_id or None,"sha256":digest,
             "verification":verification,"note":"浏览器证据已保存；页面采集本身不等于任务通过。"}
