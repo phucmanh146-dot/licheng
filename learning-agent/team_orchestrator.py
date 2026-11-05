@@ -324,7 +324,7 @@ def propose(data, prepared_project=None, persist=True):
                              'time_blocks_before':(p['plan'] or {}).get('time_blocks',[]),'time_blocks_after':plan['time_blocks']}}
     return commit(p,p['version'],'保存 B 的计划预览，等待用户采用') if persist else p
 
-def apply(data):
+def _apply_proposal(data, action):
     p = current(data)
     proposal = p['proposal']
     if not proposal or data.get('proposal_id')!=proposal['id']:
@@ -335,7 +335,16 @@ def apply(data):
     p['undo_at_version'] = p['version'] + 1
     p['plan'],p['proposal'] = proposal['plan'],None
     p['plan_diagnosis'] = copy.deepcopy(p['diagnosis'])
-    return commit(p,p['version'],'用户采用计划')
+    return commit(p,p['version'],action)
+
+
+def apply(data):
+    return _apply_proposal(data, '用户采用计划')
+
+
+def apply_automated(data):
+    """Adopt a validated internal plan from a trusted workflow, not a browser flag."""
+    return _apply_proposal(data, '系统按自动推进规则采用已验证计划')
 
 def validate_criterion_results(data, task):
     rows = required(data, 'criterion_results', list)
