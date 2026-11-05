@@ -7,7 +7,7 @@ info:
     decisions and submit execution receipts. The browser evidence bridge is a
     separate Chrome extension using the same bearer token.
 servers:
-  - url: https://REPLACE_WITH_RAILWAY_DOMAIN
+  - url: https://shanganya-cloud-agent-hub-production.up.railway.app
 security:
   - BearerAuth: []
 paths:
