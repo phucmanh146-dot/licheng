@@ -37,8 +37,30 @@ def check_diagnosis(d):
             team.strings(gap, 'acceptance_criteria', True)
         except ValueError:
             errors.append(key + ' 缺少可核对的 acceptance_criteria')
-        if not gap.get('current_locator') or not gap.get('current_artifact'):
-            warnings.append(key + ' 尚缺现状位置或材料版本，精细指导仍需 A 补充')
+        # A verified Gap must be anchored to the exact current artifact version
+        # and source location before B can turn it into an executable plan.
+        # Unknown/blocked gaps remain visible but cannot be promoted by B.
+        if gap.get('verification_status') in ('unknown', 'blocked') and gap.get('micro_steps'):
+            errors.append(key + ' 状态为 UNKNOWN/BLOCKED，却携带生产微动作；必须先补证据并重新诊断，不能交给 B')
+        if gap.get('verification_status') in ('verified', 'evidence_linked_pending_confirmation'):
+            missing = []
+            artifact = gap.get('current_artifact')
+            if not isinstance(artifact, dict) or not artifact.get('artifact_id') or type(artifact.get('artifact_version')) is not int:
+                missing.append('current_artifact/artifact_version')
+            if not isinstance(gap.get('current_locator'), str) or not gap['current_locator'].strip():
+                missing.append('current_locator')
+            if not isinstance(gap.get('current_evidence'), str) or not gap['current_evidence'].strip():
+                missing.append('current_evidence')
+            if not isinstance(gap.get('target_result'), str) or not gap['target_result'].strip():
+                missing.append('target_criterion/target_result')
+            refs = [source for source in d['sources'] if source.get('source_id') in gap.get('source_refs', [])]
+            if any(source.get('kind') == 'reference' for source in refs):
+                if not isinstance(gap.get('reference_locator'), str) or not gap['reference_locator'].strip():
+                    missing.append('reference_locator')
+            if missing:
+                errors.append(key + ' 已标记核验但证据锚点不完整：' + '、'.join(missing) + '；退回 A 补证据，不能进入 B')
+        elif not gap.get('current_locator') or not gap.get('current_artifact'):
+            warnings.append(key + ' 尚缺现状位置或材料版本；当前仅保留 UNKNOWN/BLOCKED，不得转成可执行任务')
     return {'ready_for_B': not errors, 'errors': errors, 'warnings': warnings,
             'provider': 'deterministic-action-planner', 'source_commit': B_SOURCE_COMMIT}
 
