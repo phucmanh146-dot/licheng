@@ -1,0 +1,107 @@
+openapi: 3.1.0
+info:
+  title: Shanganya Cloud Agent Hub
+  version: 1.0.0
+  description: >-
+    ChatGPT execution bridge. Create tasks, claim approved work, retrieve durable
+    decisions and submit execution receipts. The browser evidence bridge is a
+    separate Chrome extension using the same bearer token.
+servers:
+  - url: https://REPLACE_WITH_RAILWAY_DOMAIN
+security:
+  - BearerAuth: []
+paths:
+  /api/v1/hub/tasks:
+    post:
+      operationId: submitAgentTask
+      summary: Submit a task to the cloud Agent Hub
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [task]
+              properties:
+                title: {type: string}
+                task: {type: string, maxLength: 12000}
+                conversation_id: {type: string}
+                message_id: {type: string}
+                decision_key: {type: string}
+                requested_action: {type: string}
+                acceptance_criteria:
+                  type: array
+                  items:
+                    type: object
+                    required: [type]
+                    properties:
+                      type: {type: string, enum: [contains_text, url_contains, title_contains, screenshot_present]}
+                      value: {type: string}
+      responses:
+        '202':
+          description: Task queued or waiting for approval
+          content:
+            application/json:
+              schema: {type: object, additionalProperties: true}
+  /api/v1/hub/tasks/claim:
+    post:
+      operationId: claimNextAgentTask
+      summary: Claim the next queued or approved task for ChatGPT execution
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                worker: {type: string, default: chatgpt-action}
+      responses:
+        '200':
+          description: Claimed task and evidence context, or no work
+          content:
+            application/json:
+              schema: {type: object, additionalProperties: true}
+  /api/v1/hub/tasks/{task_id}:
+    get:
+      operationId: getAgentTask
+      summary: Read task status and independent verification evidence
+      parameters:
+        - {name: task_id, in: path, required: true, schema: {type: string}}
+      responses:
+        '200':
+          description: Task status
+          content:
+            application/json:
+              schema: {type: object, additionalProperties: true}
+  /api/v1/hub/tasks/{task_id}/complete:
+    post:
+      operationId: submitAgentExecutionReceipt
+      summary: Save ChatGPT's execution receipt; this does not itself mark the task passed
+      parameters:
+        - {name: task_id, in: path, required: true, schema: {type: string}}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [claim_token, result]
+              properties:
+                claim_token: {type: string}
+                result: {type: string, maxLength: 12000}
+      responses:
+        '200':
+          description: Receipt saved; browser evidence is still required
+          content:
+            application/json:
+              schema: {type: object, additionalProperties: true}
+  /api/v1/hub/decisions:
+    get:
+      operationId: listUserDecisions
+      summary: Retrieve durable user-approved and user-rejected decisions
+      responses:
+        '200':
+          description: Decision archive
+          content:
+            application/json:
+              schema: {type: object, additionalProperties: true}
