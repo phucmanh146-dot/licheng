@@ -21,12 +21,6 @@ CREATE TABLE IF NOT EXISTS cloud_hub_tokens(
 CREATE TABLE IF NOT EXISTS cloud_hub_pair_codes(
  code_hash TEXT PRIMARY KEY, created REAL NOT NULL, used REAL
 );
-CREATE TABLE IF NOT EXISTS cloud_hub_tokens(
- token_hash TEXT PRIMARY KEY, label TEXT NOT NULL, created REAL NOT NULL, revoked INTEGER NOT NULL DEFAULT 0
-);
-CREATE TABLE IF NOT EXISTS cloud_hub_pair_codes(
- code_hash TEXT PRIMARY KEY, created REAL NOT NULL, used REAL
-);
 CREATE TABLE IF NOT EXISTS cloud_hub_tasks(
  id TEXT PRIMARY KEY, conversation_id TEXT NOT NULL, title TEXT NOT NULL,
  task_text TEXT NOT NULL, acceptance_json TEXT NOT NULL, requested_action TEXT NOT NULL,

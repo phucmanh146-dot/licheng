@@ -49,7 +49,14 @@ app = FastAPI(title='上岸鸭共享科研Agent', lifespan=lifespan)
 origins = [x.strip().rstrip('/') for x in os.getenv('SHANGAN_ALLOWED_ORIGINS','').split(',') if x.strip()]
 if '*' in origins:
     raise RuntimeError('Credentialed API requires explicit origins')
-app.add_middleware(CORSMiddleware, allow_origins=origins, allow_origin_regex=r'^chrome-extension://[a-p]{32}
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_origin_regex=r'^chrome-extension://[a-p]{32}$',
+    allow_credentials=True,
+    allow_methods=['GET', 'POST'],
+    allow_headers=['Content-Type', 'X-CSRF-Token', 'Idempotency-Key', 'Authorization', 'X-SY-Platform-Token'],
+)
 
 
 @app.middleware('http')
@@ -394,9 +401,8 @@ def asset(name: str):
     allowed = {'shared-workbench.js','shared-workbench.css','style.css','cloud-hub.js'}
     if name not in allowed:
         raise HTTPException(404)
-    return FileResponse(ROOT/'visual-workflow'/name)
-, allow_credentials=True,
-                   allow_methods=['GET','POST'], allow_headers=['Content-Type','X-CSRF-Token','Idempotency-Key','Authorization','X-SY-Platform-Token'])
+    target = ROOT/name if name == 'cloud-hub.js' else ROOT/'visual-workflow'/name
+    return FileResponse(target)
 
 
 @app.middleware('http')
@@ -677,15 +683,3 @@ def autoloop_thread(request: Request, conversation_id: str):
 def autoloop_bind(request: Request, conversation_id: str, data: dict):
     user = identity(request)
     return universal_autoloop.bind_thread(user['user_id'], conversation_id, data.get('project_id'))
-
-@app.get('/')
-def index():
-    return FileResponse(ROOT/'visual-workflow'/'shared-workbench.html')
-
-
-@app.get('/assets/{name}')
-def asset(name: str):
-    allowed = {'shared-workbench.js','shared-workbench.css','style.css'}
-    if name not in allowed:
-        raise HTTPException(404)
-    return FileResponse(ROOT/'visual-workflow'/name)

@@ -3,8 +3,6 @@
 Scores only deterministic, auditable properties of a model run. Semantic correctness
 still requires an independent human reviewer; mock runs can never certify live ability.
 """
-from collections import defaultdict
-
 STEP_FIELDS = (
     "target_locator", "action", "reason", "expected_change",
     "output", "self_check", "failure_next", "capability_basis",
@@ -122,6 +120,9 @@ def model_skill_profile(records, skill):
         row for row in records if isinstance(row, dict)
         and str(row.get("skill", "")).strip().casefold() == key
         and row.get("run_mode") == "LIVE"
+        and _text(row.get("model_id"))
+        and _text(row.get("trace_id"))
+        and _text(row.get("task_type"))
         and row.get("human_reviewed") is True
         and _text(row.get("reviewer_id"))
         and (not _text(row.get("executor_id")) or row.get("reviewer_id") != row.get("executor_id"))

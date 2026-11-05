@@ -27,6 +27,17 @@ class SharedPlatformTests(unittest.TestCase):
     def tearDown(self):
         self.client.__exit__(None,None,None); self.fixture.tearDown()
 
+
+    def test_cloud_hub_page_and_script_are_served_from_real_paths(self):
+        page = self.client.get('/hub')
+        self.assertEqual(page.status_code, 200)
+        self.assertIn('/assets/cloud-hub.js', page.text)
+        script = self.client.get('/assets/cloud-hub.js')
+        self.assertEqual(script.status_code, 200)
+        self.assertIn('api/v1/hub', script.text)
+        workbench = self.client.get('/assets/shared-workbench.js')
+        self.assertEqual(workbench.status_code, 200)
+
     def test_acl_csrf_and_version(self):
         other = team.create({'goal':'private-other','mode':'live'})
         self.assertEqual(self.client.get('/api/v1/projects/'+other['project_id']).status_code,403)

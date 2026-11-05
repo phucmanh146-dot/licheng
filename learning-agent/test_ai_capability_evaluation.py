@@ -73,7 +73,8 @@ class AICapabilityEvaluationTests(unittest.TestCase):
     def test_model_skill_level_requires_five_distinct_human_reviewed_live_cases(self):
         records = [{
             "skill": "evidence_diagnosis", "case_id": f"c{i}", "task_type": f"type{i%3}",
-            "run_mode": "LIVE", "human_reviewed": True, "reviewer_id": "reviewer-2",
+            "run_mode": "LIVE", "model_id": "model-x", "trace_id": f"trace-{i}",
+            "human_reviewed": True, "reviewer_id": "reviewer-2",
             "hard_failures": [], "score": 96,
         } for i in range(10)]
         profile = evaluation.model_skill_profile(records[:4], "evidence_diagnosis")
@@ -84,11 +85,23 @@ class AICapabilityEvaluationTests(unittest.TestCase):
     def test_duplicate_case_does_not_inflate_model_level(self):
         row = {
             "skill": "evidence_diagnosis", "case_id": "same", "task_type": "diagnosis",
-            "run_mode": "LIVE", "human_reviewed": True, "reviewer_id": "human",
+            "run_mode": "LIVE", "model_id": "model-x", "trace_id": "trace-1",
+            "human_reviewed": True, "reviewer_id": "human",
             "hard_failures": [], "score": 100,
         }
         profile = evaluation.model_skill_profile([row] * 10, "evidence_diagnosis")
         self.assertEqual(profile["live_human_reviewed_cases"], 1)
+        self.assertEqual(profile["level"], "unverified")
+
+
+    def test_missing_live_trace_cannot_certify_model_skill(self):
+        records = [{
+            "skill": "evidence_diagnosis", "case_id": f"c{i}", "task_type": f"type{i%3}",
+            "run_mode": "LIVE", "human_reviewed": True, "reviewer_id": "reviewer-2",
+            "hard_failures": [], "score": 99,
+        } for i in range(12)]
+        profile = evaluation.model_skill_profile(records, "evidence_diagnosis")
+        self.assertEqual(profile["live_human_reviewed_cases"], 0)
         self.assertEqual(profile["level"], "unverified")
 
     def test_person_and_model_skill_levels_are_never_collapsed(self):
