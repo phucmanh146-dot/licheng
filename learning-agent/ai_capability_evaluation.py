@@ -6,7 +6,7 @@ still requires an independent human reviewer; mock runs can never certify live a
 from collections import defaultdict
 
 STEP_FIELDS = (
-    "input_version", "target_locator", "action", "reason", "expected_change",
+    "target_locator", "action", "reason", "expected_change",
     "output", "self_check", "failure_next", "capability_basis",
 )
 GENERIC_ACTIONS = {
@@ -124,6 +124,7 @@ def model_skill_profile(records, skill):
         and row.get("run_mode") == "LIVE"
         and row.get("human_reviewed") is True
         and _text(row.get("reviewer_id"))
+        and (not _text(row.get("executor_id")) or row.get("reviewer_id") != row.get("executor_id"))
         and row.get("hard_failures") == []
         and isinstance(row.get("score"), (int, float))
         and 0 <= row["score"] <= 100
