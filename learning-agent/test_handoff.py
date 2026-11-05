@@ -17,7 +17,8 @@ def diagnosis_fixture(context=None, skills=None):
     d['unknowns'] = ['人工验收夹具，不是 A 模型产出']
     d['artifact_versions'] = [{'artifact_id':'fixture-input','artifact_version':1,'title':'人工测试输入材料'}]
     gap = d['gaps'][0]
-    gap.update(target_result='提交一次可复查的接口记录',
+    gap.update(verification_status='verified',
+               target_result='提交一次可复查的接口记录',
                required_capabilities=skills or [],
                acceptance_criteria=['记录输入版本', '记录执行结果与证据'],
                current_artifact={'artifact_id':'fixture-input','artifact_version':1},
@@ -111,13 +112,12 @@ class HandoffTests(unittest.TestCase):
         d['gaps'][0]['reference_locator'] = 'page:3/paragraph:2'
         self.assertTrue(handoff.check_diagnosis(d)['ready_for_B'])
 
-    def test_demo_fixture_is_not_misclassified_as_verified_evidence(self):
+    def test_demo_fixture_cannot_enter_live_B_planning(self):
         d = diagnosis_fixture()
         d['gaps'][0]['verification_status'] = 'demo_fixture'
-        del d['gaps'][0]['current_locator']
         report = handoff.check_diagnosis(d)
-        self.assertTrue(report['ready_for_B'])
-        self.assertTrue(any('不得转成可执行任务' in warning for warning in report['warnings']))
+        self.assertFalse(report['ready_for_B'])
+        self.assertTrue(any('模拟/演示夹具' in error for error in report['errors']))
 
     def test_B_code_generates_preview_and_enforces_learning_dependencies(self):
         d = diagnosis_fixture(skills=['接口记录'])
@@ -224,7 +224,7 @@ class HandoffTests(unittest.TestCase):
         t = self.p['plan']['tasks'][0]
         self.assertEqual(t['status'], 'completed')
         self.assertEqual(t['external_review']['packet']['gap_results'][0]['status'], 'remaining')
-        self.assertEqual(self.p['diagnosis']['gaps'][0]['verification_status'], 'demo_fixture')
+        self.assertEqual(self.p['diagnosis']['gaps'][0]['verification_status'], 'verified')
 
     def test_duplicate_review_and_new_submission_do_not_reuse_stale_review(self):
         self.submitted(); review = self.review()
