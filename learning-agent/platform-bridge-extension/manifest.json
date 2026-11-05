@@ -4,7 +4,7 @@
   "version": "1.0.0",
   "description": "经用户明确启用后，将 ChatGPT、TRAE、豆包页面快照和手动截图发送到上岸鸭云端 Agent 中台。",
   "permissions": ["storage", "activeTab", "tabs"],
-  "host_permissions": ["https://*.up.railway.app/*"],
+  "host_permissions": ["https://shanganya-cloud-agent-hub-production.up.railway.app/*"],
   "background": {"service_worker": "background.js"},
   "action": {"default_popup": "popup.html"},
   "content_scripts": [{
