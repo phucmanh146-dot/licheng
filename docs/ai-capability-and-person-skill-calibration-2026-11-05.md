@@ -133,3 +133,10 @@ B 下一阶段只抓三件事：分别给初学/熟练两名执行者同一真�
 ## 六、当前验收边界
 
 代码/单测能证明结构、状态和边界行为；不能证明模型语义质量、OCR 实际准确率、真实 Qdrant/Reranker 服务可用、真人学习效果或业务 ROI。未取得真实运行证据时，状态保持 NOT_RUN / NOT_CONFIGURED / PENDING_HUMAN_REVIEW。
+
+
+## 本轮对标评审与最新回归（2026-11-05）
+
+A/B 对标执法文书系统的详细角色评述、83/84 阶段性评分、交互验收标准和合并边界见：[A/B 两位同学工程评述](abc-law-enforcement-benchmark-ai-skill-review-20261105.md)。
+
+本轮统一候选分支在独立 D 盘工作树中完成 RAG/评测/事件 Runtime 与云端 Hub/浏览器证据桥集成，修复 CORS、重复 root/assets 路由、Hub JS 资源路径和重复 schema；AI 模型技能认证增加 model_id/trace_id/task_type 真实性门槛。最新回归为 415 项 Python 测试通过、Chrome+Playwright Demo E2E 通过、compileall/JS 语法/diff 检查通过。Demo E2E 不计作真人 V2 或 LIVE 模型质量证明。统一候选尚待 PR/CI 与生产部署验收。
