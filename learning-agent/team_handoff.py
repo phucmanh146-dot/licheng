@@ -37,6 +37,8 @@ def check_diagnosis(d):
             team.strings(gap, 'acceptance_criteria', True)
         except ValueError:
             errors.append(key + ' 缺少可核对的 acceptance_criteria')
+        if gap.get('verification_status') == 'demo_fixture':
+            errors.append(key + ' 是模拟/演示夹具，不是真实材料诊断；禁止进入真实 B 生产规划')
         # A verified Gap must be anchored to the exact current artifact version
         # and source location before B can turn it into an executable plan.
         # Unknown/blocked gaps remain visible but cannot be promoted by B.
