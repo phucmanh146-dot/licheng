@@ -15,6 +15,7 @@ Added:
 - `cloud_hub.heartbeat_task(task_id, {claim_token})`: renews the lease for 300 seconds only when the task is still claimed, the token matches, and the existing lease has not expired.
 - `POST /api/v1/hub/tasks/{task_id}/heartbeat`: authenticated ChatGPT Action endpoint.
 - OpenAPI operation `renewAgentTaskLease`.
+- Claim responses now include the current `lease_until`, allowing the worker to schedule renewal before expiry.
 - Regression tests for valid renewal, wrong-token rejection, and expired-lease rejection.
 
 The heartbeat never marks a task complete. Completion still requires a separate execution receipt and the existing evidence/human-review gate.
@@ -22,7 +23,8 @@ The heartbeat never marks a task complete. Completion still requires a separate 
 ## Validation
 - Baseline before change: 415 Python unittest cases passed.
 - Focused Cloud Hub suite after change: 9 tests passed.
-- Full regression after change: see terminal result recorded for this revision.
+- Full regression after change: **417 Python unittest cases passed**.
+- Python compile checks and `git diff --check`: passed.
 - Live deployment / Railway worker / browser extension end-to-end: NOT_RUN in this local change; do not label as production verified.
 
 ## Remaining engineering priorities
