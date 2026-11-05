@@ -269,8 +269,9 @@ def complete_task(task_id, data):
             raise PermissionError("执行租约已失效，请重新领取任务")
         c.execute("UPDATE cloud_hub_tasks SET status='pending_evidence',reported_result=?,updated=? WHERE id=?",
                   (result,now,task_id))
-    return {"task_id":task_id,"status":"pending_evidence",
-            "note":"ChatGPT 的自述结果已保存，但尚未验收；需要浏览器证据或人工核验。"}
+    verification = _verify(task_id)
+    return {"task_id":task_id,"status":verification["status"],"verification":verification,
+            "note":"ChatGPT 的自述结果已保存，但不会单凭自述判定通过；需要浏览器证据或人工核验。"}
 
 
 def _verify(task_id):
@@ -279,6 +280,9 @@ def _verify(task_id):
         if not task:
             raise ValueError("任务不存在")
         criteria = json.loads(task["acceptance_json"])
+        if task["status"] not in ("pending_evidence","partial"):
+            return {"status":task["status"],"criteria":[],"evidence_count":0,
+                    "method":"awaiting_execution_receipt"}
         evidence = c.execute(
             "SELECT * FROM cloud_hub_evidence WHERE task_id=? OR (conversation_id=? AND task_id='') ORDER BY created",
             (task_id,task["conversation_id"])).fetchall()
