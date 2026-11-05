@@ -20,6 +20,8 @@ import team_orchestrator as team
 import team_recovery
 import team_revision
 import team_runtime
+import autoloop_signals
+import universal_autoloop
 
 ROOT = Path(__file__).resolve().parent
 
@@ -35,6 +37,7 @@ async def lifespan(app):
         if not connect_local_gateway():
             raise RuntimeError('HERMES_CONNECTION_FAILED')
     store.init()
+    universal_autoloop.init()
     team_ai.bind()
     yield
 
@@ -127,6 +130,13 @@ def logout(request: Request):
     return response
 
 
+@app.get('/api/v1/engineering/health')
+def engineering_health(request: Request, deep: bool = False):
+    identity(request)
+    import engineering_health as probes
+    return probes.report(deep=deep)
+
+
 @app.get('/api/v1/health')
 def health(request: Request):
     identity(request)
@@ -184,7 +194,7 @@ def grant(request: Request, pid: str, data: dict):
 
 HANDLERS = {'context':team_inputs.save_context, 'member':team_inputs.save_member,
             'artifact-import':artifact_store.import_file, 'apply':team.apply,
-            'feedback':team.feedback, 'review-receive':team_handoff.receive_review,
+            'feedback':team.feedback, 'review-receive':team_handoff.receive_manual_review,
             'recovery-pause':team_recovery.pause, 'recovery-condition':team_recovery.signal,
             'recovery-resume':team_recovery.resume, 'recovery-attempt':team_recovery.attempt,
             'advance-review':team_revision.advance, 'runtime-focus':team_runtime.focus,
@@ -234,6 +244,11 @@ def operation(request: Request, pid: str, operation: str, data: dict):
         value['review'] = review
     result = HANDLERS[operation](value)
     store.event('project:'+pid, operation, 'completed', {'actor':user['user_id'], 'version':result.get('version')})
+    # Authenticated domain signals wake the existing LangGraph worker. The
+    # worker reuses registered artifact versions and deduplicates by project version.
+    autoloop = autoloop_signals.enqueue_after_operation(result, user['user_id'], operation, value)
+    if autoloop:
+        result['autoloop'] = autoloop
     return result
 
 
@@ -295,6 +310,23 @@ def accept(request: Request, run_id: str, data: dict):
     p.setdefault('accepted_agent_runs',[]).append(run_id)
     return team.commit(p,p['version'],'确认Agent诊断及计划预览；尚未采用计划')
 
+
+@app.post('/api/v1/autoloop/events', status_code=202)
+def autoloop_ingest(request: Request, data: dict):
+    user = identity(request)
+    return universal_autoloop.ingest(user['user_id'], data)
+
+
+@app.get('/api/v1/autoloop/threads/{conversation_id}')
+def autoloop_thread(request: Request, conversation_id: str):
+    user = identity(request)
+    return universal_autoloop.thread(user['user_id'], conversation_id)
+
+
+@app.post('/api/v1/autoloop/threads/{conversation_id}/bind')
+def autoloop_bind(request: Request, conversation_id: str, data: dict):
+    user = identity(request)
+    return universal_autoloop.bind_thread(user['user_id'], conversation_id, data.get('project_id'))
 
 @app.get('/')
 def index():

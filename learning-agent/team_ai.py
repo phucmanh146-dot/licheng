@@ -8,6 +8,8 @@ import hashlib
 import json
 import re
 import uuid
+import time
+import ai_efficiency
 import artifact_store
 import personal_guidance
 import rescue_service as rescue
@@ -257,6 +259,7 @@ def call_json(p, stage, payload, validator):
            'model':cfg['model'],'started':team.agent.now(),'status':'running',
            'attempts':[],'semantic_independently_verified':False}
     trace(p['project_id'], run)
+    started_monotonic = time.monotonic()
     try:
         messages = [{'role':'system','content':SYSTEM},{'role':'user','content':content}]
         last = None
@@ -265,13 +268,16 @@ def call_json(p, stage, payload, validator):
             run.setdefault('context_checks', []).append({'request_chars':request_chars,
                 'limit_chars':agent_context.MAX_REQUEST_CHARS})
             reply = rescue.complete(messages, cfg)
-            attempt = {'response_sha256':hashlib.sha256(reply.encode('utf-8')).hexdigest(), 'response_text':reply}
+            attempt = {'response_sha256':hashlib.sha256(reply.encode('utf-8')).hexdigest(), 'response_text':reply,
+                       'request_chars':request_chars, 'response_chars':len(reply)}
             run['attempts'].append(attempt)
             try:
                 value = team.agent.json_reply(reply)
                 result = validator(value)
                 run.update(status='succeeded',finished=team.agent.now(),output=result)
                 attempt['validated'] = True
+                run['efficiency'] = ai_efficiency.summarize_attempts(
+                    run['attempts'], (time.monotonic()-started_monotonic)*1000, validated=True)
                 trace(p['project_id'], run)
                 return result, {k:run[k] for k in ('run_id','model','input_sha256','status','semantic_independently_verified')}
             except (ValueError, KeyError, TypeError) as exc:
@@ -284,6 +290,8 @@ def call_json(p, stage, payload, validator):
         raise ValueError('模型结果或原文引用两次校验未通过；已保存材料与失败记录') from last
     except Exception as exc:
         run.update(status='failed',finished=team.agent.now(),error_code=type(exc).__name__)
+        run['efficiency'] = ai_efficiency.summarize_attempts(
+            run['attempts'], (time.monotonic()-started_monotonic)*1000, validated=False)
         trace(p['project_id'], run)
         raise
 

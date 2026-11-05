@@ -78,6 +78,19 @@ def search(project, rows, query, limit=90):
             except Exception:
                 if not db.collection_exists(cfg['collection']):
                     raise
+        collection_info = db.get_collection(cfg['collection'])
+        vector_config = collection_info.config.params.vectors
+        if isinstance(vector_config, dict):
+            vector_config = vector_config.get('')
+        actual_dimensions = getattr(vector_config, 'size', None)
+        if actual_dimensions is not None and actual_dimensions != cfg['dimensions']:
+            raise ValueError('QDRANT_VECTOR_DIMENSION_MISMATCH')
+        # Project/model filters are used on every query; index them for production scale.
+        indexed_fields = set(getattr(collection_info, 'payload_schema', {}) or {})
+        for field_name in ('project_id', 'embedding_model'):
+            if field_name not in indexed_fields:
+                db.create_payload_index(cfg['collection'], field_name=field_name,
+                                        field_schema=m.PayloadSchemaType.KEYWORD, wait=True)
         chunks = []
         for doc, unit, _ in rows:
             for start in range(0, len(unit['text']), 1000):
