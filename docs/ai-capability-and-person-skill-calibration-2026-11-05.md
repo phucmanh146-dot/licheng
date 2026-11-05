@@ -123,8 +123,8 @@ B 下一阶段只抓三件事：分别给初学/熟练两名执行者同一真�
 
 ## 五、合并与发布纪律
 
-- `feature/agent-rag-rerank-20261102` 的 PR #97 是本轮 AI 能力评测、个人能力校准、RAG 和事件 Runtime 的主要候选集成分支；必须跑 CI 与完整回归后再合并。
-- PR #99 的通用 Autoloop 设计与技能文件是较早的子集，若 #97 已包含相同文件，不重复合并。
+- PR #103 已将本轮 AI 能力评测、个人能力校准、RAG 和事件 Runtime 统一合并到 main（提交 `9538e6c`；CI event-kernel/regression 均成功）。PR #97 是其较早的重叠候选，不应再整体合并。
+- PR #99 的通用 Autoloop 设计与技能文件已包含在 PR #103 合并结果中；若无独立新差异，应标记为被统一集成取代，不重复合并。
 - PR #34 的 B 分支基于旧 A 分支；A/B 的旧职责分支相对 main 已落后，不把旧分支整体合入 main。
 - PR #101 是 V10 工作台的另一条堆叠发布链，base 不是 main；应在其目标分支做集成验收，不跨链直接合并。
 - PR #91/#92 依赖 captain 80-point 分支；先确认共同基线和冲突，再决定是否独立进入 main。
@@ -139,4 +139,4 @@ B 下一阶段只抓三件事：分别给初学/熟练两名执行者同一真�
 
 A/B 对标执法文书系统的详细角色评述、83/84 阶段性评分、交互验收标准和合并边界见：[A/B 两位同学工程评述](abc-law-enforcement-benchmark-ai-skill-review-20261105.md)。
 
-本轮统一候选分支在独立 D 盘工作树中完成 RAG/评测/事件 Runtime 与云端 Hub/浏览器证据桥集成，修复 CORS、重复 root/assets 路由、Hub JS 资源路径和重复 schema；AI 模型技能认证增加 model_id/trace_id/task_type 真实性门槛。最新回归为 415 项 Python 测试通过、Chrome+Playwright Demo E2E 通过、compileall/JS 语法/diff 检查通过。Demo E2E 不计作真人 V2 或 LIVE 模型质量证明。统一候选尚待 PR/CI 与生产部署验收。
+本轮统一候选分支在独立 D 盘工作树中完成 RAG/评测/事件 Runtime 与云端 Hub/浏览器证据桥集成，修复 CORS、重复 root/assets 路由、Hub JS 资源路径和重复 schema；AI 模型技能认证增加 model_id/trace_id/task_type 真实性门槛。最新回归为 415 项 Python 测试通过、Chrome+Playwright Demo E2E 通过、compileall/JS 语法/diff 检查通过。Demo E2E 不计作真人 V2 或 LIVE 模型质量证明。统一候选已由 PR #103 合并到 main，CI 的 event-kernel/regression 两项成功；生产部署与真实模型/真人业务验收仍待执行。
