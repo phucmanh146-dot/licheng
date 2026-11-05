@@ -40,7 +40,7 @@ AI 未验证时人主导；AI 已验证但成员未知时带练；成员独立�
 
 ## 本轮工程核验
 
-统一候选分支在独立 D 盘工作树合并 RAG/评测/事件运行时与云端 Hub/浏览器证据桥。合并时发现并修复：shared_api.py 的 CORS 语法残缺、重复 root/assets 路由、Hub JS 静态资源错误路径；清理 cloud_hub.py 重复 schema 声明；AI 技能认证补充 model_id/trace_id/task_type 必填门槛。统一候选分支尚未部署，需经 PR/CI 和生产验收。
+统一候选分支在独立 D 盘工作树合并 RAG/评测/事件运行时与云端 Hub/浏览器证据桥。合并时发现并修复：shared_api.py 的 CORS 语法残缺、重复 root/assets 路由、Hub JS 静态资源错误路径；清理 cloud_hub.py 重复 schema 声明；AI 技能认证补充 model_id/trace_id/task_type 必填门槛。统一候选已通过 PR #103 合并到 main（提交 `9538e6c`），CI 的 event-kernel 与 regression 两项均成功；生产服务和真实业务验收仍未完成。
 
 **最新完整回归：415 项 Python 单元/集成测试通过**（独立 D 盘 venv，安装 FastAPI/Pydantic、LangGraph、Qdrant、tzdata 等工程依赖）；compileall、前端 JS 语法检查、git diff --check 通过。Chrome + Playwright 浏览器 E2E 通过：创建、A→B Demo、采用前预览、开始、提交待复核、刷新持久化、带证据复核、API 状态、移动端无横向溢出。该 E2E 使用明确的工程 Demo 夹具，不是 LIVE 模型或真人科研 V2；不能把它计入业务收益。
 
