@@ -15,6 +15,12 @@ import learning_agent as agent
 import team_orchestrator as team
 
 SCHEMA = """
+CREATE TABLE IF NOT EXISTS cloud_hub_tokens(
+ token_hash TEXT PRIMARY KEY, label TEXT NOT NULL, created REAL NOT NULL, revoked INTEGER NOT NULL DEFAULT 0
+);
+CREATE TABLE IF NOT EXISTS cloud_hub_pair_codes(
+ code_hash TEXT PRIMARY KEY, created REAL NOT NULL, used REAL
+);
 CREATE TABLE IF NOT EXISTS cloud_hub_tasks(
  id TEXT PRIMARY KEY, conversation_id TEXT NOT NULL, title TEXT NOT NULL,
  task_text TEXT NOT NULL, acceptance_json TEXT NOT NULL, requested_action TEXT NOT NULL,
@@ -91,17 +97,45 @@ def _text(value, name, limit, optional=False):
 def init():
     with team.connection() as c:
         c.executescript(SCHEMA)
+        pair_code = os.getenv("SHANGAN_BRIDGE_PAIR_CODE", "")
+        if pair_code:
+            digest = hashlib.sha256(pair_code.encode()).hexdigest()
+            c.execute("INSERT INTO cloud_hub_pair_codes(code_hash,created) VALUES(?,?) ON CONFLICT(code_hash) DO NOTHING",
+                      (digest,time.time()))
+
+
+def pair(data):
+    code = _text(data.get("pair_code"),"pair_code",120)
+    expected = os.getenv("SHANGAN_BRIDGE_PAIR_CODE", "")
+    if not expected or not secrets.compare_digest(code,expected):
+        raise PermissionError("配对码无效或已失效")
+    digest = hashlib.sha256(code.encode()).hexdigest()
+    token = secrets.token_urlsafe(48)
+    now = time.time()
+    with agent.WRITE_LOCK, team.connection() as c:
+        row = c.execute("SELECT used FROM cloud_hub_pair_codes WHERE code_hash=?",(digest,)).fetchone()
+        if not row or row["used"] is not None:
+            raise PermissionError("配对码已使用，请重新生成")
+        c.execute("UPDATE cloud_hub_pair_codes SET used=? WHERE code_hash=? AND used IS NULL",(now,digest))
+        c.execute("INSERT INTO cloud_hub_tokens VALUES(?,?,?,0)",
+                  (hashlib.sha256(token.encode()).hexdigest(),_text(data.get("label") or "ChatGPT + Browser","label",80),now))
+    return {"token":token,"scopes":["bridge","chatgpt"],"note":"请立即保存令牌；页面关闭后不再显示。可同时用于浏览器扩展和 ChatGPT Action。"}
 
 
 def require_token(request, scope="bridge"):
-    name = "SHANGAN_CHATGPT_ACTION_TOKEN" if scope == "chatgpt" else "SHANGAN_BRIDGE_TOKEN"
-    expected = os.getenv(name) or os.getenv("SHANGAN_BRIDGE_TOKEN")
-    if not expected:
-        raise PermissionError("云端连接尚未配置")
     header = request.headers.get("authorization", "")
     supplied = header[7:].strip() if header.lower().startswith("bearer ") else request.headers.get("x-sy-platform-token", "")
-    if not secrets.compare_digest(str(supplied), expected):
-        raise PermissionError("云端连接令牌无效")
+    if not supplied:
+        raise PermissionError("缺少云端连接令牌")
+    expected_name = "SHANGAN_CHATGPT_ACTION_TOKEN" if scope == "chatgpt" else "SHANGAN_BRIDGE_TOKEN"
+    expected = os.getenv(expected_name) or os.getenv("SHANGAN_BRIDGE_TOKEN")
+    if expected and secrets.compare_digest(supplied,expected):
+        return True
+    digest = hashlib.sha256(supplied.encode()).hexdigest()
+    with team.connection() as c:
+        row = c.execute("SELECT revoked FROM cloud_hub_tokens WHERE token_hash=?",(digest,)).fetchone()
+    if not row or row["revoked"]:
+        raise PermissionError("云端连接令牌无效或已撤销")
     return True
 
 
