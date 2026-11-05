@@ -65,6 +65,29 @@ class CloudHubTests(unittest.TestCase):
         self.assertEqual(claimed["task"]["task_id"],created["task_id"])
         self.assertTrue(claimed["task"]["claim_token"])
 
+    def test_worker_can_renew_lease_before_expiry(self):
+        created = cloud_hub.submit_task({"task":"执行一个超过五分钟的长任务。"})
+        claimed = cloud_hub.claim_task({"worker":"test-chatgpt"})["task"]
+        renewed = cloud_hub.heartbeat_task(created["task_id"], {
+            "claim_token": claimed["claim_token"]
+        })
+        self.assertEqual(renewed["status"], "claimed")
+        self.assertGreater(renewed["lease_until"], claimed["lease_until"])
+        self.assertEqual(renewed["lease_seconds"], 300)
+
+    def test_expired_or_wrong_worker_cannot_renew_lease(self):
+        created = cloud_hub.submit_task({"task":"验证过期租约不能复活。"})
+        claimed = cloud_hub.claim_task({"worker":"test-chatgpt"})["task"]
+        with self.assertRaises(PermissionError):
+            cloud_hub.heartbeat_task(created["task_id"], {"claim_token":"wrong-token"})
+        with team.connection() as c:
+            c.execute("UPDATE cloud_hub_tasks SET lease_until=? WHERE id=?",
+                      (0, created["task_id"]))
+        with self.assertRaises(PermissionError):
+            cloud_hub.heartbeat_task(created["task_id"], {
+                "claim_token": claimed["claim_token"]
+            })
+
     def test_chatgpt_self_report_is_not_enough_browser_evidence_verifies(self):
         created = cloud_hub.submit_task({
             "task":"在测试站点发布一个草稿。",

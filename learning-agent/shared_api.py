@@ -349,6 +349,12 @@ def hub_task_status(request: Request, task_id: str):
     return cloud_hub.task_status(task_id)
 
 
+@app.post('/api/v1/hub/tasks/{task_id}/heartbeat')
+def hub_heartbeat_task(request: Request, task_id: str, data: dict):
+    cloud_hub.require_token(request, 'chatgpt')
+    return cloud_hub.heartbeat_task(task_id, data)
+
+
 @app.post('/api/v1/hub/tasks/{task_id}/complete')
 def hub_complete_task(request: Request, task_id: str, data: dict):
     cloud_hub.require_token(request, 'chatgpt')

@@ -73,6 +73,27 @@ paths:
           content:
             application/json:
               schema: {type: object, additionalProperties: true}
+  /api/v1/hub/tasks/{task_id}/heartbeat:
+    post:
+      operationId: renewAgentTaskLease
+      summary: Renew the active task lease while ChatGPT is still executing
+      parameters:
+        - {name: task_id, in: path, required: true, schema: {type: string}}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [claim_token]
+              properties:
+                claim_token: {type: string}
+      responses:
+        '200':
+          description: Lease renewed; this does not complete the task
+          content:
+            application/json:
+              schema: {type: object, additionalProperties: true}
   /api/v1/hub/tasks/{task_id}/complete:
     post:
       operationId: submitAgentExecutionReceipt

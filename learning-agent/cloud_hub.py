@@ -247,8 +247,30 @@ def claim_task(data):
             (row["conversation_id"],)).fetchall()
     return {"task":{"task_id":row["id"],"conversation_id":row["conversation_id"],"title":row["title"],
                     "task":row["task_text"],"acceptance_criteria":json.loads(row["acceptance_json"]),
-                    "claim_token":token,"evidence":[dict(x) for x in evidence],
+                    "claim_token":token,"lease_until":now+300,
+                    "evidence":[dict(x) for x in evidence],
                     "decisions":_decision_context()}}
+
+
+def heartbeat_task(task_id, data):
+    """Renew a live execution lease without allowing a stale worker to revive it."""
+    token = _text(data.get("claim_token"), "claim_token", 300)
+    now = time.time()
+    lease_until = now + 300
+    with agent.WRITE_LOCK, team.connection() as c:
+        row = c.execute("SELECT status,claim_token,lease_until FROM cloud_hub_tasks WHERE id=?",
+                        (task_id,)).fetchone()
+        if not row:
+            raise ValueError("任务不存在")
+        if (row["status"] != "claimed"
+                or not secrets.compare_digest(row["claim_token"], token)
+                or row["lease_until"] < now):
+            raise PermissionError("执行租约已失效，不能续租；请重新领取任务")
+        c.execute("UPDATE cloud_hub_tasks SET lease_until=?,updated=? WHERE id=? AND status='claimed' AND claim_token=?",
+                  (lease_until, now, task_id, token))
+    return {"task_id": task_id, "status": "claimed",
+            "lease_until": lease_until, "lease_seconds": 300,
+            "note": "执行租约已续期；任务仍未完成，最终仍需提交成果和证据。"}
 
 
 def complete_task(task_id, data):
