@@ -95,12 +95,12 @@ def member(project_id, user_id, role):
         c.execute('INSERT INTO platform_members VALUES(?,?,?) ON CONFLICT(project_id,user_id) DO UPDATE SET role=excluded.role', (project_id,user_id,role))
 
 
-def enqueue(project, user_id, key, query):
+def enqueue(project, user_id, key, query, metadata=None):
     if not isinstance(key, str) or not 8 <= len(key) <= 160:
         raise ValueError('Idempotency-Key需为8至160字符')
     if not isinstance(query, str) or not 1 <= len(query.strip()) <= 2000:
         raise ValueError('请填写1至2000字符的诊断问题')
-    value = {'project_id':project['project_id'], 'expected_version':project['version'], 'query':query.strip()}
+    value = {'project_id':project['project_id'], 'expected_version':project['version'], 'query':query.strip(), **(metadata or {})}
     body = agent.dump(value)
     digest = hashlib.sha256(body.encode()).hexdigest()
     now = time.time(); run_id = uuid.uuid4().hex
@@ -142,6 +142,31 @@ def get_run(run_id, user_id=None):
         result['result'] = json.loads(result['result'])
         result['events'] = [{**dict(r), 'body':json.loads(r['body'])} for r in c.execute('SELECT node,status,body,created FROM platform_run_events WHERE run_id=? ORDER BY created,id', (run_id,))]
     return result
+
+
+
+def list_project_runs(project_id, limit=20):
+    """List recent run receipts for the active project; never expose raw prompts or lease tokens."""
+    if not isinstance(project_id, str) or not project_id:
+        raise ValueError("项目ID无效")
+    if type(limit) is not int or not 1 <= limit <= 50:
+        raise ValueError("limit 必须在1至50之间")
+    with team.connection() as c:
+        rows = c.execute(
+            "SELECT id,status,result,error,created,updated,input FROM platform_runs "
+            "WHERE project_id=? ORDER BY updated DESC LIMIT ?",
+            (project_id, limit),
+        ).fetchall()
+    runs = []
+    for row in rows:
+        source = json.loads(row["input"] or "{}")
+        runs.append({
+            "id": row["id"], "status": row["status"],
+            "result": json.loads(row["result"] or "{}"),
+            "error": row["error"], "created": row["created"], "updated": row["updated"],
+            "event_type": source.get("event_type"),
+        })
+    return {"runs": runs}
 
 
 def claim():
