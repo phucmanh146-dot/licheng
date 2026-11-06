@@ -1,0 +1,673 @@
+{
+  "schema_version": 1,
+  "dataset_type": "REAL_QUERY_CANDIDATES_PENDING_HUMAN_LABEL",
+  "human_labeled": false,
+  "required_human_review": {
+    "minimum_cases": 30,
+    "annotator_must_be": "non-executor authenticated team member",
+    "reviewer_must_be": "second independent authenticated team member",
+    "instruction": "以下30题均由AI根据真实材料生成，只是候选题。每题必须由真人回到原件核验artifact_id、artifact_version和精确locator；允许多个相关证据；无关项必须标为无关。未完成人工标注与第二人复核前，不计入30条人工标注评测集。"
+  },
+  "cases": [
+    {
+      "case_id": "J01",
+      "project": "嘉农芯生",
+      "query": "嫁接机器人每小时1200株的指标出自哪一页？",
+      "annotation_status": "PENDING_HUMAN_VERIFICATION",
+      "candidate_evidence": [
+        {
+          "source_file": "V1-key-slides.md",
+          "locator": "slide:12",
+          "candidate_relevance": "AI-suggested; not human-verified"
+        }
+      ],
+      "expected": null,
+      "artifact_id": null,
+      "artifact_version": null,
+      "annotator_id": null,
+      "annotator_identity_source": null,
+      "reviewer_id": null,
+      "reviewer_identity_source": null,
+      "human_relevance_decision": null,
+      "annotation_notes": null
+    },
+    {
+      "case_id": "J02",
+      "project": "嘉农芯生",
+      "query": "96%以上成活率是否有对应批次的原始试验记录？",
+      "annotation_status": "PENDING_HUMAN_VERIFICATION",
+      "candidate_evidence": [
+        {
+          "source_file": "G2-G3真实复核记录",
+          "locator": "G2核心技术指标",
+          "candidate_relevance": "AI-suggested; not human-verified"
+        }
+      ],
+      "expected": null,
+      "artifact_id": null,
+      "artifact_version": null,
+      "annotator_id": null,
+      "annotator_identity_source": null,
+      "reviewer_id": null,
+      "reviewer_identity_source": null,
+      "human_relevance_decision": null,
+      "annotation_notes": null
+    },
+    {
+      "case_id": "J03",
+      "project": "嘉农芯生",
+      "query": "第三方种苗质量检测报告能证明哪些事项，不能证明哪些事项？",
+      "annotation_status": "PENDING_HUMAN_VERIFICATION",
+      "candidate_evidence": [
+        {
+          "source_file": "G2-G3真实复核记录",
+          "locator": "可用于G2的材料",
+          "candidate_relevance": "AI-suggested; not human-verified"
+        }
+      ],
+      "expected": null,
+      "artifact_id": null,
+      "artifact_version": null,
+      "annotator_id": null,
+      "annotator_identity_source": null,
+      "reviewer_id": null,
+      "reviewer_identity_source": null,
+      "human_relevance_decision": null,
+      "annotation_notes": null
+    },
+    {
+      "case_id": "J04",
+      "project": "嘉农芯生",
+      "query": "种苗检测报告的编号和检测日期是什么？",
+      "annotation_status": "PENDING_HUMAN_VERIFICATION",
+      "candidate_evidence": [
+        {
+          "source_file": "G2-G3真实复核记录",
+          "locator": "BEDYLS23061601-P-001",
+          "candidate_relevance": "AI-suggested; not human-verified"
+        }
+      ],
+      "expected": null,
+      "artifact_id": null,
+      "artifact_version": null,
+      "annotator_id": null,
+      "annotator_identity_source": null,
+      "reviewer_id": null,
+      "reviewer_identity_source": null,
+      "human_relevance_decision": null,
+      "annotation_notes": null
+    },
+    {
+      "case_id": "J05",
+      "project": "嘉农芯生",
+      "query": "G2要复算1200株/小时还缺哪些运行数据？",
+      "annotation_status": "PENDING_HUMAN_VERIFICATION",
+      "candidate_evidence": [
+        {
+          "source_file": "G2-G3真实复核记录",
+          "locator": "当前缺口",
+          "candidate_relevance": "AI-suggested; not human-verified"
+        }
+      ],
+      "expected": null,
+      "artifact_id": null,
+      "artifact_version": null,
+      "annotator_id": null,
+      "annotator_identity_source": null,
+      "reviewer_id": null,
+      "reviewer_identity_source": null,
+      "human_relevance_decision": null,
+      "annotation_notes": null
+    },
+    {
+      "case_id": "J06",
+      "project": "嘉农芯生",
+      "query": "PPT第17页声称19.6万元设计方案价值，当前有什么凭证支持？",
+      "annotation_status": "PENDING_HUMAN_VERIFICATION",
+      "candidate_evidence": [
+        {
+          "source_file": "V1-key-slides.md",
+          "locator": "slide:17",
+          "candidate_relevance": "AI-suggested; not human-verified"
+        }
+      ],
+      "expected": null,
+      "artifact_id": null,
+      "artifact_version": null,
+      "annotator_id": null,
+      "annotator_identity_source": null,
+      "reviewer_id": null,
+      "reviewer_identity_source": null,
+      "human_relevance_decision": null,
+      "annotation_notes": null
+    },
+    {
+      "case_id": "J07",
+      "project": "嘉农芯生",
+      "query": "合作协议是否能证明19.6万元项目合同已经签订并回款？",
+      "annotation_status": "PENDING_HUMAN_VERIFICATION",
+      "candidate_evidence": [
+        {
+          "source_file": "G2-G3真实复核记录",
+          "locator": "可用于G3的材料",
+          "candidate_relevance": "AI-suggested; not human-verified"
+        }
+      ],
+      "expected": null,
+      "artifact_id": null,
+      "artifact_version": null,
+      "annotator_id": null,
+      "annotator_identity_source": null,
+      "reviewer_id": null,
+      "reviewer_identity_source": null,
+      "human_relevance_decision": null,
+      "annotation_notes": null
+    },
+    {
+      "case_id": "J08",
+      "project": "嘉农芯生",
+      "query": "土地租赁合同的面积和租期是什么？",
+      "annotation_status": "PENDING_HUMAN_VERIFICATION",
+      "candidate_evidence": [
+        {
+          "source_file": "G2-G3真实复核记录",
+          "locator": "土地租赁合同",
+          "candidate_relevance": "AI-suggested; not human-verified"
+        }
+      ],
+      "expected": null,
+      "artifact_id": null,
+      "artifact_version": null,
+      "annotator_id": null,
+      "annotator_identity_source": null,
+      "reviewer_id": null,
+      "reviewer_identity_source": null,
+      "human_relevance_decision": null,
+      "annotation_notes": null
+    },
+    {
+      "case_id": "J09",
+      "project": "嘉农芯生",
+      "query": "G3完工验收需要补齐哪些原始材料？",
+      "annotation_status": "PENDING_HUMAN_VERIFICATION",
+      "candidate_evidence": [
+        {
+          "source_file": "G2-G3真实复核记录",
+          "locator": "当前缺口",
+          "candidate_relevance": "AI-suggested; not human-verified"
+        }
+      ],
+      "expected": null,
+      "artifact_id": null,
+      "artifact_version": null,
+      "annotator_id": null,
+      "annotator_identity_source": null,
+      "reviewer_id": null,
+      "reviewer_identity_source": null,
+      "human_relevance_decision": null,
+      "annotation_notes": null
+    },
+    {
+      "case_id": "J10",
+      "project": "嘉农芯生",
+      "query": "年增种苗3200万株和增收2000余万元目前属于什么证据状态？",
+      "annotation_status": "PENDING_HUMAN_VERIFICATION",
+      "candidate_evidence": [
+        {
+          "source_file": "V1-key-slides.md",
+          "locator": "slide:17",
+          "candidate_relevance": "AI-suggested; not human-verified"
+        }
+      ],
+      "expected": null,
+      "artifact_id": null,
+      "artifact_version": null,
+      "annotator_id": null,
+      "annotator_identity_source": null,
+      "reviewer_id": null,
+      "reviewer_identity_source": null,
+      "human_relevance_decision": null,
+      "annotation_notes": null
+    },
+    {
+      "case_id": "J11",
+      "project": "嘉农芯生",
+      "query": "PPT第14页与第15页的专利数量口径是否一致？",
+      "annotation_status": "PENDING_HUMAN_VERIFICATION",
+      "candidate_evidence": [
+        {
+          "source_file": "V1-key-slides.md",
+          "locator": "slide:14;slide:15",
+          "candidate_relevance": "AI-suggested; not human-verified"
+        }
+      ],
+      "expected": null,
+      "artifact_id": null,
+      "artifact_version": null,
+      "annotator_id": null,
+      "annotator_identity_source": null,
+      "reviewer_id": null,
+      "reviewer_identity_source": null,
+      "human_relevance_decision": null,
+      "annotation_notes": null
+    },
+    {
+      "case_id": "J12",
+      "project": "嘉农芯生",
+      "query": "市场规模数据37.6亿、40.9亿、44.6亿和48.4亿分别对应哪些年份？",
+      "annotation_status": "PENDING_HUMAN_VERIFICATION",
+      "candidate_evidence": [
+        {
+          "source_file": "V1-source-extract-compact.md",
+          "locator": "slide:3",
+          "candidate_relevance": "AI-suggested; not human-verified"
+        }
+      ],
+      "expected": null,
+      "artifact_id": null,
+      "artifact_version": null,
+      "annotator_id": null,
+      "annotator_identity_source": null,
+      "reviewer_id": null,
+      "reviewer_identity_source": null,
+      "human_relevance_decision": null,
+      "annotation_notes": null
+    },
+    {
+      "case_id": "J13",
+      "project": "嘉农芯生",
+      "query": "项目历程中AI扫描系统加入嫁接机器人是在什么阶段？",
+      "annotation_status": "PENDING_HUMAN_VERIFICATION",
+      "candidate_evidence": [
+        {
+          "source_file": "V1-source-extract-compact.md",
+          "locator": "slide:11",
+          "candidate_relevance": "AI-suggested; not human-verified"
+        }
+      ],
+      "expected": null,
+      "artifact_id": null,
+      "artifact_version": null,
+      "annotator_id": null,
+      "annotator_identity_source": null,
+      "reviewer_id": null,
+      "reviewer_identity_source": null,
+      "human_relevance_decision": null,
+      "annotation_notes": null
+    },
+    {
+      "case_id": "J14",
+      "project": "嘉农芯生",
+      "query": "PPT第18页列出的效率、成活率和成本对比有哪些数值？",
+      "annotation_status": "PENDING_HUMAN_VERIFICATION",
+      "candidate_evidence": [
+        {
+          "source_file": "V1-source-extract-compact.md",
+          "locator": "slide:18",
+          "candidate_relevance": "AI-suggested; not human-verified"
+        }
+      ],
+      "expected": null,
+      "artifact_id": null,
+      "artifact_version": null,
+      "annotator_id": null,
+      "annotator_identity_source": null,
+      "reviewer_id": null,
+      "reviewer_identity_source": null,
+      "human_relevance_decision": null,
+      "annotation_notes": null
+    },
+    {
+      "case_id": "J15",
+      "project": "嘉农芯生",
+      "query": "融资到账117万元和对价195万元分别是什么状态？",
+      "annotation_status": "PENDING_HUMAN_VERIFICATION",
+      "candidate_evidence": [
+        {
+          "source_file": "V1-source-extract-compact.md",
+          "locator": "slide:29",
+          "candidate_relevance": "AI-suggested; not human-verified"
+        }
+      ],
+      "expected": null,
+      "artifact_id": null,
+      "artifact_version": null,
+      "annotator_id": null,
+      "annotator_identity_source": null,
+      "reviewer_id": null,
+      "reviewer_identity_source": null,
+      "human_relevance_decision": null,
+      "annotation_notes": null
+    },
+    {
+      "case_id": "D01",
+      "project": "滴水润疆",
+      "query": "项目提出的五阶段滴灌带循环路径是什么？",
+      "annotation_status": "PENDING_HUMAN_VERIFICATION",
+      "candidate_evidence": [
+        {
+          "source_file": "V1-excerpt.md",
+          "locator": "page:4",
+          "candidate_relevance": "AI-suggested; not human-verified"
+        }
+      ],
+      "expected": null,
+      "artifact_id": null,
+      "artifact_version": null,
+      "annotator_id": null,
+      "annotator_identity_source": null,
+      "reviewer_id": null,
+      "reviewer_identity_source": null,
+      "human_relevance_decision": null,
+      "annotation_notes": null
+    },
+    {
+      "case_id": "D02",
+      "project": "滴水润疆",
+      "query": "项目的差异化是否仅仅是销售滴灌带产品？",
+      "annotation_status": "PENDING_HUMAN_VERIFICATION",
+      "candidate_evidence": [
+        {
+          "source_file": "V1-excerpt.md",
+          "locator": "page:4",
+          "candidate_relevance": "AI-suggested; not human-verified"
+        }
+      ],
+      "expected": null,
+      "artifact_id": null,
+      "artifact_version": null,
+      "annotator_id": null,
+      "annotator_identity_source": null,
+      "reviewer_id": null,
+      "reviewer_identity_source": null,
+      "human_relevance_decision": null,
+      "annotation_notes": null
+    },
+    {
+      "case_id": "D03",
+      "project": "滴水润疆",
+      "query": "回收端采用哪两种主要回收机制？",
+      "annotation_status": "PENDING_HUMAN_VERIFICATION",
+      "candidate_evidence": [
+        {
+          "source_file": "V1-excerpt.md",
+          "locator": "page:10",
+          "candidate_relevance": "AI-suggested; not human-verified"
+        }
+      ],
+      "expected": null,
+      "artifact_id": null,
+      "artifact_version": null,
+      "annotator_id": null,
+      "annotator_identity_source": null,
+      "reviewer_id": null,
+      "reviewer_identity_source": null,
+      "human_relevance_decision": null,
+      "annotation_notes": null
+    },
+    {
+      "case_id": "D04",
+      "project": "滴水润疆",
+      "query": "再制造工艺链包含哪些具体步骤？",
+      "annotation_status": "PENDING_HUMAN_VERIFICATION",
+      "candidate_evidence": [
+        {
+          "source_file": "V1-excerpt.md",
+          "locator": "page:10",
+          "candidate_relevance": "AI-suggested; not human-verified"
+        }
+      ],
+      "expected": null,
+      "artifact_id": null,
+      "artifact_version": null,
+      "annotator_id": null,
+      "annotator_identity_source": null,
+      "reviewer_id": null,
+      "reviewer_identity_source": null,
+      "human_relevance_decision": null,
+      "annotation_notes": null
+    },
+    {
+      "case_id": "D05",
+      "project": "滴水润疆",
+      "query": "回收物料如何进入再投放环节形成闭环？",
+      "annotation_status": "PENDING_HUMAN_VERIFICATION",
+      "candidate_evidence": [
+        {
+          "source_file": "V1-excerpt.md",
+          "locator": "page:10",
+          "candidate_relevance": "AI-suggested; not human-verified"
+        }
+      ],
+      "expected": null,
+      "artifact_id": null,
+      "artifact_version": null,
+      "annotator_id": null,
+      "annotator_identity_source": null,
+      "reviewer_id": null,
+      "reviewer_identity_source": null,
+      "human_relevance_decision": null,
+      "annotation_notes": null
+    },
+    {
+      "case_id": "D06",
+      "project": "滴水润疆",
+      "query": "项目如何按作物类型和水源条件匹配滴灌带规格？",
+      "annotation_status": "PENDING_HUMAN_VERIFICATION",
+      "candidate_evidence": [
+        {
+          "source_file": "V1-excerpt.md",
+          "locator": "page:10",
+          "candidate_relevance": "AI-suggested; not human-verified"
+        }
+      ],
+      "expected": null,
+      "artifact_id": null,
+      "artifact_version": null,
+      "annotator_id": null,
+      "annotator_identity_source": null,
+      "reviewer_id": null,
+      "reviewer_identity_source": null,
+      "human_relevance_decision": null,
+      "annotation_notes": null
+    },
+    {
+      "case_id": "D07",
+      "project": "滴水润疆",
+      "query": "新疆端和山东端在跨区域协同中分别负责什么？",
+      "annotation_status": "PENDING_HUMAN_VERIFICATION",
+      "candidate_evidence": [
+        {
+          "source_file": "V1-excerpt.md",
+          "locator": "page:13",
+          "candidate_relevance": "AI-suggested; not human-verified"
+        }
+      ],
+      "expected": null,
+      "artifact_id": null,
+      "artifact_version": null,
+      "annotator_id": null,
+      "annotator_identity_source": null,
+      "reviewer_id": null,
+      "reviewer_identity_source": null,
+      "human_relevance_decision": null,
+      "annotation_notes": null
+    },
+    {
+      "case_id": "D08",
+      "project": "滴水润疆",
+      "query": "田间反馈需要重点采集哪三类信息？",
+      "annotation_status": "PENDING_HUMAN_VERIFICATION",
+      "candidate_evidence": [
+        {
+          "source_file": "V1-excerpt.md",
+          "locator": "page:13",
+          "candidate_relevance": "AI-suggested; not human-verified"
+        }
+      ],
+      "expected": null,
+      "artifact_id": null,
+      "artifact_version": null,
+      "annotator_id": null,
+      "annotator_identity_source": null,
+      "reviewer_id": null,
+      "reviewer_identity_source": null,
+      "human_relevance_decision": null,
+      "annotation_notes": null
+    },
+    {
+      "case_id": "D09",
+      "project": "滴水润疆",
+      "query": "联合评审如何把田间问题转化为研发任务？",
+      "annotation_status": "PENDING_HUMAN_VERIFICATION",
+      "candidate_evidence": [
+        {
+          "source_file": "V1-excerpt.md",
+          "locator": "page:13",
+          "candidate_relevance": "AI-suggested; not human-verified"
+        }
+      ],
+      "expected": null,
+      "artifact_id": null,
+      "artifact_version": null,
+      "annotator_id": null,
+      "annotator_identity_source": null,
+      "reviewer_id": null,
+      "reviewer_identity_source": null,
+      "human_relevance_decision": null,
+      "annotation_notes": null
+    },
+    {
+      "case_id": "D10",
+      "project": "滴水润疆",
+      "query": "小试、中试和试点应用的验证顺序是什么？",
+      "annotation_status": "PENDING_HUMAN_VERIFICATION",
+      "candidate_evidence": [
+        {
+          "source_file": "V1-excerpt.md",
+          "locator": "page:14",
+          "candidate_relevance": "AI-suggested; not human-verified"
+        }
+      ],
+      "expected": null,
+      "artifact_id": null,
+      "artifact_version": null,
+      "annotator_id": null,
+      "annotator_identity_source": null,
+      "reviewer_id": null,
+      "reviewer_identity_source": null,
+      "human_relevance_decision": null,
+      "annotation_notes": null
+    },
+    {
+      "case_id": "D11",
+      "project": "滴水润疆",
+      "query": "既有V2证据批注指出当前缺少哪些批次级原始数据？",
+      "annotation_status": "PENDING_HUMAN_VERIFICATION",
+      "candidate_evidence": [
+        {
+          "source_file": "V2-evidence-annotation.md",
+          "locator": "V2证据批注",
+          "candidate_relevance": "AI-suggested; not human-verified"
+        }
+      ],
+      "expected": null,
+      "artifact_id": null,
+      "artifact_version": null,
+      "annotator_id": null,
+      "annotator_identity_source": null,
+      "reviewer_id": null,
+      "reviewer_identity_source": null,
+      "human_relevance_decision": null,
+      "annotation_notes": null
+    },
+    {
+      "case_id": "D12",
+      "project": "滴水润疆",
+      "query": "回收率应该用什么分子和分母计算？",
+      "annotation_status": "PENDING_HUMAN_VERIFICATION",
+      "candidate_evidence": [
+        {
+          "source_file": "V2-evidence-annotation.md",
+          "locator": "建议操作",
+          "candidate_relevance": "AI-suggested; not human-verified"
+        }
+      ],
+      "expected": null,
+      "artifact_id": null,
+      "artifact_version": null,
+      "annotator_id": null,
+      "annotator_identity_source": null,
+      "reviewer_id": null,
+      "reviewer_identity_source": null,
+      "human_relevance_decision": null,
+      "annotation_notes": null
+    },
+    {
+      "case_id": "D13",
+      "project": "滴水润疆",
+      "query": "如何区分项目模式设计与已经真实运行的回收闭环？",
+      "annotation_status": "PENDING_HUMAN_VERIFICATION",
+      "candidate_evidence": [
+        {
+          "source_file": "V2-evidence-annotation.md",
+          "locator": "V2证据批注",
+          "candidate_relevance": "AI-suggested; not human-verified"
+        }
+      ],
+      "expected": null,
+      "artifact_id": null,
+      "artifact_version": null,
+      "annotator_id": null,
+      "annotator_identity_source": null,
+      "reviewer_id": null,
+      "reviewer_identity_source": null,
+      "human_relevance_decision": null,
+      "annotation_notes": null
+    },
+    {
+      "case_id": "D14",
+      "project": "滴水润疆",
+      "query": "堵塞率、破损点、出水均匀性和使用寿命应如何采集？",
+      "annotation_status": "PENDING_HUMAN_VERIFICATION",
+      "candidate_evidence": [
+        {
+          "source_file": "V1-excerpt.md",
+          "locator": "page:13",
+          "candidate_relevance": "AI-suggested; not human-verified"
+        }
+      ],
+      "expected": null,
+      "artifact_id": null,
+      "artifact_version": null,
+      "annotator_id": null,
+      "annotator_identity_source": null,
+      "reviewer_id": null,
+      "reviewer_identity_source": null,
+      "human_relevance_decision": null,
+      "annotation_notes": null
+    },
+    {
+      "case_id": "D15",
+      "project": "滴水润疆",
+      "query": "什么情况下项目不能声称已经实现规模化复制？",
+      "annotation_status": "PENDING_HUMAN_VERIFICATION",
+      "candidate_evidence": [
+        {
+          "source_file": "V1-excerpt.md",
+          "locator": "page:14",
+          "candidate_relevance": "AI-suggested; not human-verified"
+        }
+      ],
+      "expected": null,
+      "artifact_id": null,
+      "artifact_version": null,
+      "annotator_id": null,
+      "annotator_identity_source": null,
+      "reviewer_id": null,
+      "reviewer_identity_source": null,
+      "human_relevance_decision": null,
+      "annotation_notes": null
+    }
+  ]
+}
