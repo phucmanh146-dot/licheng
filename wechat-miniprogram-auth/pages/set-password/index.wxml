@@ -1,0 +1,11 @@
+<view class="page">
+ <view class="brand"><view class="brand-mark">鸭</view><view><view class="brand-name">上岸鸭</view><text class="brand-sub">把计划变成真正完成的事</text></view></view>
+ <view class="steps"><view class="step-line active"></view><view class="step-line active"></view><view class="step-line"></view></view>
+ <view class="eyebrow">第 2 步 · 设置密码</view><view class="title">设置你的登录密码</view>
+ <view class="desc">手机号已验证。请设置密码，以后使用手机号和密码登录。</view>
+ <view class="field"><text class="field-label">设置密码</text><view class="input-wrap"><input class="input" password placeholder="至少 8 位，包含字母和数字" placeholder-class="placeholder" value="{{password}}" bindinput="onPassword"/></view></view>
+ <view class="field"><text class="field-label">确认密码</text><view class="input-wrap"><input class="input" password placeholder="请再次输入密码" placeholder-class="placeholder" value="{{confirm}}" bindinput="onConfirm"/></view></view>
+ <view class="notice">密码由服务端使用加盐 scrypt 哈希保存，不会以明文保存。不要使用生日或连续数字。</view>
+ <view class="primary" bindtap="create">创建账号</view><view class="link" bindtap="back">← 返回上一步</view>
+ <view class="footer">手机号已验证 · 下一步：创建账号</view>
+</view>
