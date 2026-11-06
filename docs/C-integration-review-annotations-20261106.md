@@ -38,6 +38,12 @@ A 负责证据诊断与独立复核；B 负责行动卡、规划器、容量计�
 
 **放行条件**：冲突清零 + CI 全绿 + 生产健康检查 + Action/浏览器证据链真实通过。当前不能合并。
 
+
+### PR #101 — Universal Autoloop 接入分支
+
+- PR #101 的 GitHub 状态是 merged，但目标分支为 `fix/v10-preserve-ui-ddl-energy-planner-20261030`，不是 `main`。
+- 因此只记录为“已合并到旧 V10 分支”，不能计入当前 main 已合并项。后续需将其独有变更与 main 对照，保留仍有价值的修复，再通过独立 PR 集成；不得把旧分支整体回灌。
+
 ## 4. 其他未合并 PR 的逐项批注
 
 以下 PR 均仍开放且为 Draft；它们的 base/head 属于较早的 V7/V8/V9/V10 分支栈，不能把整条旧分支直接并入当前 main。已在各 PR Conversation 留下修改批注。
