@@ -309,9 +309,20 @@ def accept(request: Request, run_id: str, data: dict):
     return team.commit(p,p['version'],'确认Agent诊断及计划预览；尚未采用计划')
 
 
+@app.get('/livez')
+def public_livez():
+    # Process liveness only. Database and dependency readiness remains /healthz.
+    return {'ok': True, 'mode': 'cloud', 'process': 'alive'}
+
+
 @app.get('/healthz')
 def public_healthz():
-    return cloud_hub.health()
+    try:
+        return cloud_hub.health()
+    except Exception as exc:
+        # Keep the diagnostic in deploy logs without exposing paths or credentials in the response.
+        print(f"HEALTHZ_FAILURE {type(exc).__name__}: {exc}", flush=True)
+        return JSONResponse({'ok': False, 'error': type(exc).__name__}, status_code=503)
 
 
 @app.get('/hub')
