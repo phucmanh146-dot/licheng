@@ -123,7 +123,8 @@ function analyzeCrop(){
  button.click();notice('已向当前已连接的模型提交框选截图与任务识别请求，结果显示在上方的 Agent 回答区。')
 }
 function confirmTask(){
- const d=lastCrop,a=account(),rawText=selectedHistoryMessage?String(selectedHistoryMessage.text||''):String(d?.content||'');if(!rawText.trim()||(!selectedHistoryMessage&&!d?.file?.id))return notice('先选择一条历史消息或框选真实微信内容',true);
+ const d=lastCrop,a=window.SY&&typeof window.SY.getAcctData==='function'?window.SY.getAcctData():null,rawText=selectedHistoryMessage?String(selectedHistoryMessage.text||''):String(d?.content||'');if(!rawText.trim()||(!selectedHistoryMessage&&!d?.file?.id))return notice('先选择一条历史消息或框选真实微信内容',true);
+ if(!a)return notice('请先登录工作台，再关联微信任务证据。',true);
  const sel=Q('#pmaw-existing-task')?.value||'new';
  let task=null;
  const create=sel==='new';
@@ -149,17 +150,37 @@ function confirmTask(){
   taskId:String(task.id),taskName:String(task.name),groupQuery:(Q('#pmaw-group-query')?.value||'').trim(),
   messageQuery:(Q('#pmaw-message-query')?.value||'').trim(),
   selectedResult:lastCandidate?.label||'',
-  text:rawTextForRecord,links:extractedLinks,fileId:d?.file?.id||null,proofId:selectedHistoryMessage?'history:'+String(selectedHistoryMessage.id):'crop:'+String(d.file.id),historyMessageId:selectedHistoryMessage?.id||null,
+  text:rawTextForRecord,links:extractedLinks,fileId:d?.file?.id||null,proofId:selectedHistoryMessage?'history:'+String(selectedHistoryMessage.id||selectedHistoryMessage.time||Date.now()):'crop:'+String(d.file.id),historyMessageId:selectedHistoryMessage?.id||null,
   capturedAt:new Date().toISOString(),source:selectedHistoryMessage?'wechat-history':'windows-wechat-selected-region',
-  ddlCandidate:(String(d.content||'').split(/\n/).find(x=>/DDL|截止|提交|deadline|明天|今晚/i.test(x))||'').slice(0,250),
+  ddlCandidate:(rawText.split(/\n/).find(x=>/DDL|截止|提交|deadline|明天|今晚/i.test(x))||'').slice(0,250),
   confirmedByUser:true};
  const prior=Array.isArray(a.wxTaskEvidence)?a.wxTaskEvidence:[];
  if(prior.some(x=>(x.proofId||('crop:'+String(x.fileId)))===record.proofId&&x.taskId===record.taskId))return notice('这条微信证据已经归入该任务，无须重复保存。');
  prior.unshift(record);a.wxTaskEvidence=prior.slice(0,180);
  if(extractedLinks.length){task.materials=Array.isArray(task.materials)?task.materials:[];extractedLinks.forEach(function(url){if(!task.materials.some(function(m){return (typeof m==='string'?m:m&&(m.url||m.href||m.link))===url}))task.materials.push({id:'wx-link-'+Date.now().toString(36)+'-'+task.materials.length,url:url,title:url,source:'wechat-message',readStatus:'pending',addedAt:Date.now()})});}
- save(a);taskOptions();
+ window.SY.saveAcctData(a);taskOptions();
  Q('#pmaw-last-confirmed').textContent='已确认：'+task.name+' · 保存1条微信证据'+(extractedLinks.length?'，提取 '+extractedLinks.length+' 条链接并附加到任务资料':'')+'；DDL以实际截图和你手动填写为准。';
  setFlowStep(4);selectedHistoryMessage=null;notice('任务证据已关联到《'+task.name+'》。'+(create?'新任务已加入原有任务列表。':'没有更改该任务的原计划。'));
+}
+
+function updateNewTask(){
+ const select=Q('#pmaw-existing-task'),fields=Q('#pmaw-new-task-fields');
+ if(fields)fields.hidden=!!(select&&select.value&&select.value!=='new');
+}
+function taskOptions(){
+ const select=Q('#pmaw-existing-task');
+ if(!select||!window.SY||typeof window.SY.getAcctData!=='function')return;
+ const current=select.value,acct=window.SY.getAcctData()||{};
+ const tasks=(Array.isArray(acct.tasks)?acct.tasks:[]).slice().sort((a,b)=>{
+  if(!!a.done!==!!b.done)return Number(!!a.done)-Number(!!b.done);
+  return String(a.dueDate||a.date||'9999-12-31').localeCompare(String(b.dueDate||b.date||'9999-12-31'))||String(a.name||'').localeCompare(String(b.name||''));
+ });
+ select.replaceChildren();
+ const add=(label,value)=>{const option=document.createElement('option');option.value=String(value);option.textContent=label;select.append(option);};
+ add('\u65b0\u5efa\u4efb\u52a1\uff08\u6838\u5bf9\u540e\u52a0\u5165\u539f\u5217\u8868\uff09','new');
+ tasks.forEach(t=>add(String(t.name||'\u672a\u547d\u540d\u4efb\u52a1')+' \u00b7 '+String(t.date||'\u672a\u6392\u671f')+(t.done?' \u00b7 \u5df2\u5b8c\u6210':''),t.id));
+ select.value=tasks.some(t=>String(t.id)===current)?current:'new';
+ updateNewTask();
 }
 function make(){
  const root=El('section','pmaw-mini');root.id='pmaw-mini';
@@ -212,5 +233,5 @@ if(location.hash.startsWith('#wechat-remote')){
  const timer=setInterval(()=>{if(done){clearInterval(timer);return}go()},1100);
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',go);else go();
 }
-window.SYPMWeChatV4={mount,focus,search,crop};
+window.SYPMWeChatV4={mount,focus,search,crop,taskOptions,updateNewTask};
 })();

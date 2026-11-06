@@ -10,7 +10,8 @@ var tasks=function(a){return a&&Array.isArray(a.tasks)?a.tasks:[]};
 var done=function(t){return !!(t&&(t.done||t.completed||t.completedAt||t.status==='已交付'))};
 var name=function(t){return String(t&&(t.name||t.title||t.text)||'未命名任务')};
 var due=function(t){return String(t&&(t.dueDate||t.deadlineDate||t.due)||'')};
-var fmt=function(n){return Number.isFinite(Number(n))&&Number(n)>0?Math.round(Number(n))+'分钟':'待估算'};\nvar dateKey=function(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')};
+var fmt=function(n){return Number.isFinite(Number(n))&&Number(n)>0?Math.round(Number(n))+'分钟':'待估算'};
+var dateKey=function(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')};
 var currentTask=function(){var a=acct(),ts=tasks(a);return ts.find(function(t){return String(t.id)===String(selectedId)})||null};
 var miniRubric=[
  ['固定事务不被挤占','课程/会议等固定时段锁定，排期不能覆盖','待核验','product-acceptance.md：要求列明；当前状态段未明确证明'],

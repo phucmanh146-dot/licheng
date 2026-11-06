@@ -67,6 +67,27 @@ function documentSources(root,docs){
  for(const item of failed) section.append(E('p','p2-meta','未读到正文：'+(item.title||item.url||'未知链接')));
  root.append(section);
 }
+
+function renderAgentActions(root,msg){
+ const actions=Array.isArray(msg.workbenchActions)?msg.workbenchActions:[];
+ if(!actions.length)return;
+ const wrap=E('section','p2-agent-proposals');
+ wrap.append(E('strong','p2-agent-proposals-title','Agent ????????'));
+ for(const action of actions){
+  if(!action||typeof action!=='object'||action.applied||action.dismissed)continue;
+  const card=E('article','p2-agent-proposal'),titleMap={replan:'????????',create_task:'????',set_next_step:'???????',move_to_buffer:'?????',mark_awaiting_evidence:'????????'};
+  card.append(E('b','',titleMap[action.type]||'Agent ????'));
+  const detail=action.title||action.nextStep||action.reason||action.date||action.taskId||'';
+  if(detail)card.append(E('p','',String(detail)));
+  if(action.reason&&detail!==action.reason)card.append(E('small','',String(action.reason)));
+  const buttons=E('div','p2-agent-proposal-actions'),accept=E('button','p2-agent-accept','????'),reject=E('button','p2-agent-reject','????');
+  accept.type=reject.type='button';
+  accept.addEventListener('click',async()=>{accept.disabled=reject.disabled=true;accept.textContent='?????';try{if(typeof window.P2AgentActionHandler!=='function')throw new Error('???????????');const result=await window.P2AgentActionHandler(action);action.applied=true;action.applyResult=result||{};card.replaceChildren(E('b','p2-agent-applied','??????'));}catch(err){accept.disabled=reject.disabled=false;accept.textContent='????';card.append(E('p','p2-agent-action-error',err.message||String(err)));}});
+  reject.addEventListener('click',()=>{action.dismissed=true;card.replaceChildren(E('span','p2-agent-dismissed','?????????????????'));});
+  buttons.append(accept,reject);card.append(buttons);wrap.append(card);
+ }
+ if(wrap.children.length>1)root.append(wrap);
+}
 function renderMessages(thread){
  const host=document.querySelector('#p2-messages'),welcome=document.querySelector('#p2-welcome');
  host.replaceChildren();const messages=thread?.messages||[];welcome.hidden=messages.length>0;
@@ -75,7 +96,7 @@ function renderMessages(thread){
   if(msg.role==='assistant'){
    row.append(E('div','p2-avatar','✦'));
    bubble.append(E('div','p2-meta','上岸鸭 P2 · '+(msg.model||'AI')+(msg.mode?' · '+msg.mode:'')));
-   const body=E('div','p2-rich');rich(body,msg.content);bubble.append(body);
+   const body=E('div','p2-rich');rich(body,msg.content);bubble.append(body);renderAgentActions(bubble,msg);
    sources(bubble,msg.sources||[],msg.searchError);
    documentSources(bubble,msg.sourceDocuments||[]);
    const answerActions=E('div','p2-answer-actions');if(window.P2MindMap)answerActions.append(window.P2MindMap.createButton(msg.content||''));if(window.P2VideoPresenter)answerActions.append(window.P2VideoPresenter.createButton(msg.content||''));if(window.P2HeyGenVideo)answerActions.append(window.P2HeyGenVideo.createButton(msg.content||''));if(answerActions.childNodes.length)bubble.append(answerActions);
