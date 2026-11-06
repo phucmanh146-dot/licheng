@@ -1,5 +1,6 @@
 """Task-specific capability branching and a versioned, inspectable resource catalog."""
 from copy import deepcopy
+from research_personalization import capability_profile
 
 NAV = 'https://github.com/datawhalechina/hello-agents/blob/main/Extra-Chapter/Extra13-Hello-Agents视频课录制共创.md'
 CATALOG = [
@@ -94,6 +95,7 @@ def prerequisites(gap, owner, member, diagnosis, context):
     tasks, paths, heads = [], [], []
     for i, skill in enumerate(gap.get('required_capabilities', [])):
         status, evidence = skill_status(member, skill)
+        profile = capability_profile(member, skill)
         if status == 'verified':
             continue
         refs = resources(diagnosis, skill)
@@ -129,6 +131,8 @@ def prerequisites(gap, owner, member, diagnosis, context):
                           'depends_on':chain[-1:], 'deadline':gap.get('deadline',context.get('deadline','待成员确认')),
                           'source_refs':gap['source_refs'], 'status':'candidate' if not chain else 'blocked',
                           'kind':phase, 'capability':skill, 'capability_status':status,
+                          'proficiency_level':profile['level'], 'support_mode':profile['support_mode'],
+                          'capability_evidence_count':profile['confirmed_evidence_count'],
                           'estimate_basis':'待本人确认和实际用时校准', 'resource_options':refs})
             if gap.get('current_artifact'):
                 tasks[-1]['micro_steps'] = [{'step_id':identifier+':'+str(n),
@@ -142,6 +146,9 @@ def prerequisites(gap, owner, member, diagnosis, context):
             chain.append(identifier)
         heads.append(chain[-1])
         paths.append({'gap_id':gap['gap_id'],'member_id':owner,'capability':skill,
-                      'capability_status':status,'task_ids':chain+[gap['gap_id']+':deliver'],
+                      'capability_status':status,'proficiency_level':profile['level'],
+                      'support_mode':profile['support_mode'],
+                      'capability_evidence_count':profile['confirmed_evidence_count'],
+                      'task_ids':chain+[gap['gap_id']+':deliver'],
                       'resources':refs,'personalized':True,'basis':evidence or '能力自述未验证，先试做'})
     return tasks, paths, heads

@@ -23,6 +23,17 @@
 
 浏览器草案不代表队长正式采纳；请导出备份。正式项目数据库、跨设备并发、采用/撤销及验收权仍属于队长，B 不写队长的正式执行状态。
 
+## 2026-11-05：与总控正式交接入口的关系（按 main 核对）
+
+B 的独立规划器与总控项目流程是两个入口，不是两套正式状态库：
+- 独立规划器：`/planner.html` → `/api/agent/planner/*`，用于导入诊断、试做规则排程、编辑和导出草案；浏览器 localStorage 只保存草案。
+- 正式总控：`/team.html` → “队友交付接线” → `handoff-check` → `generate-b` → proposal → “采用这份计划”。服务端由 `team_handoff.generate → planner → action_planner.generate` 生成草案，再由 `team.propose/apply` 保存项目版本。
+- 执行/验收：开始任务 → 记录真实尝试/耗时 → 提交真实 V2 → `pending_review` → A/非执行者复核 → `review-receive` → 人工确认/退回 → `advance-review` 对剩余问题局部重排。
+- 相关路由已在 `learning_agent_server.py` 注册；对应联调测试在 `test_handoff.py`。这证明代码接线存在，不等于真实模型、真实 V2 或真人独立复核已通过。
+- 以项目服务端 SQLite 状态和 history 为正式状态；不得把 `planner.html` 的 localStorage 草案当作正式项目状态。
+
+点击顺序、A/B/C 责任边界和真实业务验收表见 [ABC 视频式交互批注](../docs/abc-video-interaction-annotations-2026-11-05.md)。
+
 ## 后端接口
 
 POST `/api/agent/planner/` 下：

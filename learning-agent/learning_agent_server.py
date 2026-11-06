@@ -26,6 +26,8 @@ import team_revision
 import cc_progress
 import research_companion
 import assistant_chat
+import event_kernel
+import platform_store
 
 ROOT = Path(__file__).resolve().parent
 try:
@@ -74,6 +76,10 @@ class Handler(LegacyHandler):
         parsed = urlparse(self.path)
         path = parsed.path
         try:
+            if path == '/api/agent/engineering-health':
+                import engineering_health
+                deep = parse_qs(parsed.query).get('deep', ['0'])[0] == '1'
+                return self.send_json(engineering_health.report(deep=deep))
             if path == '/api/agent/health':
                 import shutil, importlib.util
                 return self.send_json({'ok': True, 'version': 'learning-agent-1', 'ai': rescue.public_config(),
@@ -127,6 +133,16 @@ class Handler(LegacyHandler):
                 import team_ai
                 query = parse_qs(parsed.query)
                 return self.send_json(team_ai.read_trace(query.get('id',[''])[0],query.get('run_id',[''])[0]))
+            if path == '/api/agent/events':
+                query = parse_qs(parsed.query)
+                run_id = query.get('run_id', [''])[0]
+                if run_id:
+                    return self.send_json(event_kernel.status(run_id))
+                project_id = query.get('project_id', [''])[0]
+                if not project_id:
+                    raise ValueError('请提供 project_id 或 run_id')
+                team.state(project_id)  # Verify the project exists before listing its receipts.
+                return self.send_json(platform_store.list_project_runs(project_id, limit=20))
             if path == '/api/agent/state':
                 return self.send_json(agent.state())
             if path == '/api/agent/run':
@@ -159,7 +175,7 @@ class Handler(LegacyHandler):
                 allowed += ('/team-recovery.js',)
                 allowed += ('/team-runtime.js',)
                 allowed += ('/team-intervention.js',)
-                allowed += ('/research-companion.js', '/contest-progress.html', '/v10-ai-demo.html', '/v10-ai-chat.js')
+                allowed += ('/research-companion.js', '/contest-progress.html', '/team-rag.js', '/v10-ai-demo.html', '/v10-ai-chat.js')
                 if self.path.split('?')[0] not in allowed:
                     return self.send_json({'error': '文件不可读取'}, 404)
             return super().do_GET()
@@ -183,6 +199,8 @@ class Handler(LegacyHandler):
             data = json.loads(self.rfile.read(size))
             if not isinstance(data, dict):
                 raise ValueError('请求必须为 JSON 对象')
+            if path == '/api/agent/events':
+                return self.send_json(event_kernel.submit(data), 202)
             if path.startswith('/api/agent/planner/') and path.rsplit('/',1)[-1] in ('split','lock','calibrate','reconcile','alternatives'):
                 import b_refinements as b
                 op=path.rsplit('/',1)[-1]
@@ -224,7 +242,8 @@ class Handler(LegacyHandler):
                             'period-replan':team.period_replan,'undo-plan':team.undo_plan,
                             'dispatch':dispatch.dispatch,'brief':dispatch.brief,
                             'handoff-check':handoff.check,'generate-b':handoff.generate,
-                            'review-receive':handoff.receive_review,'review-run':handoff.invoke_review,
+                            'review-receive':handoff.receive_review,'review-manual':handoff.receive_manual_review,
+                            'review-run':handoff.invoke_review,
                             'context':team_inputs.save_context,'member':team_inputs.save_member,
                             'capability':team_inputs.record_capability,'artifact-import':artifact_store.import_file,
                             'artifact-retrieve':artifact_retrieval.retrieve,

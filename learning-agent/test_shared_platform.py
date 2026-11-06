@@ -1,4 +1,4 @@
-"""Synthetic model, real HTTP/SQLite/LangGraph. No LIVE or human quality claim."""
+""""Synthetic model, real HTTP/SQLite/LangGraph. No LIVE or human quality claim."""
 import json
 import time
 import unittest
@@ -26,6 +26,17 @@ class SharedPlatformTests(unittest.TestCase):
 
     def tearDown(self):
         self.client.__exit__(None,None,None); self.fixture.tearDown()
+
+
+    def test_cloud_hub_page_and_script_are_served_from_real_paths(self):
+        page = self.client.get('/hub')
+        self.assertEqual(page.status_code, 200)
+        self.assertIn('/assets/cloud-hub.js', page.text)
+        script = self.client.get('/assets/cloud-hub.js')
+        self.assertEqual(script.status_code, 200)
+        self.assertIn('api/v1/hub', script.text)
+        workbench = self.client.get('/assets/shared-workbench.js')
+        self.assertEqual(workbench.status_code, 200)
 
     def test_acl_csrf_and_version(self):
         other = team.create({'goal':'private-other','mode':'live'})
@@ -107,6 +118,12 @@ class SharedPlatformTests(unittest.TestCase):
                 json={'query':'有效分母','expected_version':p['version']})
             self.assertEqual(submitted.status_code,202,submitted.text)
             rid = submitted.json()['run_id']
+            # Input import also emits an Autoloop signal. Isolate this test's
+            # explicit run so store.claim() cannot consume the earlier side event.
+            with team.connection() as c:
+                c.execute(
+                    "UPDATE platform_runs SET status='cancelled' WHERE project_id=? AND user_id=? AND status='queued' AND id<>?",
+                    (p['project_id'], self.uid, rid))
             import os
             if os.getenv('SHANGAN_LIVE_CLOSED_LOOP') == '1':
                 from hermes_gateway import connect_local_gateway
@@ -141,6 +158,7 @@ class SharedPlatformTests(unittest.TestCase):
             review_id=uuid.uuid4().hex
             review={'review_id':review_id,'task_id':tid,'plan_version':p['plan']['plan_version'],
                 'diagnosis_version':p['diagnosis']['diagnosis_version'],'artifact_id':'report','artifact_version':2,
+                'method':'manual','content_read_confirmed':True,
                 'note':'测试复核账号逐项核对','criterion_results':rows,
                 'gap_results':[{'gap_id':g,'status':'closed','evidence':'SYNTHETIC 已核对新版','evidence_refs':[ref]} for g in task['gap_ids']]}
             change(reviewer,rh,'review-receive',{'review':review})

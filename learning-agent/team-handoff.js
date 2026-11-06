@@ -63,7 +63,7 @@ $('review-export').onclick=()=>safe(async()=>{
  setTimeout(()=>URL.revokeObjectURL(url),1000);
  $('message').textContent='已导出当前目标、本人任务、实际材料与待复核成果；请把这一版本交给 A';
 });
-$('a-review-form').onsubmit=e=>{e.preventDefault();safe(()=>mutate('review-receive',{review:JSON.parse($('a-review-json').value)}));};
+$('a-review-form').onsubmit=e=>{e.preventDefault();safe(()=>{const review=JSON.parse($('a-review-json').value);if(review.method==='manual'){if(!window.confirm('请确认：你已打开并阅读当前提交的 V2 原件，按每条验收条件逐项核对，并且不是本次成果执行者。'))return;review.content_read_confirmed=true;return mutate('review-manual',{review});}return mutate('review-receive',{review});});};
 $('rescue-task').onchange=rescueChoices;
 
 function rescueMediaEvent(node,event){return new Promise((resolve,reject)=>{const timer=setTimeout(()=>finish(new Error('媒体读取超时，请换用短录屏或截图。')),15000);function finish(error){clearTimeout(timer);node.removeEventListener(event,ready);node.removeEventListener('error',failed);error?reject(error):resolve();}function ready(){finish();}function failed(){finish(new Error('无法解码媒体，请换用常见图片或视频格式。'));}node.addEventListener(event,ready,{once:true});node.addEventListener('error',failed,{once:true});});}

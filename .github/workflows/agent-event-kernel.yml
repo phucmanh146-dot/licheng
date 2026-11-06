@@ -1,0 +1,102 @@
+name: Agent Event Kernel
+on:
+  push:
+    branches:
+      - feature/agent-rag-rerank-20261102
+    paths:
+      - "learning-agent/autoloop_signals.py"
+      - "learning-agent/universal_autoloop.py"
+      - "learning-agent/test_universal_autoloop.py"
+      - "learning-agent/deadline_policy.py"
+      - "learning-agent/period_planner.py"
+      - "learning-agent/test_deadline_policy.py"
+      - "learning-agent/test_period_planner_transition.py"
+      - "learning-agent/research_graph.py"
+      - "learning-agent/deadline_schedule.py"
+      - "learning-agent/test_deadline_schedule_worker.py"
+      - "learning-agent/test_autoloop_signals.py"
+      - "learning-agent/event_kernel.py"
+      - "learning-agent/platform_store.py"
+      - "learning-agent/research_graph.py"
+      - "learning-agent/team_orchestrator.py"
+      - "learning-agent/learning_agent_server.py"
+      - "learning-agent/team.js"
+      - "learning-agent/test_event_kernel.py"
+      - "learning-agent/research_personalization.py"
+      - "learning-agent/test_research_personalization.py"
+      - "learning-agent/personal_guidance.py"
+      - "learning-agent/ai_efficiency.py"
+      - "learning-agent/test_ai_efficiency.py"
+      - "learning-agent/team_ai.py"
+      - ".github/workflows/agent-event-kernel.yml"
+  pull_request:
+    paths:
+      - "learning-agent/autoloop_signals.py"
+      - "learning-agent/deadline_schedule.py"
+      - "learning-agent/research_graph.py"
+      - "learning-agent/test_deadline_schedule_worker.py"
+      - "learning-agent/universal_autoloop.py"
+      - "learning-agent/test_universal_autoloop.py"
+      - "learning-agent/deadline_policy.py"
+      - "learning-agent/period_planner.py"
+      - "learning-agent/test_deadline_policy.py"
+      - "learning-agent/test_period_planner_transition.py"
+      - "learning-agent/test_autoloop_signals.py"
+      - "learning-agent/event_kernel.py"
+      - "learning-agent/platform_store.py"
+      - "learning-agent/research_graph.py"
+      - "learning-agent/team_orchestrator.py"
+      - "learning-agent/learning_agent_server.py"
+      - "learning-agent/team.js"
+      - "learning-agent/test_event_kernel.py"
+      - "learning-agent/research_personalization.py"
+      - "learning-agent/test_research_personalization.py"
+      - "learning-agent/personal_guidance.py"
+      - "learning-agent/ai_efficiency.py"
+      - "learning-agent/test_ai_efficiency.py"
+      - "learning-agent/team_ai.py"
+      - ".github/workflows/agent-event-kernel.yml"
+jobs:
+  event-kernel:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Python syntax
+        run: |
+          python - <<'PY'
+          import ast
+          from pathlib import Path
+          files = [
+              "learning-agent/autoloop_signals.py",
+              "learning-agent/universal_autoloop.py",
+              "learning-agent/test_universal_autoloop.py",
+              "learning-agent/deadline_policy.py",
+              "learning-agent/period_planner.py",
+              "learning-agent/test_deadline_policy.py",
+              "learning-agent/test_period_planner_transition.py",
+              "learning-agent/research_graph.py",
+              "learning-agent/deadline_schedule.py",
+              "learning-agent/test_deadline_schedule_worker.py",
+              "learning-agent/research_graph.py",
+              "learning-agent/shared_api.py",
+              "learning-agent/test_autoloop_signals.py",
+              "learning-agent/test_event_kernel.py",
+              "learning-agent/research_personalization.py",
+              "learning-agent/test_research_personalization.py",
+              "learning-agent/personal_guidance.py",
+              "learning-agent/ai_efficiency.py",
+              "learning-agent/test_ai_efficiency.py",
+              "learning-agent/team_ai.py",
+          ]
+          for name in files:
+              ast.parse(Path(name).read_text(encoding="utf-8"), filename=name)
+              print("syntax ok:", name)
+          PY
+      - name: Event ingress and Autoloop signal tests
+        working-directory: learning-agent
+        run: python -m unittest -v test_event_kernel test_autoloop_signals test_universal_autoloop test_deadline_policy test_period_planner_transition test_deadline_schedule_worker test_research_personalization test_ai_efficiency
+      - name: Workbench JavaScript syntax
+        run: node --check learning-agent/team.js

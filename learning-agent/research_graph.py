@@ -4,8 +4,10 @@ Every completed node is checkpointed with a fenced lease. Model outputs remain
 candidates: publishing the preview and adopting a plan are explicit user actions.
 """
 import copy
+import logging
 import threading
 import time
+from datetime import datetime, date
 from typing import TypedDict
 from langgraph.graph import StateGraph, START, END
 import artifact_retrieval
@@ -14,6 +16,9 @@ import platform_store as store
 import team_ai
 import team_handoff
 import team_orchestrator as team
+import deadline_schedule
+import autoloop_signals
+import universal_autoloop
 
 
 class ResearchState(TypedDict, total=False):
@@ -99,6 +104,7 @@ def build(run_id, token):
     return graph.compile()
 
 
+
 def execute(run):
     import json
     stopped = threading.Event()
@@ -111,11 +117,69 @@ def execute(run):
     thread = threading.Thread(target=heartbeat, daemon=True)
     thread.start()
     try:
-        value = build(run['id'], run['lease_token']).invoke({'input':json.loads(run['input'])}, {'recursion_limit':12})
+        run_input = json.loads(run['input'])
+        if run_input.get("event_type") in ("deadline.approaching", "task.unscheduled_triage"):
+            deadline_schedule.execute(run, run_input)
+            return
+        value = build(run['id'], run['lease_token']).invoke({'input':run_input}, {'recursion_limit':12})
         team.current(value['input'])
         result = {k:value[k] for k in ('diagnosis','plan','retrieval')}
         result['expected_version'] = value['input']['expected_version']
         result['preview_only'] = True
+        if value['input'].get('auto_advance') is True:
+            # Persist validated outputs against the latest project version. Only
+            # internal, reversible plan adoption is automated; unresolved evidence,
+            # unscheduled work or external dependencies remain behind the approval gate.
+            current = team.state(value['input']['project_id'])
+            current = team.diagnosis({
+                'project_id': current['project_id'],
+                'expected_version': current['version'],
+                'diagnosis': value['diagnosis'],
+            })
+            current = team.propose({
+                'project_id': current['project_id'],
+                'expected_version': current['version'],
+                'plan': value['plan'],
+                'reason': '事件触发的自动工作流：诊断与计划已通过结构校验',
+            })
+            blockers = []
+            if current['diagnosis'].get('unknowns'):
+                blockers.append('诊断仍有未知项')
+            if current['proposal']['plan'].get('unscheduled'):
+                blockers.append('仍有未排入计划的任务')
+            if any(t.get('status') == 'blocked' or t.get('external_dependencies')
+                   for t in current['proposal']['plan'].get('tasks', [])):
+                blockers.append('存在阻塞任务或外部依赖')
+            if blockers:
+                result.update({
+                    'preview_only': True,
+                    'auto_adopted': False,
+                    'approval_required': True,
+                    'approval_reasons': blockers,
+                    'proposal_id': current['proposal']['id'],
+                    'expected_version': current['version'],
+                })
+                store.event(run['id'], 'approval_gate', 'waiting', {'reasons': blockers})
+                store.finish(run['id'], run['lease_token'], 'awaiting_confirmation', result)
+                return
+            adopted = team.apply_automated({
+                'project_id': current['project_id'],
+                'expected_version': current['version'],
+                'proposal_id': current['proposal']['id'],
+            })
+            result.update({
+                'preview_only': False,
+                'auto_adopted': True,
+                'approval_required': False,
+                'adopted_plan_version': adopted['plan']['plan_version'],
+                'expected_version': adopted['version'],
+            })
+            store.event(run['id'], 'auto_adoption', 'completed', {
+                'plan_version': adopted['plan']['plan_version'],
+                'project_version': adopted['version'],
+            })
+            store.finish(run['id'], run['lease_token'], 'succeeded', result)
+            return
         store.finish(run['id'], run['lease_token'], 'awaiting_confirmation', result)
     except Exception as exc:
         code = getattr(exc, 'code', type(exc).__name__)
@@ -132,7 +196,23 @@ def worker(once=False):
         if not connect_local_gateway():
             raise RuntimeError('HERMES_CONNECTION_FAILED')
     store.init()
+    universal_autoloop.init()
+    next_deadline_scan = 0.0
+    next_inbox_scan = 0.0
     while True:
+        now = time.monotonic()
+        if now >= next_deadline_scan:
+            try:
+                autoloop_signals.enqueue_due_deadlines()
+            except Exception:
+                logging.exception('Autoloop deadline scan failed; worker will continue')
+            next_deadline_scan = now + 60.0
+        if now >= next_inbox_scan:
+            try:
+                universal_autoloop.dispatch_pending()
+            except Exception:
+                logging.exception("Autoloop inbox dispatch failed; worker will continue")
+            next_inbox_scan = now + 5.0
         run = store.claim()
         if run:
             execute(run)
