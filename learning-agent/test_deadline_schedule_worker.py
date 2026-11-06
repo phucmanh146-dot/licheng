@@ -1,4 +1,5 @@
 import unittest
+from datetime import datetime, timedelta
 from unittest.mock import patch
 import deadline_schedule
 
@@ -8,11 +9,16 @@ class DeadlineScheduleWorkerTests(unittest.TestCase):
         return {"id":"run-1","lease_token":"lease-1"}
 
     def project(self, saved=True):
+        # Keep the fixture relative to the test execution date. Fixed historical
+        # windows silently expire and route the worker into the availability gate.
+        today = datetime.now(deadline_schedule.period_planner.TZ).date()
+        next_day = today + timedelta(days=1)
+        period_end = today + timedelta(days=3)
         plan = {
             "plan_version": 2,
             "tasks": [{
                 "task_id":"task-1","title":"重要任务","owner_ids":["m1"],
-                "status":"scheduled","deadline":"2026-11-07",
+                "status":"scheduled","deadline":period_end.isoformat(),
                 "estimate_minutes_range":[60,90],"depends_on":[],
                 "steps":["a"],"is_important":True,
             }],
@@ -20,10 +26,10 @@ class DeadlineScheduleWorkerTests(unittest.TestCase):
         }
         if saved:
             plan["replanning_context"] = {
-                "member_id":"m1","period_start":"2026-11-04","period_end":"2026-11-07",
+                "member_id":"m1","period_start":today.isoformat(),"period_end":period_end.isoformat(),
                 "daily_limit":180,"buffer_minutes":10,"transition_buffer_minutes":10,
                 "chunk_minutes":60,"allow_split":True,"selected_task_ids":["task-1"],
-                "windows":[{"date":"2026-11-05","start":"09:00","end":"12:00"}],
+                "windows":[{"date":next_day.isoformat(),"start":"09:00","end":"12:00"}],
                 "busy":[],"full_dates":[],"remaining_minutes":{},
             }
         return {
