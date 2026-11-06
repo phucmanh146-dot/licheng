@@ -25,6 +25,7 @@ import team_inputs
 import team_revision
 import cc_progress
 import research_companion
+import assistant_chat
 import event_kernel
 import platform_store
 
@@ -174,7 +175,7 @@ class Handler(LegacyHandler):
                 allowed += ('/team-recovery.js',)
                 allowed += ('/team-runtime.js',)
                 allowed += ('/team-intervention.js',)
-                allowed += ('/research-companion.js', '/contest-progress.html', '/team-rag.js')
+                allowed += ('/research-companion.js', '/contest-progress.html', '/team-rag.js', '/v10-ai-demo.html', '/v10-ai-chat.js')
                 if self.path.split('?')[0] not in allowed:
                     return self.send_json({'error': '文件不可读取'}, 404)
             return super().do_GET()
@@ -226,6 +227,8 @@ class Handler(LegacyHandler):
             if path == '/api/agent/planner/replan':
                 import action_planner
                 return self.send_json(action_planner.replan(data['diagnosis'], data['plan'], data['settings'], data['expected_plan_version']))
+            if path == '/api/agent/assistant-chat':
+                return self.send_json(assistant_chat.respond(data))
             if path.startswith('/api/agent/team/'):
                 operation = path.rsplit('/',1)[-1]
                 handlers = {'research-save':research_companion.save,
