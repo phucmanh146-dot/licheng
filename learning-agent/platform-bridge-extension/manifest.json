@@ -1,0 +1,20 @@
+{
+  "manifest_version": 3,
+  "name": "上岸鸭 · 云端浏览器证据桥",
+  "version": "1.0.0",
+  "description": "经用户明确启用后，将 ChatGPT、TRAE、豆包页面快照和手动截图发送到上岸鸭云端 Agent 中台。",
+  "permissions": ["storage", "activeTab", "tabs"],
+  "host_permissions": ["https://shanganya-cloud-agent-hub-production.up.railway.app/*"],
+  "background": {"service_worker": "background.js"},
+  "action": {"default_popup": "popup.html"},
+  "content_scripts": [{
+    "matches": [
+      "https://chatgpt.com/*","https://chat.openai.com/*",
+      "https://trae.cn/*","https://*.trae.cn/*",
+      "https://trae.ai/*","https://*.trae.ai/*",
+      "https://doubao.com/*","https://*.doubao.com/*"
+    ],
+    "js": ["content.js"],
+    "run_at": "document_idle"
+  }]
+}

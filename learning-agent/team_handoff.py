@@ -148,6 +148,14 @@ def review_request(p, task_id=None, include_documents=False):
     return packet
 
 
+def receive_manual_review(data):
+    """Accept a human-authored review only after an explicit V2 read attestation."""
+    review = team.required(data, 'review', dict)
+    if review.get('method') != 'manual' or review.get('content_read_confirmed') is not True:
+        raise ValueError('人工复核必须声明 method=manual，并确认已打开当前 V2 原件逐项核对')
+    return receive_review(data, content_read=True)
+
+
 def receive_review(data, content_read=False):
     p = team.current(data)
     if not p['plan'] or p['plan_stale']:
@@ -207,9 +215,14 @@ def receive_review(data, content_read=False):
         if existing['packet'] == review:
             return p
         raise team.Conflict('复核编号已存在且内容不同')
+    manual_attestation = bool(content_read and review.get('method') == 'manual'
+                              and review.get('content_read_confirmed') is True
+                              and p.get('artifact_storage_required'))
     record = {'packet': review, 'review_id': review['review_id'], 'created': team.agent.now(),
-              'source': 'A_handoff', 'content_independently_verified': False,
+              'source': 'A_handoff', 'content_independently_verified': manual_attestation,
               'content_read_verified': bool(content_read and p.get('artifact_storage_required')),
+              'reviewer_id': review['reviewer_id'],
+              'review_method': review['method'],
               'quotes_checked': bool(p.get('artifact_storage_required'))}
     p.setdefault('artifact_reviews', []).append(record)
     task['external_review'] = copy.deepcopy(record)
