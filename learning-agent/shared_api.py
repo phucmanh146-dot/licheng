@@ -46,6 +46,12 @@ async def lifespan(app):
 
 
 app = FastAPI(title='上岸鸭共享科研Agent', lifespan=lifespan)
+
+
+@app.get('/livez')
+def public_livez():
+    """Unauthenticated process liveness probe; deliberately does not touch DB/services."""
+    return {'ok': True, 'mode': 'cloud', 'process': 'alive'}
 origins = [x.strip().rstrip('/') for x in os.getenv('SHANGAN_ALLOWED_ORIGINS','').split(',') if x.strip()]
 if '*' in origins:
     raise RuntimeError('Credentialed API requires explicit origins')
