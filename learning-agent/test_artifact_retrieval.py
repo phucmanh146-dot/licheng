@@ -91,7 +91,7 @@ class RetrievalTests(unittest.TestCase):
         self.assertTrue(all(row['artifact_version'] == 1 for row in catalog))
 
     def test_quote_alignment_uses_exact_text_and_real_storage_locator(self):
-        original = '第一项说明\\n关键证据：本轮有效分母为 7。\\n最后一项说明'
+        original = '第一项说明\n关键证据：本轮有效分母为 7。\n最后一项说明'
         docs = [{'artifact_id':'report', 'artifact_version':2,
                  'units':[{'locator':'page:7/line:2', 'text':original}]}]
         resolved = team_ai.resolve_quote_refs([{
@@ -105,12 +105,12 @@ class RetrievalTests(unittest.TestCase):
 
     def test_quote_alignment_tolerates_linebreaks_but_not_ambiguous_matches(self):
         docs = [{'artifact_id':'report', 'artifact_version':1,
-                 'units':[{'locator':'line:1', 'text':'关键证据：\\n有效分母为 7。'}]}]
+                 'units':[{'locator':'line:1', 'text':'关键证据：\n有效分母为 7。'}]}]
         resolved = team_ai.resolve_quote_refs([{
             'artifact_id':'report', 'artifact_version':1,
             'quote':'关键证据： 有效分母为 7。'
         }], docs)
-        self.assertEqual(resolved[0]['quote'], '关键证据：\\n有效分母为 7。')
+        self.assertEqual(resolved[0]['quote'], '关键证据：\n有效分母为 7。')
         ambiguous = [{'artifact_id':'report', 'artifact_version':1, 'units':[
             {'locator':'line:1', 'text':'关键证据：有效分母为 7。'},
             {'locator':'line:2', 'text':'关键证据：有效分母为 7。'}]}]
