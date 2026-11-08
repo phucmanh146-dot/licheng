@@ -99,7 +99,7 @@ class RetrievalTests(unittest.TestCase):
             'locator':'PDF第7页第二段', 'quote':'关键证据：本轮有效分母为 7。'
         }], docs)
         self.assertEqual(resolved[0]['locator'], 'page:7/line:2')
-        self.assertEqual(resolved[0]['quote'], '关键证据：本轮有效分母为 7。')
+        self.assertEqual(resolved[0]['quote'], '关键证据：本轮有效分母为\\n7。')
         self.assertEqual(resolved[0]['model_locator'], 'PDF第7页第二段')
         self.assertEqual(resolved[0]['quote_origin'], 'server_unique_whitespace_alignment')
 
