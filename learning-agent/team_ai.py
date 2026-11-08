@@ -66,10 +66,10 @@ def quote_catalog(docs):
 
 def _normalized_quote_pattern(quote):
     """Whitespace-tolerant exact-text matcher; punctuation and wording stay exact."""
-    normalized = re.sub(r'\\s+', ' ', str(quote)).strip()
+    normalized = re.sub(r'\s+', ' ', str(quote)).strip()
     if len(normalized) < 8:
         raise ValueError('原文引文过短，至少提供8个可核对字符')
-    return r'\\s+'.join(re.escape(part) for part in normalized.split(' '))
+    return r'\s+'.join(re.escape(part) for part in normalized.split(' '))
 
 
 def resolve_quote_refs(refs, docs):
