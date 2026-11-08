@@ -40,27 +40,34 @@ def validate_action_specificity(step):
 
 
 def quote_catalog(docs):
-    """Offer exact source snippets across each unit, bound to version and locator."""
+    """Offer bounded, evenly distributed exact snippets across stored units."""
+    units = [(doc, unit) for doc in docs for unit in doc.get('units', [])
+             if isinstance(unit.get('text'), str) and unit['text']]
+    if not units:
+        return []
+    # Keep prompt growth bounded for decks/books with hundreds of parsed units.
+    budget = 192
+    if len(units) > budget:
+        indexes = sorted({round(i * (len(units) - 1) / (budget - 1)) for i in range(budget)})
+        units = [units[i] for i in indexes]
+    per_unit = max(1, min(16, budget // len(units)))
     rows = []
-    for doc in docs:
-        for unit in doc.get('units', []):
-            content = unit['text']
-            if not isinstance(content, str) or not content:
+    for doc, unit in units:
+        content = unit['text']
+        # The former start/middle/end sampling missed relevant paragraphs in
+        # long units. Sample evenly across the entire unit, with stable IDs.
+        width = 320
+        count = min(per_unit, max(1, (len(content) + 239) // 240))
+        last_start = max(0, len(content) - width)
+        starts = sorted({round(last_start * i / max(1, count - 1)) for i in range(count)})
+        for start in starts:
+            quote = content[start:start + width]
+            if not quote:
                 continue
-            # The former start/middle/end sampling missed relevant paragraphs in
-            # long units. Sample evenly across the entire unit, with stable IDs.
-            width = 320
-            count = min(16, max(1, (len(content) + 239) // 240))
-            last_start = max(0, len(content) - width)
-            starts = sorted({round(last_start * i / max(1, count - 1)) for i in range(count)})
-            for start in starts:
-                quote = content[start:start + width]
-                if not quote:
-                    continue
-                row = {'artifact_id':doc['artifact_id'], 'artifact_version':doc['artifact_version'],
-                       'locator':unit['locator'], 'quote':quote}
-                row['quote_id'] = 'Q'+hashlib.sha256(team.agent.dump(row).encode('utf-8')).hexdigest()[:20]
-                rows.append(row)
+            row = {'artifact_id':doc['artifact_id'], 'artifact_version':doc['artifact_version'],
+                   'locator':unit['locator'], 'quote':quote}
+            row['quote_id'] = 'Q'+hashlib.sha256(team.agent.dump(row).encode('utf-8')).hexdigest()[:20]
+            rows.append(row)
     return rows
 
 
