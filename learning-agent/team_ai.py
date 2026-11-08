@@ -118,7 +118,7 @@ def resolve_quote_refs(refs, docs):
                 else:
                     units = [unit]
                 for candidate in units:
-                    for match in re.finditer(pattern, candidate['text'], flags=re.IGNORECASE):
+                    for match in re.finditer(pattern, candidate['text']):
                         matches.append((doc, candidate, match))
         if len(matches) != 1:
             raise ValueError('原文引文无法唯一对齐：请使用当前材料的真实 locator 和连续原文；重复出现时补充更长引文')
