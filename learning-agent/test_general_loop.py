@@ -23,7 +23,7 @@ import team_dispatch as dispatch
 
 
 def diagnosis_reply(p, skills=None):
-    r = next(x for x in p['stored_artifacts'] if x['purpose'] == 'input')
+    r = max((x for x in p['stored_artifacts'] if x['purpose'] == 'input'), key=lambda x: (x['artifact_id'], x['artifact_version']))
     ref = {'artifact_id':r['artifact_id'],'artifact_version':r['artifact_version']}
     unit = store.read(p, ref['artifact_id'], ref['artifact_version'])['units'][0]
     return {'gaps':[{'gap_id':'G1','current_evidence':'人工夹具：当前人数没有写明有效分母',
