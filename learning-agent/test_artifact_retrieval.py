@@ -7,6 +7,7 @@ import learning_agent as agent
 import team_orchestrator as team
 import artifact_store as store
 import artifact_retrieval as retrieval
+import team_ai
 
 
 class RetrievalTests(unittest.TestCase):
@@ -78,6 +79,44 @@ class RetrievalTests(unittest.TestCase):
             server.shutdown()
             server.server_close()
             thread.join(timeout=5)
+
+
+    def test_quote_catalog_covers_long_units_beyond_start_middle_end(self):
+        marker = 'TARGET_EVIDENCE_MIDPOINT_742'
+        text = ('前置内容。' * 260) + marker + ('后续内容。' * 260)
+        docs = [{'artifact_id':'report', 'artifact_version':1,
+                 'units':[{'locator':'paragraph:1', 'text':text}]}]
+        catalog = team_ai.quote_catalog(docs)
+        self.assertTrue(any(marker in row['quote'] for row in catalog))
+        self.assertTrue(all(row['artifact_version'] == 1 for row in catalog))
+
+    def test_quote_alignment_uses_exact_text_and_real_storage_locator(self):
+        original = '第一项说明\\n关键证据：本轮有效分母为 7。\\n最后一项说明'
+        docs = [{'artifact_id':'report', 'artifact_version':2,
+                 'units':[{'locator':'page:7/line:2', 'text':original}]}]
+        resolved = team_ai.resolve_quote_refs([{
+            'artifact_id':'report', 'artifact_version':2,
+            'locator':'PDF第7页第二段', 'quote':'关键证据：本轮有效分母为 7。'
+        }], docs)
+        self.assertEqual(resolved[0]['locator'], 'page:7/line:2')
+        self.assertEqual(resolved[0]['quote'], '关键证据：本轮有效分母为 7。')
+        self.assertEqual(resolved[0]['model_locator'], 'PDF第7页第二段')
+        self.assertEqual(resolved[0]['quote_origin'], 'server_unique_whitespace_alignment')
+
+    def test_quote_alignment_tolerates_linebreaks_but_not_ambiguous_matches(self):
+        docs = [{'artifact_id':'report', 'artifact_version':1,
+                 'units':[{'locator':'line:1', 'text':'关键证据：\\n有效分母为 7。'}]}]
+        resolved = team_ai.resolve_quote_refs([{
+            'artifact_id':'report', 'artifact_version':1,
+            'quote':'关键证据： 有效分母为 7。'
+        }], docs)
+        self.assertEqual(resolved[0]['quote'], '关键证据：\\n有效分母为 7。')
+        ambiguous = [{'artifact_id':'report', 'artifact_version':1, 'units':[
+            {'locator':'line:1', 'text':'关键证据：有效分母为 7。'},
+            {'locator':'line:2', 'text':'关键证据：有效分母为 7。'}]}]
+        with self.assertRaisesRegex(ValueError, '无法唯一对齐'):
+            team_ai.resolve_quote_refs([{'artifact_id':'report','artifact_version':1,
+                                         'quote':'关键证据：有效分母为 7。'}], ambiguous)
 
 
 if __name__ == '__main__':
