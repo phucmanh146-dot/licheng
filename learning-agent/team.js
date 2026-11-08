@@ -46,7 +46,7 @@ function proposalView(){
  for(const note of p.plan.assumptions)box.append(el('p',note));
 }
 
-async function request(path,data){const response=await fetch('/api/agent/team'+path,data?{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)}:{});const value=await response.json();if(!response.ok)throw new Error(value.error||'服务不可用');return value;}
+async function request(path,data){const response=await fetch('/api/agent/team'+path,data?{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)}:{});const value=await response.json();if(!response.ok){const error=new Error(value.error||'服务不可用');error.status=response.status;error.payload=value;throw error;}return value;}
 function context(){return {project_id:project.project_id,expected_version:project.version};}
 
 async function refreshAutoloopAlerts(){
@@ -84,7 +84,37 @@ async function refreshAutoloopAlerts(){
 }
 async function load(id){project=await request('?id='+encodeURIComponent(id));localStorage.setItem('team-project',id);render();await refreshAutoloopAlerts();}
 async function refresh(){const state=await request('');$('projects').replaceChildren(...state.projects.map(p=>{const option=el('option',p.goal);option.value=p.project_id;return option;}));const id=project?.project_id||new URLSearchParams(location.search).get('project_id')||localStorage.getItem('team-project');const found=state.projects.find(p=>p.project_id===id)||state.projects[0];if(found){$('projects').value=found.project_id;await load(found.project_id);} $('message').textContent='已读取后端最新状态';}
-async function mutate(path,data){const selected=project.project_id;const p=await request('/'+path,{...context(),...data});if(project.project_id!==selected){$('message').textContent='已保存到原项目；当前项目选择保留';return;}if(path==='undo-plan')periodProject=null;await load(p.project_id);$('message').textContent='已保存 · 版本 '+project.version;}
+async function mutate(path,data){
+ const selected=project.project_id, originalDiagnosis=project.diagnosis?.diagnosis_version;
+ let payload={...context(),...data}, result;
+ try{result=await request('/'+path,payload);}
+ catch(error){
+  if(error.status!==409)throw error;
+  // A version conflict is a stale view, not permission to overwrite newer work.
+  // Refresh first; retry only pure preview-generation operations, once, and only
+  // when the diagnosis is unchanged and no other proposal has already been saved.
+  const latest=await request('?id='+encodeURIComponent(selected));
+  if(project.project_id!==selected)throw error;
+  project=latest;render();
+  if(path==='generate-b'&&latest.diagnosis&&!latest.diagnosis_needs_refresh&&
+     latest.diagnosis.diagnosis_version===originalDiagnosis&&!latest.proposal){
+    $('message').textContent='项目刚刚有更新，已读取最新版本；正在安全续接 B 的计划预览…';
+    result=await request('/'+path,{project_id:selected,expected_version:latest.version,...data});
+  }else if(path==='propose'&&latest.diagnosis&&!latest.diagnosis_needs_refresh&&
+     latest.diagnosis.diagnosis_version===originalDiagnosis&&!latest.proposal&&
+     data.plan?.based_on_diagnosis_version===originalDiagnosis){
+    $('message').textContent='项目刚刚有更新，已读取最新版本；正在重新校验这份计划…';
+    result=await request('/'+path,{project_id:selected,expected_version:latest.version,...data});
+  }else{
+    $('message').textContent='版本冲突已恢复：已刷新到最新项目状态。为保护新成果，本次没有重复提交；请根据最新预览继续。';
+    return;
+  }
+ }
+ if(project.project_id!==selected){$('message').textContent='已保存到原项目；当前项目选择保留';return;}
+ if(path==='undo-plan')periodProject=null;
+ await load(result.project_id);
+ $('message').textContent='已保存 · 版本 '+project.version;
+}
 async function safe(fn){try{await fn();}catch(e){$('message').textContent=e.message;}}
 function render(){
  window.dispatchEvent(new CustomEvent('research-project-changed',{detail:{id:project.project_id}}));
