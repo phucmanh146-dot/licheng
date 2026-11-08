@@ -106,6 +106,33 @@ def resolve_quote_refs(refs, docs):
         if not isinstance(quote, str) or not quote.strip():
             resolved.append(copy.deepcopy(ref))
             continue
+        # Preserve the legacy exact-quote path byte-for-byte when its locator is
+        # already a real storage locator. An exact quote paired with a wrong
+        # locator is a real citation error, not a whitespace-normalization case.
+        exact_matches = []
+        for doc in docs:
+            if ref.get('artifact_id') and ref['artifact_id'] != doc['artifact_id']:
+                continue
+            if ref.get('artifact_version') and ref['artifact_version'] != doc['artifact_version']:
+                continue
+            for unit in doc.get('units', []):
+                if quote in unit['text']:
+                    exact_matches.append((doc, unit))
+        if exact_matches:
+            if ref.get('locator') and len(exact_matches) == 1 and ref['locator'] == exact_matches[0][1]['locator']:
+                resolved.append(copy.deepcopy(ref))
+                continue
+            if ref.get('locator') and all(ref['locator'] != unit['locator'] for _, unit in exact_matches):
+                raise ValueError('原文完全匹配，但模型提供的 locator 不是材料的真实存储位置')
+            if not ref.get('locator') and len(exact_matches) == 1:
+                doc, unit = exact_matches[0]
+                aligned = copy.deepcopy(ref)
+                aligned.update({'artifact_id':doc['artifact_id'], 'artifact_version':doc['artifact_version'],
+                                'locator':unit['locator'], 'quote_origin':'server_unique_exact_alignment'})
+                resolved.append(aligned)
+                continue
+            raise ValueError('原文在多个位置重复出现；请提供正确 locator 或更长引文')
+
         pattern = _normalized_quote_pattern(quote)
         matches = []
         for doc in docs:
@@ -116,13 +143,9 @@ def resolve_quote_refs(refs, docs):
             for unit in doc.get('units', []):
                 if ref.get('locator') and ref['locator'] == unit['locator']:
                     units = [unit]
-                elif ref.get('locator'):
-                    # A model locator may be a printed page label rather than the
-                    # parser's storage locator. Search this artifact version only;
-                    # accept the alignment only when the quote identifies one unit.
-                    units = [unit] if (ref.get('artifact_id') in (None, doc['artifact_id']) and
-                                       ref.get('artifact_version') in (None, doc['artifact_version'])) else []
                 else:
+                    # Printed page labels may differ from parser storage locators.
+                    # Only whitespace-normalized unique matches can be aligned.
                     units = [unit]
                 for candidate in units:
                     for match in re.finditer(pattern, candidate['text']):
