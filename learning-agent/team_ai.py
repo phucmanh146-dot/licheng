@@ -161,7 +161,7 @@ def resolve_quote_refs(refs, docs):
                     for match in re.finditer(pattern, candidate['text']):
                         matches.append((doc, candidate, match))
         if len(matches) != 1:
-            raise ValueError('原文引文无法唯一对齐：请使用当前材料的真实 locator 和连续原文；重复出现时补充更长引文')
+            raise ValueError('原文引文无法唯一对齐：ref='+team.agent.dump({k:ref.get(k) for k in ('artifact_id','artifact_version','locator')})+'; available='+team.agent.dump([{'artifact_id':d.get('artifact_id'),'artifact_version':d.get('artifact_version'),'locator':u.get('locator'),'quote_exact':quote in u.get('text',''),'text_length':len(u.get('text',''))} for d in docs for u in d.get('units',[])]))
         doc, unit, match = matches[0]
         aligned = copy.deepcopy(ref)
         aligned.update({'artifact_id':doc['artifact_id'], 'artifact_version':doc['artifact_version'],
