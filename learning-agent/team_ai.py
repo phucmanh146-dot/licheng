@@ -106,9 +106,19 @@ def resolve_quote_refs(refs, docs):
         if not isinstance(quote, str) or not quote.strip():
             resolved.append(copy.deepcopy(ref))
             continue
-        # Preserve the legacy exact-quote path byte-for-byte when its locator is
-        # already a real storage locator. An exact quote paired with a wrong
-        # locator is a real citation error, not a whitespace-normalization case.
+        # Fast path: preserve exact legacy citations unchanged when the supplied
+        # artifact/version/locator all identify the exact stored text.
+        if ref.get('artifact_id') and ref.get('artifact_version') and ref.get('locator'):
+            exact_unit = next((unit for doc in docs
+                if doc['artifact_id'] == ref['artifact_id'] and
+                   doc['artifact_version'] == ref['artifact_version']
+                for unit in doc.get('units', []) if unit['locator'] == ref['locator']), None)
+            if exact_unit is not None and quote in exact_unit['text']:
+                resolved.append(copy.deepcopy(ref))
+                continue
+
+        # Preserve exact citations only at a real stored locator. An exact quote
+        # paired with a non-existent locator is a citation error, not whitespace.
         exact_matches = []
         for doc in docs:
             if ref.get('artifact_id') and ref['artifact_id'] != doc['artifact_id']:
@@ -131,7 +141,7 @@ def resolve_quote_refs(refs, docs):
                                 'locator':unit['locator'], 'quote_origin':'server_unique_exact_alignment'})
                 resolved.append(aligned)
                 continue
-            raise ValueError('原文在多个位置重复出现；请提供正确 locator 或更长引文')
+            raise ValueError('原文引文无法唯一对齐：原文在多个位置重复出现；请提供正确 locator 或更长引文')
 
         pattern = _normalized_quote_pattern(quote)
         matches = []
