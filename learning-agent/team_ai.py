@@ -40,14 +40,21 @@ def validate_action_specificity(step):
 
 
 def quote_catalog(docs):
-    """Offer exact source snippets, bound to artifact/version/location/content."""
+    """Offer exact source snippets across each unit, bound to version and locator."""
     rows = []
     for doc in docs:
         for unit in doc.get('units', []):
             content = unit['text']
-            starts = sorted({0, max(0, len(content)//2-160), max(0, len(content)-320)})
+            if not isinstance(content, str) or not content:
+                continue
+            # The former start/middle/end sampling missed relevant paragraphs in
+            # long units. Sample evenly across the entire unit, with stable IDs.
+            width = 320
+            count = min(16, max(1, (len(content) + 239) // 240))
+            last_start = max(0, len(content) - width)
+            starts = sorted({round(last_start * i / max(1, count - 1)) for i in range(count)})
             for start in starts:
-                quote = content[start:start+320]
+                quote = content[start:start + width]
                 if not quote:
                     continue
                 row = {'artifact_id':doc['artifact_id'], 'artifact_version':doc['artifact_version'],
@@ -57,44 +64,97 @@ def quote_catalog(docs):
     return rows
 
 
+def _normalized_quote_pattern(quote):
+    """Whitespace-tolerant exact-text matcher; punctuation and wording stay exact."""
+    normalized = re.sub(r'\\s+', ' ', str(quote)).strip()
+    if len(normalized) < 8:
+        raise ValueError('原文引文过短，至少提供8个可核对字符')
+    return r'\\s+'.join(re.escape(part) for part in normalized.split(' '))
+
+
 def resolve_quote_refs(refs, docs):
-    """Expand an explicit model selection; conflicting supplied quotes fail closed."""
+    """Resolve quote IDs or uniquely align copied text to its actual stored locator."""
     catalog = {r['quote_id']:r for r in quote_catalog(docs)}
     if not isinstance(refs, list):
         raise ValueError('evidence_refs必须为列表')
     resolved = []
     for ref in refs:
-        # Normalize only exact quote IDs from this request's source catalog.
         if isinstance(ref, str):
             ref = {'quote_id': ref}
         if not isinstance(ref, dict):
             raise ValueError('引用必须为对象')
-        if not ref.get('quote_id'):
+        if ref.get('quote_id'):
+            source = catalog.get(ref['quote_id'])
+            if source is None:
+                raise ValueError('quote_id不属于当前材料版本的可用原文片段')
+            for key in ('artifact_id','artifact_version','locator','quote'):
+                if key in ref and ref[key] != source[key]:
+                    raise ValueError('quote_id与自行填写的引用冲突；未替模型修正错误引文')
+            resolved.append({**copy.deepcopy(source), 'quote_origin':'server_catalog_selected_by_model'})
+            continue
+
+        # Some models correctly copy the original sentence but normalize PDF/DOCX
+        # line breaks. Align only a unique verbatim (apart from whitespace) match.
+        quote = ref.get('quote')
+        if not isinstance(quote, str) or not quote.strip():
             resolved.append(copy.deepcopy(ref))
             continue
-        source = catalog.get(ref['quote_id'])
-        if source is None:
-            raise ValueError('quote_id不属于当前材料版本的可用原文片段')
-        for key in ('artifact_id','artifact_version','locator','quote'):
-            if key in ref and ref[key] != source[key]:
-                raise ValueError('quote_id与自行填写的引用冲突；未替模型修正错误引文')
-        resolved.append({**copy.deepcopy(source), 'quote_origin':'server_catalog_selected_by_model'})
+        pattern = _normalized_quote_pattern(quote)
+        matches = []
+        for doc in docs:
+            if ref.get('artifact_id') and ref['artifact_id'] != doc['artifact_id']:
+                continue
+            if ref.get('artifact_version') and ref['artifact_version'] != doc['artifact_version']:
+                continue
+            for unit in doc.get('units', []):
+                if ref.get('locator') and ref['locator'] == unit['locator']:
+                    units = [unit]
+                elif ref.get('locator'):
+                    # A model locator may be a printed page label rather than the
+                    # parser's storage locator. Search this artifact version only;
+                    # accept the alignment only when the quote identifies one unit.
+                    units = [unit] if (ref.get('artifact_id') in (None, doc['artifact_id']) and
+                                       ref.get('artifact_version') in (None, doc['artifact_version'])) else []
+                else:
+                    units = [unit]
+                for candidate in units:
+                    for match in re.finditer(pattern, candidate['text'], flags=re.IGNORECASE):
+                        matches.append((doc, candidate, match))
+        if len(matches) != 1:
+            raise ValueError('原文引文无法唯一对齐：请使用当前材料的真实 locator 和连续原文；重复出现时补充更长引文')
+        doc, unit, match = matches[0]
+        aligned = copy.deepcopy(ref)
+        aligned.update({'artifact_id':doc['artifact_id'], 'artifact_version':doc['artifact_version'],
+                        'locator':unit['locator'], 'quote':match.group(0),
+                        'quote_origin':'server_unique_whitespace_alignment'})
+        if ref.get('locator') and ref['locator'] != unit['locator']:
+            aligned['model_locator'] = ref['locator']
+        resolved.append(aligned)
     return resolved
 
+
 def bind_selected_location(gap):
-    """Fill omitted coordinates from one explicit catalog selection, never fix conflicts."""
+    """Bind a unique server-grounded quote to its actual artifact and storage locator."""
     selected = [r for r in gap.get('evidence_refs', [])
-                if r.get('quote_origin') == 'server_catalog_selected_by_model']
+                if r.get('quote_origin') in ('server_catalog_selected_by_model',
+                                             'server_unique_whitespace_alignment')]
     coords = {(r['artifact_id'],r['artifact_version'],r['locator']) for r in selected}
     if len(coords) != 1:
         return
     aid,version,loc = next(iter(coords))
-    if 'current_artifact' not in gap:
+    if 'current_artifact' not in gap or not gap.get('current_artifact', {}).get('artifact_id'):
         gap['current_artifact'] = {'artifact_id':aid,'artifact_version':version}
-        gap['current_artifact_origin'] = 'server_catalog_selected_by_model'
-    if 'current_locator' not in gap:
+        gap['current_artifact_origin'] = 'server_evidence_alignment'
+    if not gap.get('current_locator'):
         gap['current_locator'] = loc
-        gap['current_locator_origin'] = 'server_catalog_selected_by_model'
+        gap['current_locator_origin'] = 'server_evidence_alignment'
+    elif gap['current_locator'] != loc and any(
+            r.get('quote_origin') == 'server_unique_whitespace_alignment' for r in selected):
+        # Keep the model's original page label for audit; the uniquely matched
+        # stored unit is the canonical locator used by downstream validators.
+        gap['model_current_locator'] = gap['current_locator']
+        gap['current_locator'] = loc
+        gap['current_locator_origin'] = 'server_unique_whitespace_alignment'
 
 
 SYSTEM = '''你是竞赛科研任务推进Agent的诊断/复核服务。只输出JSON。
