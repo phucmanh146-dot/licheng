@@ -73,7 +73,7 @@ def status():
     key = os.getenv("OPENAI_API_KEY", "").strip()
     return {"ok": True, "configured": bool(key), "provider": "OpenAI Responses API",
             "model": DEFAULT_MODEL, "apiKeyStored": "server-environment-only",
-            "tools": ["web_search", "search_knowledge", "read_knowledge", "read_public_url", "search_web"],
+            "tools": ["web_search", "get_execution_state", "record_interruption", "resume_interruption", "search_knowledge", "read_knowledge", "read_public_url", "search_web"],
             "maxToolRounds": MAX_ROUNDS}
 
 
