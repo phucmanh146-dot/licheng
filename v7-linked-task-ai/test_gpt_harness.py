@@ -6,7 +6,7 @@ import gpt_harness
 from rescue_service import RescueError
 
 
-class GPT ჰarnessTests(unittest.TestCase):
+class GPTHarnessTests(unittest.TestCase):
     def test_status_never_returns_secret(self):
         with patch.dict(os.environ, {"OPENAI_API_KEY": "test-secret-do-not-return"}):
             state = gpt_harness.status()
