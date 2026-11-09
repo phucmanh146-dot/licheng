@@ -72,9 +72,9 @@ function distribute(a,b){
  return {p1,p2,unresolved,lateScan};
 }
 function dueReview(a,at){const time=at||now(),day=key(time);if(time.getHours()*60+time.getMinutes()<900)return [];
-const ddls=[...new Set(a.tasks.filter(t=>!isDone(t)&&due(t)).map(due))].sort(),batches=ddls.map(d=>batchFor(a,d)).filter(b=>reviewPhase(time,b.ddl)&&b.tasks.length&&!a._autoloopDdlReviewKeys['d3:'+b.ddl]);
+const ddls=[...new Set(a.tasks.filter(t=>!isDone(t)&&due(t)).map(due))].sort(),batches=ddls.map(d=>batchFor(a,d)).filter(b=>reviewPhase(time,b.ddl)&&(b.tasks.length||b.manualLate.length)&&!a._autoloopDdlReviewKeys['d3:'+b.ddl]);
 if(!batches.length)return [];const b=batches[0];a._autoloopDdlReviewKeys['d3:'+b.ddl]=Date.now();if(reviewPhase(time,b.ddl)==='D-2')a._autoloopDdlReviewKeys['d2:'+b.ddl]=Date.now();
-b.tasks.forEach(t=>{t.ddlReviewPending=true;});save(a);emit('ddl.review.opened',{ddl:b.ddl,date:day,phase:reviewPhase(time,b.ddl),overload:b.overload,demand:b.demand,available:b.available,manualLate:b.manualLate.map(t=>t.id)});
+b.tasks.concat(b.manualLate).forEach(t=>{t.ddlReviewPending=true;});save(a);emit('ddl.review.opened',{ddl:b.ddl,date:day,phase:reviewPhase(time,b.ddl),overload:b.overload,demand:b.demand,available:b.available,manualLate:b.manualLate.map(t=>t.id)});
 const result=distribute(a,b);
 if(result.unresolved.length||b.manualLate.length){const manual=b.manualLate.length?'<h4>手动锁定且排期晚于保护窗口（未自动挪动）</h4>'+list(b.manualLate):'';const unresolved=result.unresolved.length?'<h4>容量不足、仍待安排</h4>'+list(result.unresolved):'';dialog('DDL '+reviewPhase(time,b.ddl)+' 自动排期结果',manual+unresolved,[{label:'打开任务池',primary:true,run:showPools},{label:'逐项确认舍弃未安排任务',run:()=>chooseDiscard(a,result.unresolved,()=>save(a),'DDL review human-approved discard')}]);}
 else toast('DDL '+reviewPhase(time,b.ddl)+' 核查完成：'+b.tasks.length+'项任务已自动排入时间表；低优先级任务仅作候选，未自动舍弃。');
