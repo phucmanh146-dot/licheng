@@ -54,7 +54,7 @@ def backend(cookie):
    raise RuntimeError('当前会话后台工作进程达到安全上限，请稍后重试；已有任务文件不会删除。')
   sock=socket.socket();sock.bind(('127.0.0.1',0));port=sock.getsockname()[1];sock.close()
   home=SESSION_ROOT/cookie;home.mkdir(exist_ok=True)
-  env=os.environ.copy();env.pop('SY_WECHAT_AGENT_TOKEN',None);env.pop('SHANGANYA_ACCOUNT_DATA_DIR',None);env.update(SHANGANYA_SESSION_HOME=str(home),SHANGANYA_WORKER_PORT=str(port))
+  env=os.environ.copy();env.pop('SY_WECHAT_AGENT_TOKEN',None);env.pop('SHANGANYA_ACCOUNT_DATA_DIR',None);env.update(SHANGANYA_SESSION_HOME=str(home),SHANGANYA_WORKER_PORT=str(port),SHANGANYA_AUTOLOOP_ACCOUNT_ID=session_key)
   process=subprocess.Popen([sys.executable,str(ROOT/'public_worker.py')],cwd=ROOT,env=env,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
   item={'process':process,'port':port,'seen':time.monotonic()}
   SESSIONS[cookie]=item
