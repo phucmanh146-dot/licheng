@@ -187,6 +187,20 @@ def ask(data, client="unknown"):
         context += "\n\n用户本轮附带的链接（可调用 read_public_url 读取）：\n" + "\n".join(str(x)[:2048] for x in urls[:12])
     if task_context:
         context += "\n\n【工作台当前任务与执行状态】\n" + task_context
+    wechat_rows = data.get("wechatMessages") if isinstance(data.get("wechatMessages"), list) else []
+    if wechat_rows:
+        rows = []
+        for row in wechat_rows[:80]:
+            if not isinstance(row, dict):
+                continue
+            body = str(row.get("text") or row.get("content") or row.get("body") or "").strip()
+            if body:
+                rows.append("[" + str(row.get("time") or "")[:60] + "] " + str(row.get("sender") or "")[:60] + ": " + body[:1200])
+        if rows:
+            context += "\n\n【用户本轮明确选择关联的微信消息】\n" + "\n".join(rows)[:12000]
+        wechat_prompt = str(data.get("wechatPrompt") or "").strip()[:3000]
+        if wechat_prompt:
+            context += "\n\n【微信专项分析要求】\n" + wechat_prompt
     input_items = []
     for item in history[-14:]:
         if not isinstance(item, dict) or item.get("role") not in ("user", "assistant"):
