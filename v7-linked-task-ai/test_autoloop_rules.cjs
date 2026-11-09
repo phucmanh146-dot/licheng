@@ -66,9 +66,10 @@ assert(rules.applyAgentAction({type:'move_to_buffer',taskId:ordinary.id,reason:'
 assert(t.due({deadlineDate:day})===day,'legacy deadlineDate must be recognized');
 assert(t.isDone({completedAt:Date.now()})===true,'completedAt must count as completed');
 assert(t.mins({remainingWorkMinutes:17})===17,'remaining work minutes must override original estimate');
-assert(t.reviewPhase(new Date(day+'T14:59:00'),day)==='','DDL review must not fire before 15:00');
-assert(t.reviewPhase(new Date(day+'T15:00:00'),day)==='D-3','DDL review must fire at D-3 15:00');
-assert(t.reviewPhase(new Date(t.dateAdd(day,-2)+'T15:00:00'),day)==='D-2','final arrangement window must fire at D-2 15:00');
+const ddlForWindow=t.dateAdd(day,3);
+assert(t.reviewPhase(new Date(day+'T14:59:00'),ddlForWindow)==='','DDL review must not fire before 15:00');
+assert(t.reviewPhase(new Date(day+'T15:00:00'),ddlForWindow)==='D-3','DDL review must fire at D-3 15:00');
+assert(t.reviewPhase(new Date(t.dateAdd(ddlForWindow,-2)+'T15:00:00'),ddlForWindow)==='D-2','final arrangement window must fire at D-2 15:00');
 assert(t.capacity({tasks:[],dailyHours:{}},day)===0,'missing daily capacity must not be invented');
 const lateScheduled={id:'late-scheduled',name:'\u957f\u671f\u91cd\u8981\u4efb\u52a1',date:t.dateAdd(day,-1),startMinutes:600,endMinutes:720,plannedMinutes:120,aiScheduled:true,scheduleStatus:'scheduled',dueDate:day,important:true};
 const manualLate={id:'manual-late',name:'\u624b\u52a8\u9501\u5b9a\u4efb\u52a1',date:t.dateAdd(day,-1),startMinutes:780,endMinutes:840,plannedMinutes:60,aiScheduled:false,scheduleStatus:'scheduled',dueDate:day,important:true};
