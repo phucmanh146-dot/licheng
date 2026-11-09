@@ -10,7 +10,7 @@ SESSION_ROOT=Path(os.environ.get('SHANGANYA_SESSION_ROOT',str(cloud_accounts.DAT
 SESSION_ROOT.mkdir(parents=True,exist_ok=True)
 SESSIONS={};LOCK=threading.RLock()
 AI_USAGE={};AI_USAGE_LOCK=threading.RLock()
-SHARED_AI_PATHS={'/api/memo/parse','/api/ask-ai','/api/p2/ask','/api/pm/ask','/api/focus-observe','/api/ai-test','/api/pm/test'}
+SHARED_AI_PATHS={'/api/memo/parse','/api/ask-ai','/api/p2/ask','/api/harness/chat','/api/pm/ask','/api/focus-observe','/api/ai-test','/api/pm/test'}
 def shared_ai_enabled():
  return bool(os.getenv('FOCUS_AI_API_KEY','').strip() or os.getenv('OPENAI_API_KEY','').strip())
 def allow_shared_ai(account):
