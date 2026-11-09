@@ -213,9 +213,13 @@ def ask(data, client="unknown"):
     input_items.append({"role": "user", "content": user_content})
     traces, tools_used = [], []
     for round_no in range(MAX_ROUNDS):
-        response = _response({"model": str(data.get("model") or DEFAULT_MODEL),
+        response = _response({"model": DEFAULT_MODEL,
             "instructions": SYSTEM, "input": input_items, "tools": TOOLS,
             "tool_choice": "auto", "max_output_tokens": 3000, "store": False}, 110)
+        for item in response.get("output", []):
+            if item.get("type") == "web_search_call":
+                tools_used.append("web_search")
+                traces.append({"tool": "web_search", "ok": True, "summary": "OpenAI 已执行网页搜索"})
         calls = [x for x in response.get("output", []) if x.get("type") == "function_call"]
         if not calls:
             answer = _output_text(response)
