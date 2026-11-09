@@ -86,6 +86,7 @@
     else {let n=document.getElementById('aloop-toast');if(!n){n=document.createElement('div');n.id='aloop-toast';n.className='aloop-toast';document.body.appendChild(n);}n.textContent=message;n.hidden=false;clearTimeout(n._timer);n._timer=setTimeout(()=>n.hidden=true,4500);}
   }
   function overlaps(a,b){return a.start<b.end && a.end>b.start;}
+  function dueDateOf(t){return String(t&& (t.dueDate||t.deadlineDate||t.deadline)||'').slice(0,10);}
   function priority(t){const n=String(t.name||t.title||'');const core=t.mustKeep===true||t.coreGoal===true||/TRAE.{0,8}(\u8bad\u7ec3\u8425|\u8bfe\u7a0b|\u539f\u578b)|\u7ba1\u7406\u4f1a\u8ba1|\u8003\u7814|Agent.{0,8}(\u5927\u8d5b|PPT|\u667a\u80fd\u4f53)/.test(n);if(core)return -20;if(t.schedulePriority==='resume-first')return -10;if(t.urgent)return -5;if(t.important)return 0;if(t.schedulePriority==='below-high')return 5;return 8;}
   function reflow(a,fromDate,nowMinutesOverride) {
     const start=fromDate||nowDate(), placed=new Set(), warnings=[];
@@ -94,10 +95,12 @@
     for(let offset=0;offset<3;offset++){
       const day=addDays(start,offset), fixed=(a.tasks||[]).filter(t=>!t.done&&t.date===day&&Number.isFinite(t.startMinutes)&&(t.fixedBlock===true||t.taskType==='fixed'||t.category==='固定事务'))
         .map(t=>({id:t.id,start:t.startMinutes,end:Number(t.endMinutes||t.startMinutes+(Number(t.plannedMinutes||t.estMinutes)||15))})).sort((x,y)=>x.start-y.start);
-      const ddlSoon=(t)=>!!t.dueDate&&t.dueDate>=start&&t.dueDate<=addDays(start,2);
-      const movable=(a.tasks||[]).filter(t=>!t.done&&(!t.workflowPool||t.workflowPool==='scheduled')&&!placed.has(t.id)&&!(t.fixedBlock===true||t.taskType==='fixed'||t.category==='固定事务')&&(t.date<=day||ddlSoon(t))&&(!t.dueDate||t.dueDate>=day)&&(!t.scheduleNotBefore||t.scheduleNotBefore<=day)&&(!t.latestScheduleDate||day<=t.latestScheduleDate))
-        .sort((x,y)=>(x.dueDate||'9999-12-31').localeCompare(y.dueDate||'9999-12-31')||priority(x)-priority(y)||Number(x.order||0)-Number(y.order||0));
-      const dailyCap=Math.max(30,Math.floor((Number(a.dailyHours&&a.dailyHours[day])||4)*60*.8));
+      const ddlSoon=(t)=>{const d=dueDateOf(t);return !!d&&d>=start&&d<=addDays(start,2);};
+      const movable=(a.tasks||[]).filter(t=>!t.done&&(!t.workflowPool||t.workflowPool==='scheduled')&&!placed.has(t.id)&&!(t.fixedBlock===true||t.taskType==='fixed'||t.category==='固定事务')&&(t.date<=day||ddlSoon(t))&&(!dueDateOf(t)||dueDateOf(t)>=day)&&(!t.scheduleNotBefore||t.scheduleNotBefore<=day)&&(!t.latestScheduleDate||day<=t.latestScheduleDate))
+        .sort((x,y)=>(dueDateOf(x)||'9999-12-31').localeCompare(dueDateOf(y)||'9999-12-31')||priority(x)-priority(y)||Number(x.order||0)-Number(y.order||0));
+      const hours=Number(a.dailyHours&&a.dailyHours[day]);
+      const dailyCap=Number.isFinite(hours)&&hours>0?Math.floor(hours*60*.8):0;
+      if(!dailyCap&&movable.length)warnings.push(day+' 未设置可投入时长，未安排任务');
       let used=fixed.reduce((sum,x)=>sum+Math.max(0,x.end-x.start),0), occupied=fixed.slice();
       for(const task of movable){
         const cutoffAt=new Date(day+'T15:00:00').getTime();
@@ -108,13 +111,13 @@
           warnings.push(task.name+'after 15:00 intake deferred to the next available day');
           continue;
         }
-        const duration=Math.max(5,Math.min(480,Number(task.plannedMinutes||task.estMinutes)||25));
+        const duration=Math.max(5,Math.min(480,Number(task.remainingWorkMinutes||task.remainingMinutes||task.plannedMinutes||task.estMinutes||task.estimatedMinutes)||25));
         if(used+duration>dailyCap){task.scheduleStatus='needs-arrangement';task.scheduleReason='保留20%缓冲后，今日容量不足';warnings.push(task.name);continue;}
         let candidate=day===nowDate()?Math.max(START_MIN,Math.ceil((currentMinute+10)/5)*5):START_MIN;
         if(Number.isFinite(task.startMinutes)&&task.date===day)candidate=Math.max(candidate,task.startMinutes);
         let found=null;
         const parsedDeadline=task.dueTime!=null?minuteOf(task.dueTime):null;
-        const deadlineLimit=task.dueDate===day&&parsedDeadline!=null?Math.min(END_MIN,parsedDeadline):END_MIN;
+        const deadlineLimit=dueDateOf(task)===day&&parsedDeadline!=null?Math.min(END_MIN,parsedDeadline):END_MIN;
         while(candidate+duration<=deadlineLimit){
           const segment={start:candidate,end:candidate+duration};
           const conflict=occupied.filter(x=>overlaps(segment,x)).sort((x,y)=>x.end-y.end)[0];
