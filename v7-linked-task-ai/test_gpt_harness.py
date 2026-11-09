@@ -40,6 +40,41 @@ class GPTHarnessTests(unittest.TestCase):
         self.assertEqual(request.call_count, 2)
         self.assertEqual(tool.call_count, 1)
 
+
+    def test_autoloop_state_is_read_for_current_account(self):
+        expected = {"ok": True, "checkpoint": {"taskId": "daily-plan"}, "pendingInterruptions": []}
+        with patch.dict(os.environ, {"SHANGANYA_AUTOLOOP_ACCOUNT_ID": "user_test"}), \
+             patch.object(gpt_harness.autoloop, "get_state", return_value=expected) as read:
+            result = gpt_harness._tool("get_execution_state", {})
+        self.assertTrue(result["ok"])
+        self.assertEqual(result["state"], expected)
+        read.assert_called_once_with("user_test", limit=100)
+
+    def test_interruption_requires_existing_checkpoint(self):
+        with patch.object(gpt_harness.autoloop, "get_state", return_value={"checkpoint": None}):
+            result = gpt_harness._tool("record_interruption", {
+                "note": "临时突发任务", "currentTaskId": "task-1", "progress": "已完成一半"
+            })
+        self.assertFalse(result["ok"])
+        self.assertIn("未写入空白快照", result["error"])
+
+    def test_interruption_records_checkpoint_without_rescheduling(self):
+        state = {"checkpoint": {"taskId": "daily-plan", "snapshot": {"tasks": [{"id": "task-1"}]}}}
+        with patch.object(gpt_harness.autoloop, "get_state", return_value=state), \
+             patch.object(gpt_harness.autoloop, "interrupt", return_value={"ok": True, "revision": 2}) as save:
+            result = gpt_harness._tool("record_interruption", {
+                "note": "紧急电话", "currentTaskId": "task-1", "progress": "已完成第一步"
+            })
+        self.assertTrue(result["ok"])
+        self.assertIn("日程未自动改写", result["note"])
+        self.assertEqual(save.call_args.kwargs if save.call_args.kwargs else save.call_args.args[0]["taskId"], "daily-plan")
+
+    def test_resume_requires_pending_interruption(self):
+        with patch.object(gpt_harness.autoloop, "get_state", return_value={"pendingInterruptions": []}):
+            result = gpt_harness._tool("resume_interruption", {"note": "我回来了"})
+        self.assertFalse(result["ok"])
+        self.assertIn("没有未解决的中断", result["error"])
+
     def test_rate_limit_is_enforced(self):
         client = "rate-test-client"
         with gpt_harness._RATE_LOCK:
