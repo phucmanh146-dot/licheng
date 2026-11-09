@@ -6,9 +6,11 @@ const now=()=>new Date(),key=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padSt
 const today=()=>root.SY.todayKey?root.SY.todayKey():key(now()),acct=()=>root.SY.getAcctData(),save=a=>root.SY.saveAcctData(a);
 const id=()=>root.crypto&&root.crypto.randomUUID?root.crypto.randomUUID():'aloop-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2);
 const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const pool=t=>t.workflowPool||'scheduled',due=t=>String(t.dueDate||t.deadline||'').slice(0,10);
-const mins=t=>Math.max(5,Number(t.remainingMinutes||t.plannedMinutes||t.estMinutes)||25);
+const pool=t=>t.workflowPool||'scheduled',due=t=>String(t.dueDate||t.deadlineDate||t.deadline||'').slice(0,10);
+const isDone=t=>!!(t&&(t.done||t.completed||t.completedAt||['completed','passed'].includes(String(t.status||'').toLowerCase())));
+const mins=t=>Math.max(5,Number(t.remainingWorkMinutes||t.remainingMinutes||t.plannedMinutes||t.estMinutes||t.estimatedMinutes)||25);
 const fixed=t=>t.fixedBlock===true||t.taskType==='fixed'||t.hardCommitment===true||t.nonDisplaceable===true||t.category==='\u56fa\u5b9a\u4e8b\u52a1';
+const manualLocked=t=>Number.isFinite(t.startMinutes)&&t.aiScheduled!==true&&!fixed(t);
 const end=t=>Number.isFinite(t.endMinutes)?t.endMinutes:Number(t.startMinutes||0)+mins(t);
 const dateAdd=(s,n)=>{const d=new Date(s+'T12:00:00');d.setDate(d.getDate()+n);return key(d);};
 function ensure(a){a.tasks=Array.isArray(a.tasks)?a.tasks:[];a._autoloopDdlReviewKeys=a._autoloopDdlReviewKeys||{};return a;}
@@ -30,10 +32,14 @@ function important(t){if(t.mustKeep===true||t.coreGoal===true||t.urgent===true||
 if(t.mustKeep===false||t.coreGoal===false||t.important===false||t.importance==='low'||t.priority==='low')return false;
 const n=label(t);if(/TRAE.{0,8}(\u8bad\u7ec3\u8425|\u8bfe\u7a0b|\u539f\u578b)|\u7ba1\u7406\u4f1a\u8ba1|\u8003\u7814|Agent.{0,8}(\u5927\u8d5b|PPT|\u667a\u80fd\u4f53)|\u6bd4\u8d5b.{0,8}\u4ea4\u4ed8/.test(n))return true;return null;}
 function quadrant(t){const imp=important(t);if(imp===null)return 'unknown-important';return (mins(t)>60||(Array.isArray(t.subtasks)&&t.subtasks.length>3)?'long':'short')+'-'+(imp?'important':'unimportant');}
-function capacity(a,day){const hours=Number(a.dailyHours&&a.dailyHours[day])||4,cap=Math.floor(hours*60*.8);const fixedUsed=a.tasks.filter(t=>!t.done&&pool(t)==='scheduled'&&t.date===day&&Number.isFinite(t.startMinutes)).reduce((n,t)=>n+Math.max(0,end(t)-t.startMinutes),0);return Math.max(0,cap-fixedUsed);}
-function batchFor(a,ddl){const d3=dateAdd(ddl,-3),d2=dateAdd(ddl,-2),tasks=a.tasks.filter(t=>!t.done&&(pool(t)==='scheduled'||pool(t)==='pending'||pool(t)==='buffer')&&due(t)===ddl&&(!Number.isFinite(t.startMinutes)||t.scheduleStatus==='needs-arrangement'||pool(t)==='pending')&&!t.ddlReviewResolved);
+function capacity(a,day,excludeIds){const hours=Number(a.dailyHours&&a.dailyHours[day]),cap=Number.isFinite(hours)&&hours>0?Math.floor(hours*60*.8):0,excluded=excludeIds instanceof Set?excludeIds:new Set(excludeIds||[]);const used=a.tasks.filter(t=>!isDone(t)&&pool(t)==='scheduled'&&t.date===day&&Number.isFinite(t.startMinutes)&&!excluded.has(String(t.id))).reduce((n,t)=>n+Math.max(0,end(t)-t.startMinutes),0);return Math.max(0,cap-used);}
+function reviewPhase(at,ddl){const time=at||now(),minute=time.getHours()*60+time.getMinutes();if(minute<900)return '';const day=key(time);if(day===dateAdd(ddl,-3))return 'D-3';if(day===dateAdd(ddl,-2))return 'D-2';return '';}
+function latestScheduleDay(t,ddl){const q=quadrant(t);return q==='long-important'||q==='unknown-important'?dateAdd(ddl,-3):dateAdd(ddl,-2);}
+function needsReview(t,ddl){if(isDone(t)||fixed(t)||manualLocked(t)||pool(t)==='trash'||t.ddlReviewResolved)return false;const scheduled=pool(t)==='scheduled'&&Number.isFinite(t.startMinutes)&&t.scheduleStatus==='scheduled';return !scheduled||String(t.date||'')>latestScheduleDay(t,ddl);}
+function batchFor(a,ddl){const d3=dateAdd(ddl,-3),d2=dateAdd(ddl,-2),tasks=a.tasks.filter(t=>!isDone(t)&&pool(t)!=='trash'&&due(t)===ddl&&needsReview(t,ddl));
+const manualLate=a.tasks.filter(t=>!isDone(t)&&due(t)===ddl&&manualLocked(t)&&String(t.date||'')>latestScheduleDay(t,ddl));
 const groups={'long-important':[],'unknown-important':[],'short-important':[],'long-unimportant':[],'short-unimportant':[]};tasks.forEach(t=>groups[quadrant(t)].push(t));
-const demand=tasks.reduce((n,t)=>n+mins(t),0),available=capacity(a,d3)+capacity(a,d2);return {ddl,d3,d2,tasks,groups,demand,available,deficit:Math.max(0,demand-available),overload:demand>available};}
+const demand=tasks.reduce((n,t)=>n+mins(t),0),ids=new Set(tasks.map(t=>String(t.id))),available=capacity(a,d3,ids)+capacity(a,d2,ids);return {ddl,d3,d2,tasks,manualLate,groups,demand,available,deficit:Math.max(0,demand-available),overload:demand>available};}
 function chooseDiscard(a,tasks,done,reason){const xs=tasks.filter(t=>pool(t)!=='trash');let i=0;function next(){if(i>=xs.length){done&&done();return;}const t=xs[i++];dialog('\u4eba\u5de5\u786e\u8ba4\u820d\u5f03\uff08'+i+'/'+xs.length+'\uff09','\u662f\u5426\u820d\u5f03\u300a'+esc(label(t))+'\u300b\uff1f\u4fdd\u7559\u5c31\u7ee7\u7eed\u6392\u671f\uff1b\u53ea\u6709\u4f60\u786e\u8ba4\u540e\u624d\u8fdb\u5783\u573e\u6876\u3002',[
 {label:'\u4fdd\u7559\uff0c\u770b\u4e0b\u4e00\u9879',run:()=>{t.discardCandidate=false;t.discardReviewedAt=Date.now();save(a);next();}},{label:'\u786e\u8ba4\u820d\u5f03\uff0824\u5c0f\u65f6\u53ef\u6062\u590d\uff09',primary:true,run:()=>{move(a,t,'trash',reason||'human-approved-discard');save(a);emit('task.trashed',{taskId:t.id,expiresAt:t.trashExpiresAt});next();}}]);}next();}
 function distribute(a,b){
@@ -41,16 +47,17 @@ function distribute(a,b){
  const all=[...g['long-important'],...g['unknown-important'],...g['short-important'],...g['long-unimportant'],...g['short-unimportant']];
  all.forEach(t=>{
   if(pool(t)!=='scheduled')move(a,t,'scheduled','DDL review reintegrated from task pool');
-  t.ddlReviewAt=Date.now();t.ddlReviewPending=true;t.latestScheduleDate=b.d2;t.ddlQuadrant=quadrant(t);
+  t.ddlReviewAt=Date.now();t.ddlReviewPending=true;t.ddlQuadrant=quadrant(t);
   t.urgent=important(t)===true;t.important=important(t)!==false;
+  t.startMinutes=null;delete t.endMinutes;t.aiScheduled=true;t.scheduleStatus='needs-arrangement';
   if(t.ddlQuadrant==='long-important'||t.ddlQuadrant==='unknown-important'){
-   t.date=firstDay;t.startMinutes=null;t.scheduleNotBefore=firstDay;t.schedulePriority='high';
+   t.date=firstDay;t.startMinutes=null;t.scheduleNotBefore=firstDay;t.latestScheduleDate=firstDay;t.schedulePriority='high';
   }else if(t.ddlQuadrant==='short-important'){
-   t.date=firstDay;t.startMinutes=null;t.scheduleNotBefore=firstDay;t.schedulePriority='high';
+   t.date=firstDay;t.startMinutes=null;t.scheduleNotBefore=firstDay;t.latestScheduleDate=b.d2;t.schedulePriority='high';
   }else if(t.ddlQuadrant==='long-unimportant'){
-   t.date=b.d2;t.startMinutes=null;t.scheduleNotBefore=b.d2;t.schedulePriority='below-high';
+   t.date=b.d2;t.startMinutes=null;t.scheduleNotBefore=b.d2;t.latestScheduleDate=b.d2;t.schedulePriority='below-high';
   }else{
-   t.date=b.d2;t.startMinutes=null;t.scheduleNotBefore=b.d2;t.schedulePriority='lowest';t.discardCandidate=true;
+   t.date=b.d2;t.startMinutes=null;t.scheduleNotBefore=b.d2;t.latestScheduleDate=b.d2;t.schedulePriority='lowest';t.discardCandidate=true;
   }
  });
  const p1=api.reflow(a,firstDay);
@@ -62,43 +69,46 @@ function distribute(a,b){
  unresolved.forEach(t=>{move(a,t,'pending',t.ddlQuadrant==='long-important'?'D-3 mandatory high-priority task still does not fit':'D-2 final capacity still insufficient');t.latestScheduleDate=b.d2;});
  all.forEach(t=>{if(pool(t)==='scheduled'&&Number.isFinite(t.startMinutes)&&t.scheduleStatus==='scheduled'){t.ddlReviewPending=false;}});
  save(a);emit('ddl.review.distributed',{ddl:b.ddl,lateScan,d3Moved:p1.moved,d2Moved:p2.moved,unresolved:unresolved.map(t=>t.id)});
- if(unresolved.length)dialog('\u4ecd\u6709\u4efb\u52a1\u6ca1\u6709\u843d\u4f4d','\u4ee5\u4e0b\u4efb\u52a1\u4e0d\u4f1a\u88ab\u81ea\u52a8\u63a8\u5230D-1\uff0c\u8bf7\u5728D-2\u5185\u5b8c\u6210\u6392\u5e03\u3001\u88c1\u526a\u6216\u4eba\u5de5\u820d\u5f03\u3002'+list(unresolved),[{label:'\u6253\u5f00\u5f85\u5b89\u6392\u6c60',primary:true,run:showPools},{label:'\u9010\u9879\u786e\u8ba4\u820d\u5f03',run:()=>chooseDiscard(a,unresolved,()=>save(a),'D-2 human-approved discard')}]);
  return {p1,p2,unresolved,lateScan};
 }
 function dueReview(a,at){const time=at||now(),day=key(time);if(time.getHours()*60+time.getMinutes()<900)return [];
-const ddls=[...new Set(a.tasks.filter(t=>!t.done&&due(t)).map(due))].sort(),batches=ddls.map(d=>batchFor(a,d)).filter(b=>(day===b.d3||day===b.d2)&&b.tasks.length&&!a._autoloopDdlReviewKeys['d3:'+b.ddl]);
-if(!batches.length)return [];const b=batches[0];a._autoloopDdlReviewKeys['d3:'+b.ddl]=Date.now();if(day===b.d2)a._autoloopDdlReviewKeys['d2:'+b.ddl]=Date.now();b.tasks.forEach(t=>{t.ddlReviewPending=true;if(pool(t)==='scheduled'&&(!Number.isFinite(t.startMinutes)||t.scheduleStatus==='needs-arrangement'))move(a,t,'pending','DDL D-3 mandatory review');});save(a);emit('ddl.review.opened',{ddl:b.ddl,date:day,overload:b.overload,demand:b.demand,available:b.available});
-const arrange=()=>distribute(a,b),discard=()=>chooseDiscard(a,b.groups['short-unimportant'].concat(b.groups['long-unimportant']),arrange,'DDL D-3 human-approved discard');
-if(b.overload){dialog('\u622a\u6b62\u524d3\u5929 15:00\uff1a\u6392\u671f\u8d85\u8f7d','\u672a\u6392\u4efb\u52a1 '+b.demand+'\u5206\u949f\uff0cD-3\u4e0eD-2\u53ef\u7528 '+b.available+'\u5206\u949f\uff0c\u8d85\u51fa '+b.deficit+'\u5206\u949f\u3002\u662f\u5426\u613f\u610f\u820d\u5f03\u90e8\u5206\u4efb\u52a1\uff1f'+ '<h4>\u5fc5\u4fdd\u9ad8\u4f18\u5148</h4>'+list(b.groups['long-important'].concat(b.groups['unknown-important']))+'<h4>\u91cd\u8981\u4f46\u8017\u65f6\u77ed</h4>'+list(b.groups['short-important'])+'<h4>\u8017\u65f6\u957f\u4f46\u4e0d\u91cd\u8981\uff08D-2\u524d\u7f6e\uff09</h4>'+list(b.groups['long-unimportant'])+'<h4>\u77ed\u65f6\u4f4e\u4f18\u5148\uff08\u820d\u5f03\u5019\u9009\uff09</h4>'+list(b.groups['short-unimportant']),[{label:'\u662f\uff0c\u9010\u9879\u786e\u8ba4\u820d\u5f03',primary:true,run:discard},{label:'\u5426\uff0c\u4e00\u9879\u4e0d\u820d\uff0c\u5148\u6392\u671f',run:arrange}]);}
-else dialog('\u622a\u6b62\u524d3\u5929 15:00\uff1a\u6392\u671f\u6838\u9a8c','\u5df2\u626b\u63cf '+b.tasks.length+'\u9879\u672a\u6392\u4efb\u52a1\uff0c\u5bb9\u91cf\u5145\u8db3\u3002\u7cfb\u7edf\u6309\u56db\u8c61\u9650\u5206\u6d41\uff0c\u4f4e\u4f18\u4efb\u52a1\u4ec5\u4f5c\u4e3a\u820d\u5f03\u5019\u9009\uff0c\u4e0d\u81ea\u52a8\u820d\u5f03\u3002',[{label:'\u6309\u89c4\u5219\u6392\u5e03',primary:true,run:arrange},{label:'\u67e5\u770b\u4efb\u52a1\u6c60',run:showPools}]);
+const ddls=[...new Set(a.tasks.filter(t=>!isDone(t)&&due(t)).map(due))].sort(),batches=ddls.map(d=>batchFor(a,d)).filter(b=>reviewPhase(time,b.ddl)&&b.tasks.length&&!a._autoloopDdlReviewKeys['d3:'+b.ddl]);
+if(!batches.length)return [];const b=batches[0];a._autoloopDdlReviewKeys['d3:'+b.ddl]=Date.now();if(reviewPhase(time,b.ddl)==='D-2')a._autoloopDdlReviewKeys['d2:'+b.ddl]=Date.now();
+b.tasks.forEach(t=>{t.ddlReviewPending=true;});save(a);emit('ddl.review.opened',{ddl:b.ddl,date:day,phase:reviewPhase(time,b.ddl),overload:b.overload,demand:b.demand,available:b.available,manualLate:b.manualLate.map(t=>t.id)});
+const result=distribute(a,b);
+if(result.unresolved.length||b.manualLate.length){const manual=b.manualLate.length?'<h4>手动锁定且排期晚于保护窗口（未自动挪动）</h4>'+list(b.manualLate):'';const unresolved=result.unresolved.length?'<h4>容量不足、仍待安排</h4>'+list(result.unresolved):'';dialog('DDL '+reviewPhase(time,b.ddl)+' 自动排期结果',manual+unresolved,[{label:'打开任务池',primary:true,run:showPools},{label:'逐项确认舍弃未安排任务',run:()=>chooseDiscard(a,result.unresolved,()=>save(a),'DDL review human-approved discard')}]);}
+else toast('DDL '+reviewPhase(time,b.ddl)+' 核查完成：'+b.tasks.length+'项任务已自动排入时间表；低优先级任务仅作候选，未自动舍弃。');
 return b.tasks;}
 function checkDdlSecondDay(a,at){
- const day=key(at||now()),ddls=[...new Set(a.tasks.filter(t=>!t.done&&t.ddlReviewPending&&due(t)).map(due))],ddl=ddls.find(d=>day===dateAdd(d,-2));
- if(!ddl)return null;
- const xs=a.tasks.filter(t=>!t.done&&due(t)===ddl&&t.ddlReviewPending&&pool(t)!=='trash'&&(!Number.isFinite(t.startMinutes)||t.scheduleStatus==='needs-arrangement'||pool(t)==='pending'||pool(t)==='buffer'));
- if(!xs.length||a._autoloopDdlReviewKeys['d2:'+ddl])return xs;
- a._autoloopDdlReviewKeys['d2:'+ddl]=Date.now();save(a);emit('ddl.review.second_day',{ddl,taskIds:xs.map(t=>t.id)});
- dialog('D-2 \u7b2c\u4e8c\u6b21\u8d85\u8f7d\u6838\u9a8c','\u8fd9\u662f\u6700\u540e\u4e00\u4e2a\u6392\u5e03\u7a97\u53e3\u3002\u4ee5\u4e0b\u4efb\u52a1\u5fc5\u987b\u4eca\u5929\u843d\u4f4d\u6216\u7531\u4f60\u786e\u8ba4\u820d\u5f03\uff0c\u4e0d\u4f1a\u81ea\u52a8\u6eda\u5230D-1\u3002'+list(xs),[
- {label:'\u91cd\u65b0\u6392\u5e03',primary:true,run:()=>{
-  xs.forEach(t=>{move(a,t,'scheduled','D-2 final scheduling attempt');t.date=day;t.startMinutes=null;t.scheduleNotBefore=day;t.latestScheduleDate=day;t.schedulePriority=important(t)===true?'high':'below-high';});
-  const r=api.reflow(a,day),still=xs.filter(t=>pool(t)!=='trash'&&(!Number.isFinite(t.startMinutes)||t.scheduleStatus==='needs-arrangement'));
+ const time=at||now(),day=key(time);if(time.getHours()*60+time.getMinutes()<900)return [];
+ const ddls=[...new Set(a.tasks.filter(t=>!isDone(t)&&t.ddlReviewPending&&due(t)).map(due))].filter(d=>day===dateAdd(d,-2)&&!a._autoloopDdlReviewKeys['d2:'+d]);
+ if(!ddls.length)return [];
+ const allUnresolved=[],manualLate=[];
+ ddls.forEach(ddl=>{
+  const xs=a.tasks.filter(t=>!isDone(t)&&due(t)===ddl&&t.ddlReviewPending&&pool(t)!=='trash'&&needsReview(t,ddl));
+  const locked=a.tasks.filter(t=>!isDone(t)&&due(t)===ddl&&manualLocked(t)&&String(t.date||'')>day);
+  a._autoloopDdlReviewKeys['d2:'+ddl]=Date.now();
+  xs.forEach(t=>{if(pool(t)!=='scheduled')move(a,t,'scheduled','D-2 final scheduling attempt');t.date=day;t.startMinutes=null;delete t.endMinutes;t.aiScheduled=true;t.scheduleNotBefore=day;t.latestScheduleDate=day;t.schedulePriority=important(t)===true?'high':'below-high';t.scheduleStatus='needs-arrangement';});
+  const r=xs.length?api.reflow(a,day):{moved:0,warnings:[]};
+  const still=xs.filter(t=>pool(t)!=='trash'&&(!Number.isFinite(t.startMinutes)||t.scheduleStatus==='needs-arrangement'));
   still.forEach(t=>move(a,t,'pending','D-2 final capacity still insufficient'));
-  save(a);emit('ddl.review.second_reflow',{ddl,moved:r.moved,warnings:r.warnings,stillUnscheduled:still.map(t=>t.id)});
-  if(still.length)dialog('D-2 \u4ecd\u7136\u6392\u4e0d\u4e0b','\u8fd9\u4e9b\u4efb\u52a1\u4e0d\u80fd\u518d\u987a\u5ef6\u5230D-1\u3002\u8bf7\u88c1\u526a\u4efb\u52a1\u8303\u56f4\uff0c\u91ca\u653e\u65f6\u95f4\uff0c\u6216\u4eba\u5de5\u786e\u8ba4\u820d\u5f03\u3002'+list(still),[
-   {label:'\u6253\u5f00\u7f13\u51b2/\u5f85\u5b89\u6392\u6c60',primary:true,run:showPools},
-   {label:'\u4eba\u5de5\u9010\u9879\u820d\u5f03',run:()=>chooseDiscard(a,still,()=>save(a),'D-2 capacity shortfall human discard')}
-  ]);
- }},
- {label:'\u4eba\u5de5\u9010\u9879\u820d\u5f03',run:()=>chooseDiscard(a,xs,()=>save(a),'D-2 human-approved discard')}
- ]);
- return xs;
+  allUnresolved.push(...still);manualLate.push(...locked);
+  emit('ddl.review.second_reflow',{ddl,moved:r.moved,warnings:r.warnings,stillUnscheduled:still.map(t=>t.id)});
+ });
+ save(a);
+ if(allUnresolved.length||manualLate.length){const html=(manualLate.length?'<h4>手动锁定且无法自动调整</h4>'+list(manualLate):'')+(allUnresolved.length?'<h4>D-2仍然排不下，不会静默推到D-1</h4>'+list(allUnresolved):'');dialog('D-2最后排布结果',html,[{label:'打开待安排池',primary:true,run:showPools},{label:'逐项确认舍弃未安排任务',run:()=>chooseDiscard(a,allUnresolved,()=>save(a),'D-2 human-approved discard')}]);}
+ else toast('D-2最后排布完成：所有需要推进的任务已安排；未删除任何任务。');
+ return allUnresolved;
 }
-function syncPending(a){const changed=[];a.tasks.forEach(t=>{if(t.done||pool(t)!=='scheduled'||fixed(t))return;if(t.scheduleStatus==='needs-arrangement'&&!Number.isFinite(t.startMinutes)){t.workflowPool='pending';t.pendingSince=Number(t.pendingSince)||Date.now();t.triageDueAt=t.pendingSince+DAY;changed.push(t.id);}});if(changed.length)emit('task.pending.entered',{taskIds:changed});return changed;}
-function pendingSla(a,at){const ts=at||Date.now(),xs=a.tasks.filter(t=>!t.done&&pool(t)==='pending'&&Number(t.pendingSince||t.createdAt||ts)+DAY<=ts&&!t._pendingSlaNoticeAt);if(!xs.length)return [];
-xs.forEach(t=>t._pendingSlaNoticeAt=ts);save(a);emit('task.pending.sla_breached',{taskIds:xs.map(t=>t.id)});
-dialog('\u5f85\u5b89\u6392\u8d85\u8fc724\u5c0f\u65f6','\u4ee5\u4e0b\u4efb\u52a1\u5fc5\u987b\u7acb\u5373\u6392\u5e03\u6216\u4eba\u5de5\u786e\u8ba4\u820d\u5f03\uff0c\u4e0d\u4f1a\u81ea\u52a8\u5220\u9664\u3002'+list(xs),[
-{label:'\u91cd\u65b0\u6392\u5e03',primary:true,run:()=>{xs.forEach(t=>{move(a,t,'scheduled','24h pending SLA reschedule');t.date=t.date||today();});const r=api.reflow(a,today());save(a);emit('task.pending.rescheduled',{moved:r.moved,warnings:r.warnings});}},
-{label:'\u9010\u9879\u786e\u8ba4\u820d\u5f03',run:()=>chooseDiscard(a,xs,()=>save(a),'24h pending SLA human discard')}]);return xs;}
+function syncPending(a){const changed=[];a.tasks.forEach(t=>{if(isDone(t)||pool(t)!=='scheduled'||fixed(t))return;if(t.scheduleStatus==='needs-arrangement'&&!Number.isFinite(t.startMinutes)){t.workflowPool='pending';t.pendingSince=Number(t.pendingSince)||Date.now();t.triageDueAt=t.pendingSince+DAY;changed.push(t.id);}});if(changed.length)emit('task.pending.entered',{taskIds:changed});return changed;}
+function pendingSla(a,at){const ts=at||Date.now(),day=key(new Date(ts)),xs=a.tasks.filter(t=>!isDone(t)&&pool(t)==='pending'&&Number(t.pendingSince||t.createdAt||ts)+DAY<=ts&&!t._pendingSlaNoticeAt);if(!xs.length)return [];
+const ddlProtected=xs.filter(t=>due(t)&&dayDiffSafe(day,due(t))<=2),ordinary=xs.filter(t=>!ddlProtected.includes(t));
+xs.forEach(t=>t._pendingSlaNoticeAt=ts);save(a);emit('task.pending.sla_breached',{taskIds:xs.map(t=>t.id),ddlProtected:ddlProtected.map(t=>t.id)});
+const runOrdinary=()=>{if(!ordinary.length)return;ordinary.forEach(t=>{move(a,t,'scheduled','24h pending SLA reschedule');t.date=t.date||today();});const r=api.reflow(a,today());save(a);emit('task.pending.rescheduled',{moved:r.moved,warnings:r.warnings});};
+if(ddlProtected.length)dialog('临近DDL的待安排任务','以下任务距离截止不超过两天，不能通过24小时SLA自动推迟或覆盖最后排布窗口。请先裁剪范围、释放时间或人工决定。'+list(ddlProtected),[{label:'打开待安排池',primary:true,run:showPools},{label:'只重新安排其他普通任务',run:runOrdinary}]);
+else dialog('待安排超过24小时','以下普通任务需要重新排布或人工确认舍弃。'+list(ordinary),[{label:'重新排布',primary:true,run:runOrdinary},{label:'逐项确认舍弃',run:()=>chooseDiscard(a,ordinary,()=>save(a),'24h pending SLA human discard')}]);
+return xs;}
+function dayDiffSafe(a,b){const x=new Date(a+'T12:00:00'),y=new Date(b+'T12:00:00');return Math.round((y-x)/DAY);}
 function bufferLoad(a){return a.tasks.filter(t=>!t.done&&pool(t)==='buffer').reduce((n,t)=>n+mins(t),0);}
 function bufferCapacity(a){if(Number.isFinite(a.bufferCapacityMinutes)&&a.bufferCapacityMinutes>=0)return a.bufferCapacityMinutes;return Math.floor((Number(a.dailyHours&&a.dailyHours[today()])||4)*60*.2);}
 function enforceBufferCapacity(a){const load=bufferLoad(a),cap=bufferCapacity(a);if(load<=cap)return false;if(a._autoloopBufferOverloadAt&&Date.now()-a._autoloopBufferOverloadAt<MIN*10)return true;a._autoloopBufferOverloadAt=Date.now();save(a);emit('buffer.capacity.exceeded',{load,capacity:cap});
@@ -178,7 +188,7 @@ function tick(){if(!root.SY||typeof root.SY.getAcctData!=='function')return;cons
 const expired=a.tasks.filter(t=>!t.done&&pool(t)==='buffer'&&Number(t.bufferExpiresAt||0)>0&&Number(t.bufferExpiresAt)<=Date.now()&&!t._bufferExpiryNoticeAt);if(expired.length){expired.forEach(t=>t._bufferExpiryNoticeAt=Date.now());save(a);emit('buffer.window.expired',{taskIds:expired.map(t=>t.id)});dialog('\u7f13\u51b2\u7a97\u53e3\u5df2\u7ed3\u675f','\u7f13\u51b2\u4efb\u52a1\u4e0d\u4f1a\u81ea\u52a8\u6eda\u5230\u660e\u5929\uff0c\u8bf7\u5b8c\u6210\u3001\u88c1\u526a\u3001\u6709\u9650\u987a\u5ef6\u6216\u4eba\u5de5\u820d\u5f03\u3002'+list(expired),[{label:'\u7acb\u5373\u5904\u7406',primary:true,run:showPools}]);}}
 function showPoolButton(){if($('#sy-autoloop-pool-button'))return;const b=document.createElement('button');b.id='sy-autoloop-pool-button';b.className='aloop-pool-fab';b.textContent='\u4efb\u52a1\u6c60';b.onclick=showPools;document.body.append(b);}
 function install(){if(!root.SY||typeof root.SY.getAcctData!=='function')return false;showPoolButton();tick();if(!root._syAutoloopRulesTimer)root._syAutoloopRulesTimer=setInterval(tick,30000);return true;}
-api.rulesV2={handleSudden,showPools,cleanupTrash,dueReview,checkDdlSecondDay,pendingSla,bufferLoad,bufferCapacity,enforceBufferCapacity,applyAgentAction,contextForAI,showPoolButton,__test:{important,fixed,quadrant,capacity,batchFor,fixedAt,classifyInterruption,dateAdd,bufferLoad,bufferCapacity,distribute}};
+api.rulesV2={handleSudden,showPools,cleanupTrash,dueReview,checkDdlSecondDay,pendingSla,bufferLoad,bufferCapacity,enforceBufferCapacity,applyAgentAction,contextForAI,showPoolButton,__test:{important,fixed,manualLocked,isDone,quadrant,capacity,batchFor,needsReview,latestScheduleDay,reviewPhase,fixedAt,classifyInterruption,dateAdd,bufferLoad,bufferCapacity,distribute,due,mins}};
 root.SYAutoloopRules=api.rulesV2;
 if(!install()){document.addEventListener('sy:ready',install);let n=0,t=setInterval(()=>{if(install()||++n>100)clearInterval(t);},100);}
 })(typeof window!=='undefined'?window:null);
