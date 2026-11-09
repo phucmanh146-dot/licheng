@@ -62,4 +62,22 @@ const ordinary={id:'ordinary-proposal',name:'Ordinary task',date:day,plannedMinu
 account.tasks.push(ordinary);
 assert(rules.applyAgentAction({type:'move_to_buffer',taskId:ordinary.id,reason:'Approved'}).ok&&ordinary.workflowPool==='buffer','approved non-core task may move to buffer');
 
-console.log(JSON.stringify({ok:true,tests:24,day}));
+
+assert(t.due({deadlineDate:day})===day,'legacy deadlineDate must be recognized');
+assert(t.isDone({completedAt:Date.now()})===true,'completedAt must count as completed');
+assert(t.mins({remainingWorkMinutes:17})===17,'remaining work minutes must override original estimate');
+const ddlForWindow=t.dateAdd(day,3);
+assert(t.reviewPhase(new Date(day+'T14:59:00'),ddlForWindow)==='','DDL review must not fire before 15:00');
+assert(t.reviewPhase(new Date(day+'T15:00:00'),ddlForWindow)==='D-3','DDL review must fire at D-3 15:00');
+assert(t.reviewPhase(new Date(t.dateAdd(ddlForWindow,-2)+'T15:00:00'),ddlForWindow)==='D-2','final arrangement window must fire at D-2 15:00');
+assert(t.capacity({tasks:[],dailyHours:{}},day)===0,'missing daily capacity must not be invented');
+const lateScheduled={id:'late-scheduled',name:'\u957f\u671f\u91cd\u8981\u4efb\u52a1',date:t.dateAdd(day,-1),startMinutes:600,endMinutes:720,plannedMinutes:120,aiScheduled:true,scheduleStatus:'scheduled',dueDate:day,important:true};
+const manualLate={id:'manual-late',name:'\u624b\u52a8\u9501\u5b9a\u4efb\u52a1',date:t.dateAdd(day,-1),startMinutes:780,endMinutes:840,plannedMinutes:60,aiScheduled:false,scheduleStatus:'scheduled',dueDate:day,important:true};
+account.tasks=[lateScheduled,manualLate];
+const lateBatch=t.batchFor(account,day);
+assert(lateBatch.tasks.some(x=>x.id==='late-scheduled'),'important long task scheduled on D-1 must be pulled into D-3 protection');
+assert(lateBatch.manualLate.some(x=>x.id==='manual-late'),'manual late schedule must be flagged but never silently moved');
+assert(t.latestScheduleDay(lateScheduled,day)===t.dateAdd(day,-3),'long important task must be scheduled no later than D-3');
+assert(t.latestScheduleDay({name:'\u77ed\u5c0f\u4efb\u52a1',plannedMinutes:15,important:true},day)===t.dateAdd(day,-2),'short task may use D-2 as its final arrangement day');
+
+console.log(JSON.stringify({ok:true,tests:36,day}));

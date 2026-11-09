@@ -61,4 +61,13 @@ if(urgentTask.date!==todayKey || !Number.isFinite(urgentTask.startMinutes))throw
 if(farTask.date!==day || !Number.isFinite(farTask.startMinutes))throw new Error("after-15:00 task outside the three-day DDL window was not deferred to tomorrow");
 
 if(lateTask.date!==todayKey) throw new Error("near-DDL late intake should remain on the current day when needed to meet its deadline");
-console.log(JSON.stringify({ok:true,parserRows:parsed.length,dateLine:dated[0].date,reflowMoved:result.moved,ddlTaskDate:ddl.date}));
+
+const legacyDeadline = {tasks:[{id:"legacy-deadline",name:"legacy deadline",date:todayKey,startMinutes:null,plannedMinutes:30,deadlineDate:day,taskType:"learning"}],dailyHours:{[todayKey]:4,[day]:4}};
+const legacyResult=window.SYAutoloop.reflow(legacyDeadline,todayKey);
+if(!Number.isFinite(legacyDeadline.tasks[0].startMinutes)||legacyDeadline.tasks[0].date!==todayKey)throw new Error("legacy deadlineDate task was not pulled into the DDL window");
+const noCapacity = {tasks:[{id:"no-capacity",name:"no capacity",date:todayKey,startMinutes:null,plannedMinutes:30,dueDate:day,taskType:"learning"}],dailyHours:{}};
+const noCapacityResult=window.SYAutoloop.reflow(noCapacity,todayKey);
+if(Number.isFinite(noCapacity.tasks[0].startMinutes))throw new Error("scheduler invented capacity when dailyHours was missing");
+if(!noCapacityResult.warnings.some(x=>x.includes("未设置可投入时长")))throw new Error("missing capacity must be surfaced as a warning");
+
+console.log(JSON.stringify({ok:true,parserRows:parsed.length,dateLine:dated[0].date,reflowMoved:result.moved,ddlTaskDate:ddl.date,legacyDeadline:true,noCapacity:true}));

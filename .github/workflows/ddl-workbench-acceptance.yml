@@ -1,0 +1,35 @@
+name: DDL workbench acceptance
+on:
+  push:
+    branches:
+      - fix/ddl-72h-15h-autoreplan-20261109
+  pull_request:
+    branches:
+      - fix/v10-preserve-ui-ddl-energy-planner-autoloop-20261104
+jobs:
+  acceptance:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: JavaScript syntax
+        run: |
+          node --check v7-linked-task-ai/autoloop.js
+          node --check v7-linked-task-ai/autoloop-rules.js
+          node --check v7-linked-task-ai/ddl-execution-guard.js
+      - name: DDL and schedule regression tests
+        working-directory: v7-linked-task-ai
+        run: |
+          node test_autoloop_parser.cjs
+          node test_autoloop_rules.cjs
+          grep -q 'autoloop.js?v=20261109-ddl-engine' index.html
+          grep -q 'autoloop-rules.js?v=20261109-ddl-engine' index.html
+          grep -q 'ddl-execution-guard.js?v=20261109-ddl-engine' index.html
+      - name: Durable interruption runtime tests
+        working-directory: v7-linked-task-ai
+        run: python -m unittest test_autoloop_runtime.py
