@@ -10,7 +10,7 @@ SESSION_ROOT=Path(os.environ.get('SHANGANYA_SESSION_ROOT',str(cloud_accounts.DAT
 SESSION_ROOT.mkdir(parents=True,exist_ok=True)
 SESSIONS={};LOCK=threading.RLock()
 AI_USAGE={};AI_USAGE_LOCK=threading.RLock()
-SHARED_AI_PATHS={'/api/memo/parse','/api/ask-ai','/api/p2/ask','/api/pm/ask','/api/focus-observe','/api/ai-test','/api/pm/test'}
+SHARED_AI_PATHS={'/api/memo/parse','/api/ask-ai','/api/p2/ask','/api/harness/chat','/api/pm/ask','/api/focus-observe','/api/ai-test','/api/pm/test'}
 def shared_ai_enabled():
  return bool(os.getenv('FOCUS_AI_API_KEY','').strip() or os.getenv('OPENAI_API_KEY','').strip())
 def allow_shared_ai(account):
@@ -54,7 +54,7 @@ def backend(cookie):
    raise RuntimeError('当前会话后台工作进程达到安全上限，请稍后重试；已有任务文件不会删除。')
   sock=socket.socket();sock.bind(('127.0.0.1',0));port=sock.getsockname()[1];sock.close()
   home=SESSION_ROOT/cookie;home.mkdir(exist_ok=True)
-  env=os.environ.copy();env.pop('SY_WECHAT_AGENT_TOKEN',None);env.pop('SHANGANYA_ACCOUNT_DATA_DIR',None);env.update(SHANGANYA_SESSION_HOME=str(home),SHANGANYA_WORKER_PORT=str(port))
+  env=os.environ.copy();env.pop('SY_WECHAT_AGENT_TOKEN',None);env.pop('SHANGANYA_ACCOUNT_DATA_DIR',None);env.update(SHANGANYA_SESSION_HOME=str(home),SHANGANYA_WORKER_PORT=str(port),SHANGANYA_AUTOLOOP_ACCOUNT_ID=session_key)
   process=subprocess.Popen([sys.executable,str(ROOT/'public_worker.py')],cwd=ROOT,env=env,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
   item={'process':process,'port':port,'seen':time.monotonic()}
   SESSIONS[cookie]=item
