@@ -22,7 +22,12 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
+      - name: Install Harness test dependencies
+        run: python -m pip install requests Pillow pypdf python-docx openpyxl python-pptx beautifulsoup4 PyMuPDF
       - name: Python syntax
         run: python -m py_compile v7-linked-task-ai/gpt_harness.py v7-linked-task-ai/local_server.py v7-linked-task-ai/p2_chat_backend.py
+      - name: Harness unit tests
+        working-directory: v7-linked-task-ai
+        run: python -m unittest -v test_gpt_harness.py
       - name: Browser JavaScript syntax
         run: node --check v7-linked-task-ai/p2-chat.js
