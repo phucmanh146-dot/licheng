@@ -10,6 +10,7 @@ import os
 import re
 import threading
 import time
+import uuid
 from urllib.parse import urlparse
 
 import requests
@@ -17,6 +18,7 @@ import requests
 from rescue_service import RescueError, extract, search_web
 from local_tools import vault_search, vault_read
 import pm_agent_bridge as uploads
+import autoloop_runtime as autoloop
 
 API_URL = "https://api.openai.com/v1/responses"
 DEFAULT_MODEL = os.getenv("OPENAI_MODEL", "gpt-6-astra").strip() or "gpt-6-astra"
@@ -39,10 +41,19 @@ SYSTEM = """你是上岸鸭的 GPT 执行教练。你不只是聊天：先理解
 8. 估时超出或连续45分钟无新产出时，诊断缩小范围、换方法、查资料、AI演示、保存断点、休息或暂停，不鼓励死磕。
 9. 任务状态只能依据工具返回的真实状态与证据更新。用户口头说完成也应进入待验收，不自动通过。
 10. 每次回答区分：已核实事实、推断、建议、待确认事项。先给具体下一步，避免让用户重复提供已经在上下文中的资料。
-可用工具只读：联网检索、读取公开网页/文档、搜索和读取已连接的 Obsidian 知识库。禁止工具执行删除、发布、付款、发送消息、改写用户资料或直接更改排期。需要改变任务数据时，先输出可审阅的变更建议，由工作台的确定性调度器和用户确认流程执行。"""
+可用工具：联网检索、读取公开网页/文档、搜索和读取已连接的 Obsidian 知识库、读取当前账号的 Autoloop 执行状态；当用户明确报告突发中断时，可以保存追加式中断断点；当用户明确表示返回时，可以记录恢复事件。禁止工具执行删除、发布、付款、发送消息、改写用户资料或直接更改排期。需要改变任务数据时，先输出可审阅的变更建议，由工作台的确定性调度器和用户确认流程执行。"""
 
 TOOLS = [
     {"type": "web_search"},
+    {"type": "function", "name": "get_execution_state",
+     "description": "读取当前登录账户的 Autoloop 检查点、未解决的突发中断和最近执行事件，用于跨对话恢复上下文。",
+     "parameters": {"type": "object", "properties": {}, "required": [], "additionalProperties": False}, "strict": True},
+    {"type": "function", "name": "record_interruption",
+     "description": "仅当用户明确报告突发事件/临时离开时，保存当前账户的追加式中断断点；不会改动任务排期。",
+     "parameters": {"type": "object", "properties": {"note": {"type": "string"}, "currentTaskId": {"type": "string"}, "progress": {"type": "string"}}, "required": ["note", "currentTaskId", "progress"], "additionalProperties": False}, "strict": True},
+    {"type": "function", "name": "resume_interruption",
+     "description": "仅当用户明确表示已返回/准备恢复时，读取最近未解决中断并记录恢复事件；不把任务标记为完成。",
+     "parameters": {"type": "object", "properties": {"note": {"type": "string"}}, "required": ["note"], "additionalProperties": False}, "strict": True},
     {"type": "function", "name": "search_knowledge",
      "description": "在当前账号已连接的 Obsidian 知识库中检索与任务相关的笔记。未连接时返回明确状态。",
      "parameters": {"type": "object", "properties": {"query": {"type": "string"}}, "required": ["query"], "additionalProperties": False}, "strict": True},
@@ -76,7 +87,42 @@ def _rate_limit(client):
         _RATE[client] = hits
 
 
+def _account_id():
+    return str(os.getenv("SHANGANYA_AUTOLOOP_ACCOUNT_ID", "default") or "default")[:160]
+
+
 def _tool(name, args):
+    account = _account_id()
+    if name == "get_execution_state":
+        return {"ok": True, "state": autoloop.get_state(account, limit=100)}
+    if name == "record_interruption":
+        state = autoloop.get_state(account, limit=100)
+        checkpoint = state.get("checkpoint")
+        if not checkpoint or not isinstance(checkpoint.get("snapshot"), dict):
+            return {"ok": False, "error": "当前账户尚无可恢复的日程检查点；未写入空白快照。请先让工作台保存今日计划。"}
+        note = str(args.get("note") or "").strip()[:1200]
+        task_id = str(args.get("currentTaskId") or "").strip()[:180]
+        progress = str(args.get("progress") or "").strip()[:2000]
+        if not note or not task_id:
+            return {"ok": False, "error": "缺少突发事项说明或当前任务 ID，未保存断点。"}
+        event_id = "gpt-interruption:" + uuid.uuid4().hex
+        result = autoloop.interrupt({"accountId": account, "taskId": checkpoint.get("taskId") or "daily-plan",
+            "eventId": event_id, "snapshot": checkpoint["snapshot"],
+            "payload": {"note": note, "currentTaskId": task_id, "progress": progress,
+                        "occurredAt": time.time(), "source": "gpt-harness"}})
+        return {"ok": bool(result.get("ok")), "result": result, "note": "已保存追加式中断记录；原任务未标记完成，日程未自动改写。"}
+    if name == "resume_interruption":
+        state = autoloop.get_state(account, limit=100)
+        pending = state.get("pendingInterruptions") or []
+        if not pending:
+            return {"ok": False, "error": "当前账户没有未解决的中断记录，未创建虚假恢复事件。"}
+        event = pending[-1]
+        payload = event.get("payload") or {}
+        result = autoloop.resume({"accountId": account, "taskId": payload.get("taskId") or "daily-plan",
+            "eventId": "gpt-resume:" + uuid.uuid4().hex,
+            "interruptionEventId": payload.get("eventId") or event.get("eventId"),
+            "note": str(args.get("note") or "用户明确表示已返回")[:1000]})
+        return {"ok": bool(result.get("ok")), "result": result, "note": "已记录恢复事件；需要重新比较原任务剩余排期与下一个任务优先级。"}
     if name == "search_knowledge":
         q = str(args.get("query", "")).strip()[:300]
         if not q:
@@ -187,6 +233,11 @@ def ask(data, client="unknown"):
         context += "\n\n用户本轮附带的链接（可调用 read_public_url 读取）：\n" + "\n".join(str(x)[:2048] for x in urls[:12])
     if task_context:
         context += "\n\n【工作台当前任务与执行状态】\n" + task_context
+    try:
+        durable_state = autoloop.get_state(_account_id(), limit=80)
+        context += "\n\n【当前登录账户的持久化 Autoloop 状态】\n" + json.dumps(durable_state, ensure_ascii=False)[:16000]
+    except Exception as exc:
+        context += "\n\n【Autoloop 状态】当前无法读取：" + str(exc)[:200]
     wechat_rows = data.get("wechatMessages") if isinstance(data.get("wechatMessages"), list) else []
     if wechat_rows:
         rows = []
