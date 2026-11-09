@@ -13,6 +13,7 @@ import pm_vault_manager as vman
 import pm_wechat_desktop as wxdesk
 import wechat_toolbar_bridge as wxtool
 import p2_chat_backend as p2
+import gpt_harness as harness
 import agent_runtime as agent
 import autoloop_runtime as autoloop
 import knowledge_agent_skills as kskills
@@ -134,6 +135,7 @@ class Handler(SimpleHTTPRequestHandler):
         if path == '/api/public-feishu-status': return self.send_json({'ok':True,'configured':bool(os.getenv('FEISHU_APP_ID','').strip() and os.getenv('FEISHU_APP_SECRET','').strip())})
         if path == '/api/vault': return self.send_json(vault_info())
         if path == '/api/p2/status': return self.send_json(p2.status())
+        if path == '/api/harness/status': return self.send_json(harness.status())
         if path == '/api/agent/tasks':
             from urllib.parse import parse_qs
             q=parse_qs(urlparse(self.path).query)
@@ -178,6 +180,7 @@ class Handler(SimpleHTTPRequestHandler):
             size = int(self.headers.get('Content-Length','0'))
             max_size = 350000 if self.path == '/api/focus-observe' else (7200000 if self.path == '/api/extract-file' else (1200000 if self.path == '/api/p2/ask' else (1_200_000 if self.path.startswith('/api/autoloop/') else 150000)))
             if self.path == '/api/source/prepare': max_size = 4_000_000
+            if self.path == '/api/harness/chat': max_size = 1_200_000
             if self.path == '/api/memo/parse': max_size = 500_000
             if self.path == '/api/vault-save': max_size = 12_000_000
             if size < 1 or size > max_size: return self.send_json({'error':'请求大小不正确'},413)
@@ -211,6 +214,7 @@ class Handler(SimpleHTTPRequestHandler):
             if self.path=='/api/source/summarize': return self.send_json(sourceflow.summarize(data))
             if self.path=='/api/pm/url': return self.send_json(pm.import_url(data.get('url','')))
             if self.path=='/api/p2/ask': return self.send_json(p2.ask(data))
+            if self.path=='/api/harness/chat': return self.send_json(harness.ask(data, self.client_address[0]))
             if self.path=='/api/autoloop/event': return self.send_json(autoloop.append_event(data))
             if self.path=='/api/autoloop/checkpoint': return self.send_json(autoloop.save_checkpoint(data))
             if self.path=='/api/autoloop/interrupt': return self.send_json(autoloop.interrupt(data))
