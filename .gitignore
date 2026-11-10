@@ -1,0 +1,9 @@
+data/app.db
+data/*.db-*
+data/uploads/
+data/agent_tmp/
+.env
+.env.*
+!.env.example
+__pycache__/
+.pytest_cache/

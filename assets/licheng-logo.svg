@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 220" role="img" aria-labelledby="title desc">
+  <title id="title">砺程</title>
+  <desc id="desc">砺程学生科研与创新项目质量进阶 Agent 标志</desc>
+  <defs>
+    <linearGradient id="path" x1="20" y1="174" x2="174" y2="36" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#E7B44A"/>
+      <stop offset="1" stop-color="#F4D78D"/>
+    </linearGradient>
+  </defs>
+  <!-- A stepped path: evidence becomes a clearer, higher-quality result. -->
+  <g transform="translate(20 20)">
+    <rect x="0" y="0" width="180" height="180" rx="46" fill="#0E1B2A"/>
+    <path d="M38 145V118H72V91H106V64H140V37" fill="none" stroke="url(#path)" stroke-width="13" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="38" cy="145" r="9" fill="#D3E5E0"/>
+    <circle cx="72" cy="118" r="9" fill="#D3E5E0"/>
+    <circle cx="106" cy="91" r="9" fill="#D3E5E0"/>
+    <circle cx="140" cy="37" r="12" fill="#E7B44A"/>
+    <path d="M140 23V51M126 37H154" stroke="#F8E5B2" stroke-width="3" stroke-linecap="round" opacity=".8"/>
+  </g>
+  <g fill="#0E1B2A">
+    <text x="242" y="111" font-family="Noto Serif SC, Source Han Serif SC, STSong, serif" font-size="72" font-weight="700" letter-spacing="10">砺程</text>
+    <text x="249" y="153" font-family="Noto Sans SC, Microsoft YaHei, sans-serif" font-size="17" letter-spacing="4" fill="#52616D">学生科研与创新项目质量进阶 Agent</text>
+  </g>
+</svg>
