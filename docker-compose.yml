@@ -1,0 +1,16 @@
+services:
+  web:
+    build: .
+    ports:
+      - "8787:8787"
+    environment:
+      LICHENG_HOST: 0.0.0.0
+      PORT: "8787"
+      # 生产部署务必关闭演示账号，并配置强口令后自行注册。
+      LICHENG_DEMO_MODE: "0"
+      # 反代提供 HTTPS 时开启安全 Cookie。
+      LICHENG_SECURE_COOKIE: "0"
+      # DEEPSEEK_API_KEY: "sk-..."
+    volumes:
+      - ./data:/app/data
+    restart: unless-stopped

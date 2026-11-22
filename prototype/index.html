@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="砺程质量进阶陪伴 Agent 原型" />
+  <title>砺程 · 质量进阶工作台</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar" aria-label="项目导航">
+      <div class="brand-lockup">
+        <div class="brand-mark" aria-hidden="true"><span></span><span></span><span></span></div>
+        <div><div class="brand-name">砺程</div><div class="brand-subtitle">质量进阶工作台</div></div>
+      </div>
+      <div class="project-switcher">
+        <div class="field-label">当前项目</div>
+        <button class="project-button" id="projectButton" type="button" aria-expanded="false">
+          <span class="project-avatar" id="projectAvatar">湘</span>
+          <span class="project-button-copy"><strong id="projectName">湘秀未来</strong><small id="projectKind">科研创新 · 进行中</small></span>
+          <span class="chevron">⌄</span>
+        </button>
+        <div class="project-menu" id="projectMenu" hidden>
+          <button type="button" data-project="湘秀未来" data-kind="科研创新">湘秀未来 <small>当前循环</small></button>
+          <button type="button" data-project="校园低碳地图" data-kind="竞赛项目">校园低碳地图 <small>2 个待处理差距</small></button>
+          <button type="button" data-project="未命名项目" data-kind="草稿">未命名项目 <small>还没开始</small></button>
+          <button type="button" class="create-project-menu" data-action="create-project">＋ 新建项目 <small>从一条目标开始</small></button>
+        </div>
+      </div>
+      <nav class="side-nav" aria-label="工作区">
+        <div class="nav-label">工作区</div>
+        <button class="nav-item active" type="button" data-workspace="loop" title="一轮改进"><span class="nav-icon">◎</span>一轮改进<span class="nav-count">1</span></button>
+        <button class="nav-item" type="button" data-workspace="materials" title="查看材料和依据"><span class="nav-icon">▤</span>材料证据<span class="nav-count muted">6</span></button>
+        <button class="nav-item" type="button" data-workspace="actions" title="下一步行动"><span class="nav-icon">◇</span>下一步行动<span class="nav-count muted">2</span></button>
+        <button class="nav-item" type="button" data-workspace="review" title="请别人帮我检查"><span class="nav-icon">✓</span>请别人检查</button>
+        <button class="nav-item" type="button" data-workspace="transfer" title="换一个材料再试"><span class="nav-icon">↗</span>换材料再试</button>
+      </nav>
+      <div class="sidebar-divider"></div>
+      <div class="nav-label">项目成员</div>
+      <div class="member-stack" aria-label="项目成员">
+        <span class="member-avatar member-blue">林</span><span class="member-avatar member-yellow">周</span><span class="member-avatar member-red">陈</span><button class="member-add" type="button" aria-label="邀请成员">＋</button>
+      </div>
+      <div class="member-caption">3 位成员 · 1 位复核者</div>
+      <div class="sidebar-bottom">
+        <div class="evidence-score"><span>这轮依据完整度</span><strong>62%</strong></div><div class="score-track"><span style="width:62%"></span></div>
+        <p>完成改进并通过别人检查，才算真正前进。</p>
+        <button class="profile-button" id="profileButton" type="button"><span class="profile-avatar">李</span><span><strong>李同学</strong><small>项目负责人</small></span><span class="more">···</span></button>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <header class="topbar">
+        <div class="breadcrumb"><span id="breadcrumbProject">湘秀未来</span><b>/</b><span id="breadcrumbWorkspace">一轮改进</span><b>/</b><strong id="breadcrumbTitle">访谈证据 → 产品决策</strong></div>
+        <div class="top-actions"><button class="quiet-button" id="reviewModeButton" type="button"><span class="status-dot"></span><span id="reviewModeLabel">负责人视图</span><span class="chevron">⌄</span></button><button class="icon-button" type="button" aria-label="帮助">?</button><button class="notification-button" type="button" aria-label="通知"><span class="bell">♢</span><i></i></button></div>
+      </header>
+
+      <div class="view-mode-banner" id="viewModeBanner" hidden></div>
+
+      <section class="workspace-heading">
+        <div>
+          <div class="eyebrow"><span class="eyebrow-line"></span>当前这一轮 <span class="eyebrow-status">进行中</span></div>
+          <h1>让访谈证据真正支撑一项产品决策</h1>
+          <p class="heading-note">这一轮只解决一个问题：需求卡能否从原话走到具体样品，而不是堆一页漂亮总结。</p>
+        </div>
+        <div class="heading-meta"><div class="meta-person"><span class="member-avatar member-blue">林</span><span><small>由谁完成</small><strong>林同学</strong></span></div><div class="meta-divider"></div><div class="meta-person"><span class="member-avatar member-red">陈</span><span><small>由谁检查</small><strong>陈老师</strong></span></div><button class="outline-button" type="button" id="inviteButton">＋ 邀请成员</button></div>
+      </section>
+
+      <section class="progress-strip" aria-label="一轮改进进度">
+        <div class="progress-step done"><span class="step-mark">✓</span><span>说清目标</span></div><div class="progress-connector done"></div><div class="progress-step active" id="progressRubric"><span class="step-number">2</span><span>先定判断标准</span></div><div class="progress-connector"></div><div class="progress-step"><span class="step-number">3</span><span>找到还缺什么</span></div><div class="progress-connector"></div><div class="progress-step"><span class="step-number">4</span><span>做一次改进</span></div><div class="progress-connector"></div><div class="progress-step"><span class="step-number">5</span><span>提交改进版本</span></div><div class="progress-connector"></div><div class="progress-step"><span class="step-number">6</span><span>请别人检查</span></div><div class="progress-connector"></div><div class="progress-step"><span class="step-number">7</span><span>换个材料再试</span></div><div class="progress-caption"><span class="pulse-dot"></span><span id="progressCaption">正在确认这轮判断标准</span></div>
+      </section>
+
+      <div class="workbench-grid" id="qualityLoopView">
+        <section class="evidence-column" aria-label="材料与证据">
+          <div class="section-heading compact"><div><span class="section-kicker">01 · 证据</span><h2>当前材料</h2></div><button class="text-button" type="button">管理</button></div>
+          <div class="material-list">
+            <button class="material-item selected" type="button" data-material="访谈记录·03" data-detail="P14 · 访谈对象 B 的原话已定位。"><span class="file-icon file-doc">文</span><span class="material-copy"><strong>访谈记录·03</strong><small>PDF · 18 页 · 已读取</small></span><span class="material-state verified">已定位</span></button>
+            <button class="material-item" type="button" data-material="产品样品草图（现在的版本）" data-detail="P03 · 当前样品结构，尚未绑定需求证据。"><span class="file-icon file-img">图</span><span class="material-copy"><strong>产品样品草图（现在的版本）</strong><small>PNG · 1 张 · 已读取</small></span><span class="material-state pending">待绑定</span></button>
+            <button class="material-item" type="button" data-material="机构沟通备忘" data-detail="来源链接尚未完成权限确认。"><span class="file-icon file-link">链</span><span class="material-copy"><strong>机构沟通备忘</strong><small>链接 · 1 条 · 待读取</small></span><span class="material-state blocked">受阻</span></button>
+          </div>
+          <button class="add-material" type="button"><span>＋</span>添加材料</button>
+          <div class="evidence-card" id="evidenceCard"><div class="card-topline"><span class="evidence-pin">⌖</span><span>已确认的原文证据</span><span class="confidence">可信</span></div><blockquote>“如果能提前知道每次活动需要准备多少物料，就不用临时再跑一趟。”</blockquote><div class="quote-meta"><span>访谈记录·03</span><span>第 14 页 · B-07</span><button type="button" class="link-button">打开原文</button></div><div class="evidence-map"><span class="map-dot"></span><span>对应需求：提前准备物料清单</span><span class="map-arrow">→</span><span class="map-target">样品：活动准备模块</span></div></div>
+          <div class="unknown-note"><span class="unknown-mark">?</span><div><strong>还有 1 项未知</strong><p>机构是否允许共享历史订单，尚未有可引用的确认。</p><button type="button" class="link-button">记录求助卡</button></div></div>
+        </section>
+
+        <section class="loop-column" aria-label="一轮改进主区">
+          <div class="section-heading"><div><span class="section-kicker">02 · 这轮的判断标准</span><h2>先说清楚：什么算做得更好</h2></div><span class="version-chip" title="内部编号：G-01 · Rubric">这轮标准 · 草案</span></div>
+          <div class="rubric-card" id="rubricCard"><div class="rubric-intro"><span class="rubric-symbol" title="G：本轮质量标准（Rubric）">G</span><div><h3>一条需求，要能走完这条证据链</h3><p>原话 → 需求解释 → 明确决策 → 样品位置</p></div></div><div class="rubric-list"><div class="rubric-row"><span class="rubric-check checked">✓</span><div><strong>能回查原访谈原句和位置</strong><small>原文摘录与页码已记录</small></div><span class="rubric-state ready">已有证据</span></div><div class="rubric-row"><span class="rubric-check checked">✓</span><div><strong>与一项具体产品决策对应</strong><small>需求卡需写明对应样品或功能</small></div><span class="rubric-state ready">可检查</span></div><div class="rubric-row"><span class="rubric-check empty"></span><div><strong>解释为什么这个决策更合适</strong><small>需要补“原话 → 判断 → 决策”的理由</small></div><span class="rubric-state focus">本轮重点</span></div><div class="rubric-row"><span class="rubric-check empty"></span><div><strong>没有把未知写成已成立</strong><small>交易、授权、订单状态需如实标注</small></div><span class="rubric-state unknown">待确认</span></div></div><div class="rubric-footer"><span><span class="tiny-avatar">李</span>由你确认后，本轮标准才会冻结</span><button class="primary-button" id="confirmRubric" type="button">确认本轮标准</button></div></div>
+          <div class="section-heading gap-heading"><div><span class="section-kicker">03 · 找到还缺什么</span><h2>先补哪一个缺口</h2></div><button class="text-button" type="button">查看全部 3 项</button></div>
+          <div class="gap-card active-gap"><div class="gap-marker">A</div><div class="gap-content"><div class="gap-title"><strong>需求和产品决策之间少了一句理由</strong><span class="gap-priority">最值得先补</span></div><p>你已经有原话，也指向了“活动准备模块”。现在还缺：为什么这条原话足以支持这个模块，而不是另一个功能。</p><div class="gap-foot"><span class="source-tag">↳ 这轮标准 / 第 3 项</span><button class="link-button" type="button" id="gapEvidence">查看依据</button><button class="primary-button gap-confirm-button" type="button" id="confirmGap">选它作为这次要改的地方</button></div></div></div>
+          <div class="gap-card muted-gap"><div class="gap-marker muted">B</div><div class="gap-content"><div class="gap-title"><strong>机构授权状态没有依据</strong><span class="gap-unknown">证据不足 · UNKNOWN</span></div><p>已登记为证据不足，等对方确认后再处理。</p></div><span class="locked-icon">锁</span></div>
+          <div class="action-card"><div class="action-card-head"><div><span class="section-kicker warm">04 · 下一步行动</span><h2>补上一句理由</h2></div><span class="action-time">约 15 分钟</span></div><div class="action-body"><div class="action-brief"><span class="action-number">→</span><div><p>在已有需求卡下补齐这一句：</p><div class="prompt-line">“因为访谈中的 <em>___</em>，所以样品中的 <em>___</em> 需要 <em>___</em>。”</div><small>要交：一行理由 + 对应样品位置。不要重新写整页报告。</small></div></div><div class="action-assignee"><span class="member-avatar member-blue">林</span><span><small>由谁完成</small><strong>林同学</strong></span><span class="action-status">待开始</span></div></div><div class="action-footer"><span class="reviewer-action-note">复核者视图：只读查看，等待负责人提交改进版本</span><button class="secondary-button" type="button" id="askAgent">问教练怎么做</button><button class="primary-button warm-button" type="button" id="startAction">开始这一步</button></div></div>
+        </section>
+
+        <aside class="coach-column" aria-label="砺程教练">
+          <div class="coach-header"><div class="coach-identity"><div class="coach-orbit"><span></span><i></i></div><div><span class="section-kicker">砺程教练</span><h2>陪你把这一步做出来</h2></div></div><button class="icon-button small" type="button" aria-label="更多设置">···</button></div>
+          <div class="coach-context"><span class="context-dot"></span><span>只看：湘秀未来 / 这轮判断标准 / 当前缺口 A</span></div>
+          <div class="coach-tabs" role="tablist"><button class="coach-tab active" type="button" data-tab="next">下一动作</button><button class="coach-tab" type="button" data-tab="why">为什么</button><button class="coach-tab" type="button" data-tab="chat">对话</button></div>
+          <div class="coach-panel" id="coachPanel"><div class="coach-message"><div class="message-label">我读到的情况</div><p>你的原话和产品位置已经对上了。现在只缺一段可核对的理由，所以我没有让你重做访谈，也没有把“活动准备模块”直接判成正确。</p></div><div class="coach-highlight"><span class="highlight-mark">!</span><div><strong>这一步会改变什么</strong><p>补上“为什么”，检查者才能判断这不是凭感觉选的功能。</p></div></div><div class="coach-next"><div class="next-label">你现在可以</div><div class="next-action"><span>1</span><div><strong>打开原文第 14 页</strong><small>找到支持“提前准备物料”的那一句</small></div></div><div class="next-action"><span>2</span><div><strong>写一行理由</strong><small>只写原话、判断和样品位置的关系</small></div></div><div class="next-action"><span>3</span><div><strong>交给陈老师检查</strong><small>她会按这轮判断标准逐项检查</small></div></div></div><div class="coach-proof"><span class="proof-icon">⌖</span><div><strong>我为什么这样建议</strong><p>依据：访谈记录·03 / P14 / B-07<br>这轮要补：原话和产品决定之间的理由</p></div><button type="button" class="chevron-button">›</button></div></div>
+          <div class="coach-compose"><button type="button" class="composer-trigger" id="composerTrigger"><span>⌕</span><span>告诉我你卡在哪里…</span><kbd>⌘ K</kbd></button><div class="coach-note"><span class="tiny-lock">⌁</span> 砺程教练不会代你写提交内容，只会陪你把这一步做出来。</div></div>
+        </aside>
+      </div>
+      <section class="workspace-alternate" id="workspaceAlternate" hidden aria-live="polite"></section>
+      <footer class="workspace-footer"><span><span class="saved-dot"></span>已保存 · 刚刚</span><span>项目空间私有 · 仅受邀成员可见</span><button type="button" class="text-button">查看变更记录</button></footer>
+    </main>
+  </div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <div class="account-popover" id="accountPopover" hidden><div class="account-popover-head"><span class="profile-avatar">李</span><div><strong>李同学</strong><small>li.student@example.com</small></div></div><button type="button" data-account="settings">账户设置</button><button type="button" data-account="switch">切换账号</button><button type="button" data-account="logout">退出并查看登录页</button></div>
+  <div class="auth-screen" id="authScreen" hidden><div class="auth-visual"><div class="auth-orbit"><span></span><i></i></div><div class="auth-brand">砺程</div><h1>把一个模糊的想法，<br />推进成真正的成果。</h1><p>砺程教练会记住你的材料、这轮判断标准和每一次真实尝试。</p><div class="auth-proof"><span>⌖</span><span>依据可回查</span><span>↗</span><span>做法能迁移</span></div></div><div class="auth-panel"><button class="auth-close" id="authClose" type="button" aria-label="返回工作台">×</button><div class="auth-kicker">项目空间 · 私有协作</div><h2 id="authTitle">欢迎回来</h2><p class="auth-lede" id="authLede">登录后继续你的一轮改进。</p><div class="auth-tabs"><button class="auth-tab active" type="button" data-auth-tab="login">登录</button><button class="auth-tab" type="button" data-auth-tab="register">注册账号</button></div><form id="loginForm" class="auth-form"><label>邮箱<input type="email" id="loginEmail" value="li.student@example.com" required /></label><label>密码<input type="password" id="loginPassword" value="quality123" required /></label><div class="auth-row"><label class="check-row"><input type="checkbox" checked /> 保持登录</label><button type="button" class="auth-link">忘记密码？</button></div><button class="auth-submit" type="submit">登录工作台</button><small class="auth-note">演示账号已预填，可直接进入。</small></form><form id="registerForm" class="auth-form" hidden><label>你的名字<input type="text" id="registerName" placeholder="例如：林同学" required /></label><label>邮箱<input type="email" id="registerEmail" placeholder="name@example.com" required /></label><label>设置密码<input type="password" id="registerPassword" placeholder="至少 8 位字符" required minlength="8" /></label><label class="check-row"><input type="checkbox" required /> 我同意项目材料默认私有</label><button class="auth-submit" type="submit">创建我的工作台</button><small class="auth-note">创建后可以邀请成员和检查者。</small></form><div class="auth-footer">不用先配置模型 · 材料和手动流程也能继续</div></div></div>
+  <div class="project-modal-backdrop" id="projectModal" hidden><div class="project-modal" role="dialog" aria-modal="true" aria-labelledby="projectModalTitle"><button class="modal-close" id="closeProjectModal" type="button" aria-label="关闭">×</button><div class="section-kicker">新项目</div><h2 id="projectModalTitle">从一个真实目标开始</h2><p>先写到你现在能说清的程度，砺程教练会陪你补齐，不需要先写完整计划。</p><form id="projectForm"><label>项目名称<input id="newProjectName" required placeholder="例如：校园低碳地图" /></label><label>项目类型<select id="newProjectKind"><option>科研项目</option><option>竞赛项目</option><option>创新项目</option></select></label><label>现在想达成什么？<textarea id="newProjectGoal" required placeholder="例如：把调研结果推进成一项可验证的产品决策"></textarea></label><div class="modal-actions"><button class="secondary-button" id="cancelProject" type="button">先不创建</button><button class="primary-button" type="submit">创建项目</button></div></form></div></div>
+  <div class="project-modal-backdrop" id="v2Modal" hidden><div class="project-modal" role="dialog" aria-modal="true" aria-labelledby="v2ModalTitle"><button class="modal-close" id="closeV2Modal" type="button" aria-label="关闭">×</button><div class="section-kicker">动作卡 · 改进版本（V2）</div><h2 id="v2ModalTitle">提交这次改进</h2><p>把你亲手完成的理由卡贴在这里。提交后会保存一份不可覆盖的改进版本，并交给别人检查。</p><form id="v2Form"><label>改进后的内容<textarea id="v2Content" required>因为访谈中的“提前知道物料数量”会影响活动准备，所以样品中的活动准备模块需要展示物料清单。</textarea></label><label>你为什么这样改？<textarea id="v2Reason" required>这条改动把原话、判断和具体样品位置连起来，检查者可以按这轮判断标准逐项检查。</textarea></label><div class="modal-actions"><button class="secondary-button" id="cancelV2" type="button">继续修改</button><button class="primary-button" type="submit">提交改进版本给检查者</button></div></form></div></div>
+  <div class="modal-backdrop" id="composerModal" hidden><div class="composer-modal" role="dialog" aria-modal="true" aria-labelledby="composerTitle"><button class="modal-close" id="closeComposer" type="button" aria-label="关闭">×</button><div class="coach-orbit large"><span></span><i></i></div><h2 id="composerTitle">你现在卡在哪里？</h2><p>说清楚卡点，砺程教练会先判断是材料、方法、理解还是环境问题。</p><textarea id="stuckInput" placeholder="例如：我不知道这句访谈为什么能支持这个功能…"></textarea><div class="modal-actions"><button class="secondary-button" id="cancelComposer" type="button">先不说</button><button class="primary-button" id="sendComposer" type="button">让教练帮我拆开</button></div></div></div>
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,19 @@
+{
+  "name": "砺程 · 质量进阶工作台",
+  "short_name": "砺程",
+  "description": "学生科研与创新项目质量进阶 Agent",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f3f0e8",
+  "theme_color": "#0e1b2a",
+  "lang": "zh-CN",
+  "icons": [
+    {
+      "src": "assets/licheng-mark.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

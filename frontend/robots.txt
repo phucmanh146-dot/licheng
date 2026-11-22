@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+
+# 私有数据接口不允许被抓取
+Disallow: /api/
