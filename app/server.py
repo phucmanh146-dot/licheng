@@ -7,6 +7,7 @@ import mimetypes
 import os
 import secrets
 import shutil
+import signal
 import sqlite3
 import sys
 import threading
@@ -104,6 +105,20 @@ def refresh_deepseek_config() -> tuple[str, str, str]:
     DEEPSEEK_BASE_URL = os.getenv("DEEPSEEK_BASE_URL", "https://api.deepseek.com").strip().rstrip("/")
     DEEPSEEK_MODEL = os.getenv("DEEPSEEK_MODEL", "deepseek-chat").strip() or "deepseek-chat"
     return DEEPSEEK_API_KEY, DEEPSEEK_BASE_URL, DEEPSEEK_MODEL
+
+
+STARTED_AT = time.monotonic()
+
+ERROR_CODES = {
+    400: "invalid_request",
+    401: "unauthorized",
+    403: "forbidden",
+    404: "not_found",
+    409: "conflict",
+    413: "payload_too_large",
+    429: "rate_limited",
+    500: "internal_error",
+}
 
 
 def now() -> str:
@@ -241,14 +256,54 @@ def deepseek_chat(messages: list[dict[str, str]]) -> tuple[str | None, str | Non
         return None, "DeepSeek 返回内容无法解析"
 
 
-def connect() -> sqlite3.Connection:
-    DB_PATH.parent.mkdir(parents=True, exist_ok=True)
-    conn = sqlite3.connect(DB_PATH, timeout=15)
-    conn.row_factory = sqlite3.Row
-    conn.execute("PRAGMA foreign_keys = ON")
-    conn.execute("PRAGMA journal_mode = WAL")
-    conn.execute("PRAGMA busy_timeout = 15000")
-    return conn
+class ForbiddenError(Exception):
+    """Authenticated but not permitted; must not be confused with 401."""
+
+
+class NotFoundError(Exception):
+    """Resource missing or archived; must not be confused with 401."""
+
+
+class ConflictError(Exception):
+    """Optimistic-lock failure: the client edited a stale project revision."""
+
+
+class ManagedConnection:
+    """sqlite3 connection with an explicit commit/rollback and close on exit.
+
+    ``sqlite3.Connection`` used as a context manager only manages the transaction;
+    it does NOT close the connection. Every ``with connect()`` call in this module
+    therefore used to leak a file descriptor until GC. This wrapper makes the
+    lifecycle deterministic and keeps every existing call site unchanged.
+    """
+
+    def __init__(self) -> None:
+        DB_PATH.parent.mkdir(parents=True, exist_ok=True)
+        self._conn = sqlite3.connect(DB_PATH, timeout=15)
+        self._conn.row_factory = sqlite3.Row
+        self._conn.execute("PRAGMA foreign_keys = ON")
+        self._conn.execute("PRAGMA journal_mode = WAL")
+        self._conn.execute("PRAGMA busy_timeout = 15000")
+
+    def __enter__(self) -> sqlite3.Connection:
+        return self._conn
+
+    def __exit__(self, exc_type, exc, tb) -> bool:
+        try:
+            if exc_type is None:
+                self._conn.commit()
+            else:
+                self._conn.rollback()
+        finally:
+            self._conn.close()
+        return False
+
+    def __getattr__(self, name):
+        return getattr(self._conn, name)
+
+
+def connect() -> ManagedConnection:
+    return ManagedConnection()
 
 
 def base_project(
@@ -275,6 +330,7 @@ def base_project(
 ) -> dict:
     return {
         "id": project_id,
+        "revision": 1,
         "name": name,
         "kind": kind,
         "avatar": avatar,
@@ -731,53 +787,93 @@ def member_role(user_id: str, project_id: str) -> str | None:
 
 
 def require_role(user_id: str, project_id: str, roles: set[str]) -> str:
+    with connect() as conn:
+        row = conn.execute("SELECT payload FROM projects WHERE id=?", (project_id,)).fetchone()
+    if row:
+        try:
+            archived = bool(json.loads(row["payload"]).get("archivedAt"))
+        except (TypeError, json.JSONDecodeError):
+            archived = False
+        if archived:
+            raise NotFoundError("项目不存在")
     role = member_role(user_id, project_id)
     if role not in roles:
-        raise PermissionError("你没有执行此操作的项目权限")
+        raise ForbiddenError("你没有执行此操作的项目权限")
     return role
 
 
 def save_project(
-    user_id: str, project: dict, event: str, event_payload: dict | None = None
+    user_id: str,
+    project: dict,
+    event: str,
+    event_payload: dict | None = None,
+    conn: sqlite3.Connection | None = None,
 ) -> None:
+    """Persist a project and its audit event in one transaction.
+
+    Pass ``conn`` when the caller already owns a transaction (e.g. V2 submission)
+    so the business write and the audit write commit or roll back together.
+    """
+    if conn is None:
+        with connect() as owned:
+            return save_project(user_id, project, event, event_payload, owned)
+    project["revision"] = int(project.get("revision") or 1) + 1
     project["updatedAt"] = now()
-    with connect() as conn:
-        conn.execute(
-            "UPDATE projects SET payload=?, updated_at=? WHERE id=?",
-            (json.dumps(project, ensure_ascii=False), project["updatedAt"], project["id"]),
-        )
-        conn.execute(
-            "INSERT INTO audit_events VALUES (?, ?, ?, ?, ?, ?)",
-            (
-                str(uuid.uuid4()),
-                user_id,
-                project["id"],
-                event,
-                json.dumps(event_payload or {}, ensure_ascii=False),
-                project["updatedAt"],
-            ),
-        )
+    conn.execute(
+        "UPDATE projects SET payload=?, updated_at=? WHERE id=?",
+        (json.dumps(project, ensure_ascii=False), project["updatedAt"], project["id"]),
+    )
+    conn.execute(
+        "INSERT INTO audit_events VALUES (?, ?, ?, ?, ?, ?)",
+        (
+            str(uuid.uuid4()),
+            user_id,
+            project["id"],
+            event,
+            json.dumps(event_payload or {}, ensure_ascii=False),
+            project["updatedAt"],
+        ),
+    )
 
 
 class Handler(BaseHTTPRequestHandler):
-    server_version = "Licheng/0.1"
+    server_version = "Licheng/0.2"
     # Keep SSE responses incremental while closing the connection explicitly at the end.
     protocol_version = "HTTP/1.1"
 
+    @property
+    def request_id(self) -> str:
+        value = getattr(self, "_request_id", None)
+        if not value:
+            value = uuid.uuid4().hex[:12]
+            self._request_id = value
+        return value
+
     def log_message(self, fmt, *args):
         try:
-            message = fmt % args
-            sys.stderr.write(f"[licheng] {self.address_string()} {message}\n")
+            record = {
+                "ts": now(),
+                "service": "licheng",
+                "requestId": self.request_id,
+                "client": self.address_string(),
+                "method": getattr(self, "command", "-"),
+                "path": getattr(self, "path", "-"),
+                "message": fmt % args,
+            }
+            sys.stderr.write(json.dumps(record, ensure_ascii=False) + "\n")
             sys.stderr.flush()
         except Exception:
             return
 
     def send_json(self, body: dict, status: int = 200, headers: dict | None = None):
+        if "error" in body and "code" not in body:
+            body = dict(body, code=ERROR_CODES.get(status, "error"))
         raw = json.dumps(body, ensure_ascii=False).encode("utf-8")
         self.send_response(status)
         self.send_header("Content-Type", "application/json; charset=utf-8")
         self.send_header("Content-Length", str(len(raw)))
         self.send_header("Cache-Control", "no-store")
+        self.send_header("X-Request-Id", self.request_id)
         for key, value in (headers or {}).items():
             if isinstance(value, (list, tuple)):
                 for item in value:
@@ -843,7 +939,7 @@ class Handler(BaseHTTPRequestHandler):
 
     def require_csrf(self) -> None:
         if not valid_csrf(self.headers.get("Cookie", ""), self.headers.get(CSRF_HEADER)):
-            raise PermissionError("CSRF 校验失败，请刷新页面后重试")
+            raise ForbiddenError("CSRF 校验失败，请刷新页面后重试")
 
     def path_parts(self):
         return [part for part in urlparse(self.path).path.split("/") if part]
@@ -874,7 +970,22 @@ class Handler(BaseHTTPRequestHandler):
         path = urlparse(self.path).path
         try:
             if path == "/api/health":
-                return self.send_json({"ok": True, "service": "licheng", "version": "0.1.0"})
+                db_status = "ok"
+                try:
+                    with connect() as conn:
+                        conn.execute("SELECT 1").fetchone()
+                except Exception:
+                    db_status = "error"
+                return self.send_json(
+                    {
+                        "ok": db_status == "ok",
+                        "service": "licheng",
+                        "version": "0.2.0",
+                        "db": db_status,
+                        "uptimeSeconds": round(time.monotonic() - STARTED_AT, 3),
+                    },
+                    200 if db_status == "ok" else 503,
+                )
             if path == "/api/session":
                 user = self.auth()
                 if not user:
@@ -970,6 +1081,10 @@ class Handler(BaseHTTPRequestHandler):
             return self.static(path)
         except PermissionError as exc:
             return self.send_json({"error": str(exc)}, 401)
+        except ForbiddenError as exc:
+            return self.send_json({"error": str(exc)}, 403)
+        except NotFoundError as exc:
+            return self.send_json({"error": str(exc)}, 404)
         except Exception as exc:
             sys.stderr.write(f"[licheng] unhandled error on {self.command} {self.path}: {exc!r}\n")
             sys.stderr.flush()
@@ -1691,6 +1806,23 @@ class Handler(BaseHTTPRequestHandler):
             )
         return self.send_json({"rubricId": rubric_id, "version": version}, 201)
 
+    def rubric_item_ids(self, project_id: str, conn=None) -> list[str]:
+        """Stable, ordered rubric item ids used as review_items keys."""
+        if conn is None:
+            with connect() as owned:
+                return self.rubric_item_ids(project_id, owned)
+        row = conn.execute(
+            "SELECT items_json FROM rubrics WHERE project_id=? ORDER BY version DESC LIMIT 1",
+            (project_id,),
+        ).fetchone()
+        if not row:
+            return []
+        try:
+            items = json.loads(row["items_json"])
+        except (TypeError, json.JSONDecodeError):
+            return []
+        return [item.get("id", f"item-{i + 1}") for i, item in enumerate(items)]
+
     def rubric_item_count(self, project_id: str) -> int:
         with connect() as conn:
             row = conn.execute(
@@ -1703,6 +1835,20 @@ class Handler(BaseHTTPRequestHandler):
             return len(json.loads(row["items_json"]))
         except (TypeError, json.JSONDecodeError):
             return 0
+
+    @staticmethod
+    def review_values(conn, review_id: str, item_ids: list[str]) -> list[str]:
+        """Latest judgement per rubric item for one reviewer, by insert order."""
+        values = ["pending"] * len(item_ids)
+        for index, item_id in enumerate(item_ids):
+            row = conn.execute(
+                "SELECT result FROM review_items WHERE review_id=? AND rubric_item_id=? "
+                "ORDER BY created_at DESC, rowid DESC LIMIT 1",
+                (review_id, item_id),
+            ).fetchone()
+            if row:
+                values[index] = row["result"]
+        return values
 
     def create_invitation(self, user: sqlite3.Row, project_id: str, payload: dict):
         email = payload.get("email", "").strip().lower()
@@ -1751,7 +1897,7 @@ class Handler(BaseHTTPRequestHandler):
     def do_POST(self):
         path = urlparse(self.path).path
         try:
-            public = path in {"/api/auth/login", "/api/auth/register", "/api/auth/logout"}
+            public = path in {"/api/auth/login", "/api/auth/register"}
             user = None if public else self.require_auth()
             if not public:
                 self.require_csrf()
@@ -1819,6 +1965,10 @@ class Handler(BaseHTTPRequestHandler):
             return self.send_json({"error": "接口不存在"}, 404)
         except PermissionError as exc:
             return self.send_json({"error": str(exc)}, 401)
+        except ForbiddenError as exc:
+            return self.send_json({"error": str(exc)}, 403)
+        except NotFoundError as exc:
+            return self.send_json({"error": str(exc)}, 404)
         except ValueError as exc:
             return self.send_json({"error": str(exc)}, 400)
         except Exception as exc:
@@ -1849,6 +1999,10 @@ class Handler(BaseHTTPRequestHandler):
             return self.send_json({"error": "接口不存在"}, 404)
         except PermissionError as exc:
             return self.send_json({"error": str(exc)}, 401)
+        except ForbiddenError as exc:
+            return self.send_json({"error": str(exc)}, 403)
+        except NotFoundError as exc:
+            return self.send_json({"error": str(exc)}, 404)
         except Exception as exc:
             sys.stderr.write(f"[licheng] unhandled error on {self.command} {self.path}: {exc!r}\n")
             sys.stderr.flush()
@@ -1866,6 +2020,14 @@ class Handler(BaseHTTPRequestHandler):
                 if not project:
                     return self.send_json({"error": "项目不存在"}, 404)
                 require_role(user["id"], project_id, {"owner"})
+                if_match = self.headers.get("If-Match")
+                if if_match:
+                    try:
+                        expected = int(if_match.strip().strip('"'))
+                    except ValueError:
+                        raise ValueError("If-Match 必须是数字版本号")
+                    if expected != int(project.get("revision") or 1):
+                        raise ConflictError("项目已被其他人更新，请刷新后重试")
                 payload = self.body()
                 changed = []
                 if "name" in payload:
@@ -1887,6 +2049,12 @@ class Handler(BaseHTTPRequestHandler):
             return self.send_json({"error": "接口不存在"}, 404)
         except PermissionError as exc:
             return self.send_json({"error": str(exc)}, 401)
+        except ForbiddenError as exc:
+            return self.send_json({"error": str(exc)}, 403)
+        except NotFoundError as exc:
+            return self.send_json({"error": str(exc)}, 404)
+        except ConflictError as exc:
+            return self.send_json({"error": str(exc)}, 409)
         except ValueError as exc:
             return self.send_json({"error": str(exc)}, 400)
         except Exception as exc:
@@ -2205,12 +2373,13 @@ class Handler(BaseHTTPRequestHandler):
                     "UPDATE reviews SET status='invalid' WHERE project_id=? AND version_id<>?",
                     (project["id"], version_id),
                 )
-            save_project(
-                user["id"],
-                project,
-                "version.v2.submitted",
-                {"versionId": version_id, "content": content},
-            )
+                save_project(
+                    user["id"],
+                    project,
+                    "version.v2.submitted",
+                    {"versionId": version_id, "content": content},
+                    conn,
+                )
         elif action == "reviews/start":
             require_role(user["id"], project["id"], {"reviewer"})
             if not project["review"].get("v2Submitted"):
@@ -2234,126 +2403,107 @@ class Handler(BaseHTTPRequestHandler):
         elif action == "reviews/criteria":
             require_role(user["id"], project["id"], {"reviewer"})
             index, value = int(payload.get("index", -1)), payload.get("value")
-            total = self.rubric_item_count(project["id"]) or 4
-            if (
-                not project["review"]["v2Submitted"]
-                or index not in range(total)
-                or value not in {"pass", "fail", "unknown"}
-            ):
+            if not project["review"]["v2Submitted"] or value not in {"pass", "fail", "unknown"}:
                 raise ValueError("当前版本还不能检查")
             with connect() as conn:
-                latest_version = conn.execute(
-                    "SELECT id, created_by FROM material_versions WHERE project_id=? ORDER BY created_at DESC LIMIT 1",
-                    (project["id"],),
-                ).fetchone()
-            if latest_version and latest_version["created_by"] == user["id"]:
-                raise ValueError("执行者不能为自己的改进版本复核")
-            if project["review"].get("versionId") != (
-                latest_version["id"] if latest_version else None
-            ):
-                raise ValueError("请先提交新的改进版本")
-            if len(project["review"].get("criteria", [])) != total:
-                project["review"]["criteria"] = ["pending"] * total
-            project["review"]["total"] = total
-            project["review"]["criteria"][index] = value
-            project["review"]["completed"] = sum(v == "pass" for v in project["review"]["criteria"])
-            project["review"]["status"] = (
-                "全部 PASS · 可进入迁移"
-                if all(v == "pass" for v in project["review"]["criteria"])
-                else "复核进行中"
-            )
-            if all(v == "pass" for v in project["review"]["criteria"]) and project.get("actions"):
-                project["actions"][0]["status"] = "已通过复核"
-            if value == "fail":
-                project["review"]["status"] = "需要返工"
-                if project.get("actions"):
-                    project["actions"][0]["status"] = "需返工"
-            elif value == "unknown" and project.get("actions"):
-                project["actions"][0]["status"] = "等待补证据"
-            with connect() as conn:
                 version = conn.execute(
-                    "SELECT id FROM material_versions WHERE project_id=? ORDER BY created_at DESC LIMIT 1",
+                    "SELECT id, created_by FROM material_versions WHERE project_id=? "
+                    "ORDER BY created_at DESC LIMIT 1",
                     (project["id"],),
                 ).fetchone()
+                if not version or version["created_by"] == user["id"]:
+                    raise ValueError("执行者不能为自己的改进版本复核")
+                if project["review"].get("versionId") != version["id"]:
+                    raise ValueError("请先提交新的改进版本")
+                item_ids = self.rubric_item_ids(project["id"], conn)
+                total = len(item_ids)
+                if total == 0 or index not in range(total):
+                    raise ValueError("检查项编号不存在")
                 review = conn.execute(
                     """SELECT id FROM reviews
                     WHERE project_id=? AND reviewer_id=? AND version_id=? AND status='in_progress'
                     ORDER BY created_at DESC LIMIT 1""",
-                    (project["id"], user["id"], version["id"] if version else ""),
+                    (project["id"], user["id"], version["id"]),
                 ).fetchone()
                 review_id = review["id"] if review else "review-" + uuid.uuid4().hex[:12]
-                rubric_row = conn.execute(
-                    "SELECT items_json FROM rubrics WHERE project_id=? ORDER BY version DESC LIMIT 1",
-                    (project["id"],),
-                ).fetchone()
-                rubric_items = json.loads(rubric_row["items_json"]) if rubric_row else []
-                rubric_item_id = (
-                    rubric_items[index].get("id", f"item-{index + 1}")
-                    if index < len(rubric_items)
-                    else f"item-{index + 1}"
-                )
                 if not review:
                     conn.execute(
                         "INSERT INTO reviews VALUES (?, ?, ?, ?, 'in_progress', ?, NULL)",
-                        (
-                            review_id,
-                            project["id"],
-                            version["id"] if version else "",
-                            user["id"],
-                            now(),
-                        ),
+                        (review_id, project["id"], version["id"], user["id"], now()),
                     )
                 conn.execute(
                     "INSERT INTO review_items VALUES (?, ?, ?, ?, ?, ?)",
                     (
                         f"review-item-{uuid.uuid4().hex[:12]}",
                         review_id,
-                        rubric_item_id,
+                        item_ids[index],
                         value,
                         payload.get("note", ""),
                         now(),
                     ),
                 )
-            save_project(user["id"], project, "review.criteria", payload)
+                # Project payload is a presentation snapshot for this reviewer only;
+                # the authoritative judgement lives in review_items.
+                criteria = self.review_values(conn, review_id, item_ids)
+                project["review"]["versionId"] = version["id"]
+                project["review"]["total"] = total
+                project["review"]["criteria"] = criteria
+                project["review"]["completed"] = sum(v == "pass" for v in criteria)
+                project["review"]["status"] = (
+                    "需要返工" if "fail" in criteria else "复核进行中"
+                )
+                if project.get("actions"):
+                    project["actions"][0]["status"] = (
+                        "需返工"
+                        if "fail" in criteria
+                        else "等待补证据"
+                        if "unknown" in criteria
+                        else "已通过复核"
+                        if all(v == "pass" for v in criteria)
+                        else "等待别人检查"
+                    )
+                save_project(
+                    user["id"],
+                    project,
+                    "review.criteria",
+                    {"index": index, "value": value, "reviewerId": user["id"]},
+                    conn,
+                )
         elif action == "reviews/finish":
             require_role(user["id"], project["id"], {"reviewer"})
-            total = self.rubric_item_count(project["id"]) or 4
-            criteria = project["review"].get("criteria", [])
             with connect() as conn:
-                latest_version = conn.execute(
-                    "SELECT id, created_by FROM material_versions WHERE project_id=? ORDER BY created_at DESC LIMIT 1",
+                version = conn.execute(
+                    "SELECT id, created_by FROM material_versions WHERE project_id=? "
+                    "ORDER BY created_at DESC LIMIT 1",
                     (project["id"],),
                 ).fetchone()
-                version_id = latest_version["id"] if latest_version else None
+                if not version or project["review"].get("versionId") != version["id"]:
+                    raise ValueError("没有可复核的新版本")
+                if version["created_by"] == user["id"]:
+                    raise ValueError("执行者不能为自己的改进版本复核")
                 review = conn.execute(
                     """SELECT id FROM reviews
                     WHERE project_id=? AND reviewer_id=? AND version_id=? AND status='in_progress'
                     ORDER BY created_at DESC LIMIT 1""",
-                    (project["id"], user["id"], version_id or ""),
+                    (project["id"], user["id"], version["id"]),
                 ).fetchone()
-                item_count = 0
-                if review:
-                    item_count = conn.execute(
-                        "SELECT COUNT(*) AS n FROM review_items WHERE review_id=?",
-                        (review["id"],),
-                    ).fetchone()["n"]
-            if not latest_version or project["review"].get("versionId") != version_id:
-                raise ValueError("没有可复核的新版本")
-            if latest_version["created_by"] == user["id"]:
-                raise ValueError("执行者不能为自己的改进版本复核")
-            if not review:
-                raise ValueError("请先开始复核")
-            if len(criteria) != total or item_count < total or not all(v == "pass" for v in criteria):
-                raise ValueError("还有未通过或证据不足的检查项")
-            project["review"]["status"] = "成果复核 PASS"
-            project["transfer"]["status"] = "可开始"
-            project["transfer"]["progress"] = 15
-            with connect() as conn:
+                if not review:
+                    raise ValueError("请先开始复核")
+                item_ids = self.rubric_item_ids(project["id"], conn)
+                criteria = self.review_values(conn, review["id"], item_ids)
+                if not item_ids or any(v != "pass" for v in criteria):
+                    raise ValueError("还有未通过或证据不足的检查项")
                 conn.execute(
                     "UPDATE reviews SET status='passed', completed_at=? WHERE id=?",
                     (now(), review["id"]),
                 )
-            save_project(user["id"], project, "review.finished")
+                project["review"]["criteria"] = criteria
+                project["review"]["status"] = "成果复核 PASS"
+                project["review"]["completed"] = len(criteria)
+                project["review"]["finishedBy"] = user["id"]
+                project["transfer"]["status"] = "可开始"
+                project["transfer"]["progress"] = 15
+                save_project(user["id"], project, "review.finished", {"reviewerId": user["id"]}, conn)
         elif action == "transfer/advance":
             require_role(user["id"], project["id"], {"owner", "member"})
             progress = project["transfer"]["progress"]
@@ -2418,17 +2568,71 @@ class Handler(BaseHTTPRequestHandler):
         self.wfile.write(content)
 
 
-def run(host: str = "127.0.0.1", port: int = 8787):
+class BoundedThreadingHTTPServer(ThreadingHTTPServer):
+    """Threading server with a hard concurrency ceiling and fast 503 rejection."""
+
+    daemon_threads = True
+    allow_reuse_address = True
+
+    def __init__(self, *args, max_threads: int = 32, **kwargs):
+        self._slots = threading.BoundedSemaphore(max_threads)
+        super().__init__(*args, **kwargs)
+
+    def process_request(self, request, client_address):
+        if not self._slots.acquire(blocking=False):
+            try:
+                request.sendall(
+                    b"HTTP/1.1 503 Service Unavailable\r\n"
+                    b"Content-Length: 0\r\nConnection: close\r\n\r\n"
+                )
+            except OSError:
+                pass
+            try:
+                request.close()
+            except OSError:
+                pass
+            return
+        try:
+            super().process_request(request, client_address)
+        except Exception:
+            self._slots.release()
+            raise
+
+    def process_request_thread(self, request, client_address):
+        try:
+            super().process_request_thread(request, client_address)
+        finally:
+            self._slots.release()
+
+
+def run(host: str = "127.0.0.1", port: int = 8787, max_threads: int = 32):
     init_db()
     cleanup_sessions()
-    server = ThreadingHTTPServer((host, port), Handler)
-    print(f"砺程已启动: http://{host}:{port}")
+    server = BoundedThreadingHTTPServer((host, port), Handler, max_threads=max_threads)
+    stopping = threading.Event()
+
+    def request_stop(_signum, _frame):
+        if stopping.is_set():
+            return
+        stopping.set()
+        threading.Thread(target=server.shutdown, daemon=True).start()
+
+    previous = {}
+    for sig in (signal.SIGINT, signal.SIGTERM):
+        try:
+            previous[sig] = signal.signal(sig, request_stop)
+        except (ValueError, OSError):
+            pass
+    print(f"砺程已启动: http://{host}:{port} (max_threads={max_threads})")
     try:
-        server.serve_forever()
-    except KeyboardInterrupt:
-        pass
+        server.serve_forever(poll_interval=0.25)
     finally:
         server.server_close()
+        for sig, handler in previous.items():
+            try:
+                signal.signal(sig, handler)
+            except (ValueError, OSError):
+                pass
 
 
 if __name__ == "__main__":

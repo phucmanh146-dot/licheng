@@ -50,6 +50,8 @@ python run.py
 
 站点已提供 favicon、Web App Manifest、`robots.txt`、`/api/health` 健康检查，以及缺失静态资源的 404 响应。
 
+后端工程能力：scrypt 加盐口令与旧哈希自动升级、登录限流、双提交 CSRF、结构化日志与 `X-Request-Id`、统一错误码、乐观锁（`If-Match`）、单事务写入、有界线程池（默认 32）、`SIGTERM` 优雅关闭。认证失败 401、越权/CSRF 失败 403、归档或不存在 404，前端不会把越权误判为掉登录。完整契约见 `docs/api.md`。
+
 ## 测试
 
 ```powershell
@@ -76,7 +78,7 @@ python -m pytest -v tests/
 - `app/security.py` / `app/multipart.py`：密码哈希、CSRF、上传魔数校验与 multipart 解析。
 - `app/retrieval/`：检索层（路由、重写、混合检索、RRF、按画像组装、碎片收件箱）。
 - `frontend/`：正式前端（必须经后端访问）；`prototype/`：只读设计稿，可直接双击打开。
-- `docs/design/`：架构、状态机与数据字典。
+- `docs/design/`：架构、状态机与数据字典；`docs/api.md`：API 契约与状态机约束。
 - `tests/`：pytest API 集成测试。
 - `data/`：SQLite 数据库与上传目录（已 Git 忽略）。
 
@@ -89,6 +91,8 @@ python -m pytest -v tests/
 材料与协作：`GET/POST /api/projects/{id}/materials`、`POST /api/materials/{id}/evidence`、`GET /api/materials/{id}/download`、`GET/POST /api/projects/{id}/rubric`、`GET /api/projects/{id}/members`、`POST /api/projects/{id}/members/invitations`、`POST /api/invitations/{token}/accept`、`GET /api/projects/{id}/audit|versions|reviews|help`、`GET/POST /api/projects/{id}/agent/chat|chat/stream`、`POST /api/agent/advice`、`PATCH/DELETE /api/projects/{id}`。
 
 检索：`POST /api/agent/retrieve`（输入 `query`、`profile`、`trace`；输出路由、重写、混合召回、RRF、画像化答案与 trace）。
+
+完整端点、权限、错误码、SSE 事件与请求示例见 `docs/api.md`。
 
 ## 已知边界
 

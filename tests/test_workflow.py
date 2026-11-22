@@ -63,8 +63,8 @@ def test_full_quality_loop(tmp_path):
         [sys.executable, "-m", "app.server"],
         cwd=ROOT,
         env=env,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
+        stdout=subprocess.DEVNULL,
+        stderr=None,
     )
     try:
         wait_ready(base)

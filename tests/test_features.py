@@ -95,8 +95,8 @@ def start_server(tmp_path, port, db_name, extra=None):
         [sys.executable, "-m", "app.server"],
         cwd=ROOT,
         env=env,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
+        stdout=subprocess.DEVNULL,
+        stderr=None,
     )
     wait_ready(base)
     return base, process

@@ -67,8 +67,8 @@ def start_server(tmp_path):
         [sys.executable, "-m", "app.server"],
         cwd=ROOT,
         env=env,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
+        stdout=subprocess.DEVNULL,
+        stderr=None,
     )
     for _ in range(40):
         try:
@@ -88,7 +88,7 @@ def test_csrf_review_permission_upload_and_archive(tmp_path):
         status, _ = request(
             "/api/projects/xiang/rubric/confirm", "POST", {}, owner_cookie
         )
-        assert status == 401  # missing CSRF
+        assert status == 403  # missing CSRF (authenticated, but forbidden)
 
         boundary = "----HardeningBoundary"
         forged = (
@@ -122,12 +122,12 @@ def test_csrf_review_permission_upload_and_archive(tmp_path):
             reviewer_cookie,
             reviewer_csrf,
         )
-        assert status == 401  # reviewer cannot write evidence
+        assert status == 403  # reviewer cannot write evidence
 
         status, _ = request("/api/projects/xiang", "DELETE", None, owner_cookie, owner_csrf)
         assert status == 200
-        status, _ = request("/api/projects/xiang/materials", cookie=owner_cookie)
-        assert status == 401  # archived project blocks subresources
+        status, body = request("/api/projects/xiang/materials", cookie=owner_cookie)
+        assert status == 404 and body.get("code") == "not_found"  # archived blocks subresources
 
         status, body = request(
             "/api/agent/retrieve",
